@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：crud_ebom.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/1/16 14:43 
-'''
+@Date    ：2025/1/16 14:43
+"""
+
 from typing import Any
 
-from sqlalchemy import Sequence, Select, select, desc, and_, distinct
+from sqlalchemy import Select, Sequence, and_, distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -17,7 +18,6 @@ from backend.app.datamanage.model import Ebom
 
 
 class CRUDEbom(CRUDPlus[Ebom]):
-
     async def get_distinct_column_values(self, db: AsyncSession, column_name: str) -> Sequence[Any]:
         """
         获取指定列的所有唯一值
@@ -27,7 +27,7 @@ class CRUDEbom(CRUDPlus[Ebom]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f"Column {column_name} does not exist in model {self.model.__name__}")
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
         # 构建查询
         column = getattr(self.model, column_name)
@@ -45,12 +45,7 @@ class CRUDEbom(CRUDPlus[Ebom]):
         :param prd_no: 产品型号
         :return: 根节点列表
         """
-        stmt = select(self.model).where(
-            and_(
-                self.model.level1 == level1,
-                self.model.state_now == 1
-            )
-        )
+        stmt = select(self.model).where(and_(self.model.level1 == level1, self.model.state_now == 1))
         where_list = []
         if prd_no:
             where_list.append(self.model.prd_no == prd_no)
@@ -58,12 +53,16 @@ class CRUDEbom(CRUDPlus[Ebom]):
             stmt = stmt.where(*where_list)
         return stmt
 
-    async def get_node_list(self, level1: int = 1, partid: str = None, ) -> Select:
+    async def get_node_list(
+        self,
+        level1: int = 1,
+        partid: str = None,
+    ) -> Select:
         """
-            获取特定子节点的数据列表
-            :param level1: 子节点层级序号
-            :param partid: 父节点id
-            :return: 子节点列表
+        获取特定子节点的数据列表
+        :param level1: 子节点层级序号
+        :param partid: 父节点id
+        :return: 子节点列表
         """
         stmt = select(self.model).where(
             and_(

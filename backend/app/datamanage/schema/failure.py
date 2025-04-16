@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
+"""
 @Project ：fastapi-base-backend
 @File    ：base_param.py
 @IDE     ：PyCharm
 @Author  ：imbalich
 @Date    ：2024/12/25 14:56
-'''
+"""
+
 from typing import Optional
 
 from pydantic import ConfigDict, Field
@@ -66,6 +67,7 @@ class FailureSchemaBase(SchemaBase):
     fault_part_name_old: Optional[str] = Field(None, description='终判故障部位名称_未改')
     is_zero_distance: Optional[int] = Field(None, description='是否为零公里 1:是,0:否')
 
+
 class CreateFailureParam(FailureSchemaBase):
     pass
 
@@ -83,6 +85,7 @@ class GetFailureParam(SchemaBase):
     fault_mode: str = Field(..., description='终判故障模式')
     discovery_date: str = Field(..., description='发现时间（日期）')
     is_zero_distance: int = Field(..., description='是否零公里(是/否)')
+
 
 class GetFailureDetails(GetFailureParam):
     model_config = ConfigDict(from_attributes=True)
@@ -133,20 +136,5 @@ class GetFailureDetails(GetFailureParam):
 class GetFailureListResponse(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[GetFailureDetails] = Field(default_factory=list, description="查询结果列表")
-    total: int = Field(default=0, ge=0, description="总记录数")
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
+    items: list[GetFailureDetails] = Field(default_factory=list, description='查询结果列表')
+    total: int = Field(default=0, ge=0, description='总记录数')

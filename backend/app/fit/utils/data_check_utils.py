@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : data_check_utils.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/2/25 下午3:06
-'''
+"""
+
 from datetime import date
 
 from backend.app.datamanage.crud.crud_despatch import despatch_dao
@@ -18,7 +19,6 @@ from backend.database.db import async_db_session
 
 
 class DataCheckUtils:
-
     @staticmethod
     async def check_model_in_product(model: str) -> bool:
         """

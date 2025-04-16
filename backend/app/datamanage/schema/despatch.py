@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：despatch.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2024/12/25 14:56 
-'''
+@Date    ：2024/12/25 14:56
+"""
+
 from datetime import date
 from typing import Optional
 
@@ -60,5 +61,5 @@ class GetDespatchDetails(GetDespatchParam):
 class GetDespatchListResponse(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[GetDespatchDetails] = Field(default_factory=list, description="查询结果列表")
-    total: int = Field(default=0, ge=0, description="总记录数")
+    items: list[GetDespatchDetails] = Field(default_factory=list, description='查询结果列表')
+    total: int = Field(default=0, ge=0, description='总记录数')

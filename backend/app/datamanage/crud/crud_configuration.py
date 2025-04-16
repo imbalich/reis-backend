@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：crud_configuration.py.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/3/24 14:13 
-'''
-from typing import Sequence, Any
+@Date    ：2025/3/24 14:13
+"""
 
-from sqlalchemy import Select, select, distinct, desc, and_
+from typing import Any, Sequence
+
+from sqlalchemy import distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -26,7 +27,7 @@ class CRUDConfiguration(CRUDPlus[Configuration]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f"Column {column_name} does not exist in model {self.model.__name__}")
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
         # 构建查询
         column = getattr(self.model, column_name)
@@ -37,9 +38,8 @@ class CRUDConfiguration(CRUDPlus[Configuration]):
         # 返回结果
         return result.scalars().all()
 
-    ## 根据产品型号获取配置列表
+    # 根据产品型号获取配置列表
     async def get_by_model_and_part(self, db: AsyncSession, model: str, part: str) -> Sequence[Configuration]:
-
         stmt = select(self.model).order_by(self.model.product_serial_no)
         where_list = []
         where_list.append(self.model.extra_material_code == part)

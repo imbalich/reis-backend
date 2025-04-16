@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：tag_process_service.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/1/2 16:53 
-'''
+@Date    ：2025/1/2 16:53
+"""
+
 from abc import ABC, abstractmethod
 from datetime import date
 from itertools import groupby
@@ -25,7 +26,7 @@ class TagProcessService(ABC):
         处理数据的方法。
         应在子类中实现。
         """
-        raise NotImplementedError("Subclasses must implement this method")
+        raise NotImplementedError('Subclasses must implement this method')
 
     @abstractmethod
     async def process_despatch_data(self, despatch_data: list[Despatch], input_date: date) -> list[DespatchParam]:
@@ -47,9 +48,9 @@ class TagProcessService(ABC):
                     processed_data.append(validated_despatch)
             except ValidationError as e:
                 # 处理验证错误
-                error_msg = f"数据验证失败 (ID: {getattr(despatch, 'id', 'Unknown')}): {str(e)}"
+                error_msg = f'数据验证失败 (ID: {getattr(despatch, "id", "Unknown")}): {str(e)}'
                 # 将错误信息和原始数据添加到错误列表中
-                error_data.append({"original_data": despatch, "error_message": error_msg})
+                error_data.append({'original_data': despatch, 'error_message': error_msg})
         # 发运数据取时间 LIFE_CYCLE_TIME 最近的那一条
         # 降序排序是为了确保最晚的日期在分组的第一个位置
         sorted_data = sorted(processed_data, key=lambda x: x.life_cycle_time, reverse=True)
@@ -76,18 +77,21 @@ class TagProcessService(ABC):
             try:
                 # 使用 FailureParam 模型来验证和转换数据
                 processed_failure = FailureParam.model_validate(failure)
-                if processed_failure.discovery_date <= input_date and processed_failure.manufacturing_date <= input_date:
+                if (
+                    processed_failure.discovery_date <= input_date and processed_failure.manufacturing_date <= input_date
+                ):
                     # 将验证后的 FailureParam 模型实例添加到处理列表中
                     processed_data.append(processed_failure)
             except ValidationError as e:
                 # 处理验证错误
-                error_msg = f"数据验证失败 (ID: {getattr(failure, 'report_id', 'Unknown')}): {str(e)}"
+                error_msg = f'数据验证失败 (ID: {getattr(failure, "report_id", "Unknown")}): {str(e)}'
                 # 将错误信息和原始数据添加到错误列表中
-                error_data.append({"original_data": failure, "error_message": error_msg})
+                error_data.append({'original_data': failure, 'error_message': error_msg})
 
         # 过滤掉为空的故障数据
-        filtered_failure_data = [failure for failure in processed_data if
-                                 failure.discovery_date != '' and failure.manufacturing_date != '']
+        filtered_failure_data = [
+            failure for failure in processed_data if failure.discovery_date != '' and failure.manufacturing_date != ''
+        ]
         # 按故障数据中的时间属性升序排序
         sorted_failure_data = sorted(filtered_failure_data, key=lambda x: x.discovery_date, reverse=False)
 

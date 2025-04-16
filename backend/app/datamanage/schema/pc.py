@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：pc.py.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/3/27 15:44 
-'''
-from datetime import date, datetime
+@Date    ：2025/3/27 15:44
+"""
+
+from datetime import date
 from typing import Optional
 
 from pydantic import ConfigDict, Field
@@ -91,5 +92,5 @@ class GetPCDetails(GetPCParam):
 class GetPCListResponse(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[GetPCDetails] = Field(default_factory=list, description="查询结果列表")
-    total: int = Field(default=0, ge=0, description="总记录数")
+    items: list[GetPCDetails] = Field(default_factory=list, description='查询结果列表')
+    total: int = Field(default=0, ge=0, description='总记录数')

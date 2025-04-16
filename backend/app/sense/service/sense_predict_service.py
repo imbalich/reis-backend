@@ -1,18 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：sense_predict_service.py.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/4/1 16:39 
-'''
-from typing import Any
+@Date    ：2025/4/1 16:39
+"""
 
-from backend.app.sense.service.process_service import process_service
 from backend.database.db import async_db_session
 
-'''
+"""
 检验
 故障数据是否是二分类变量
 tags = await ProcessService.process(model, part)
@@ -40,14 +38,14 @@ SHAP分析，类别分析，整体分析
 输出每个类别和整体下的重要度排序
 
 逻辑回归和交叉验证单独写一个公共函数，供三种方法同时使用，输入训练集和预测集（
-'''
+"""
 
 
 class SensePredictService:
-
     @staticmethod
     async def sense_predict(model: str, part: str):
-        async with async_db_session() as db:
+        async with async_db_session():
             pass
+
 
 sense_predict_service: SensePredictService = SensePredictService()

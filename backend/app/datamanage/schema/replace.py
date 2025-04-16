@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：replace.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/1/20 09:39 
-'''
+@Date    ：2025/1/20 09:39
+"""
+
 from typing import Optional
 
-from pydantic import Field, ConfigDict
+from pydantic import ConfigDict, Field
 
 from backend.common.schema import SchemaBase
 

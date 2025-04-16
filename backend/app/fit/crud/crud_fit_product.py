@@ -1,31 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : crud_fit_product.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/3/3 下午5:12
-'''
+"""
+
 from datetime import date
 from typing import Sequence
 
-from sqlalchemy import select, desc, and_, case, func, literal, asc
+from sqlalchemy import and_, asc, case, desc, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.fit.model.fit_product import FitProduct
-from backend.app.fit.schema.fit_param import FitMethodType, FitCheckType
+from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 
 
 class CRUDFitProduct(CRUDPlus[FitProduct]):
-
     async def get_last(
-            self,
-            db: AsyncSession,
-            model: str,
-            input_date: date = None,
-            method: FitMethodType = FitMethodType.MLE
+        self, db: AsyncSession, model: str, input_date: date = None, method: FitMethodType = FitMethodType.MLE
     ) -> FitProduct | None:
         """
         获取单条型号最后的一条分布信息
@@ -61,13 +57,13 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         await self.create_models(db, objs)
 
     async def get_by_model(
-            self,
-            db: AsyncSession,
-            model: str,
-            input_date: date = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        self,
+        db: AsyncSession,
+        model: str,
+        input_date: date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ) -> Sequence[FitProduct]:
         """
         根据型号查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -89,11 +85,7 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         )
 
         # 基本查询条件
-        base_conditions = [
-            self.model.model == model,
-            self.model.method == method,
-            self.model.source == source
-        ]
+        base_conditions = [self.model.model == model, self.model.method == method, self.model.source == source]
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:
@@ -119,14 +111,14 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         return result.scalars().all()
 
     async def get_by_model_and_distribution(
-            self,
-            db: AsyncSession,
-            model: str,
-            distribution: str,
-            input_date: date = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        self,
+        db: AsyncSession,
+        model: str,
+        distribution: str,
+        input_date: date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ) -> FitProduct:
         """
         根据型号和分布查询拟合信息:查询最新的拟合信息,只选取一个
@@ -153,7 +145,7 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
             self.model.model == model,
             self.model.distribution == distribution,
             self.model.method == method,
-            self.model.source == source
+            self.model.source == source,
         ]
 
         # 如果提供了 input_date，添加到查询条件中

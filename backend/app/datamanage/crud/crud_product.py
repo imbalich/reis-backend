@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：crud_product.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/1/14 14:24 
-'''
-from typing import Sequence, Any
+@Date    ：2025/1/14 14:24
+"""
 
-from sqlalchemy import select, distinct, Select, desc
+from typing import Any, Sequence
+
+from sqlalchemy import Select, desc, distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -17,7 +18,6 @@ from backend.app.datamanage.model import Product
 
 
 class CRUDProduct(CRUDPlus[Product]):
-
     async def get_list(self, model: str = None) -> Select:
         """
         获取数据列表
@@ -41,7 +41,7 @@ class CRUDProduct(CRUDPlus[Product]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f"Column {column_name} does not exist in model {self.model.__name__}")
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
         # 构建查询
         column = getattr(self.model, column_name)

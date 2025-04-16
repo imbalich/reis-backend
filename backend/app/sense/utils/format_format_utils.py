@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：format_format_utils.py.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/3/31 17:39 
-'''
+@Date    ：2025/3/31 17:39
+"""
 
 import re
-from typing import Any, Dict, List
+
+from typing import List
 
 
 def standard_data(s: str) -> str:
@@ -22,6 +23,7 @@ def standard_data(s: str) -> str:
     s = re.sub(r'[$\（].*?[$\）]', '', s)
     return s
 
+
 def split_rela_self_value(value: str) -> List[str]:
     """根据公共分隔符将rela_self_value拆分为多个部分"""
     if not value:
@@ -30,12 +32,14 @@ def split_rela_self_value(value: str) -> List[str]:
     parts = re.split(r'[,\s;，；/]+', value.strip())
     return [p.strip() for p in parts if p.strip()]
 
+
 def split_part_into_sub_values(part: str) -> List[str]:
     """使用“/”、“-”或空格进一步拆分为子值。"""
     if not part:
         return []
     sub_parts = re.split(r'[/\ ]+', part.strip())
     return [p.strip() for p in sub_parts if p.strip()]
+
 
 def convert_time_to_minutes(time_str: str) -> int:
     """将时间字符串“HH:MM”转换为总分钟数。."""
@@ -44,6 +48,7 @@ def convert_time_to_minutes(time_str: str) -> int:
         return hours * 60 + minutes
     except ValueError:
         return 0
+
 
 def process_sub_value(sub_val: str) -> str:
     """将子值处理为所需的格式."""

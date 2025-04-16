@@ -68,7 +68,7 @@ class ServerError(BaseExceptionMixin):
     code = StandardResponseCode.HTTP_500
 
     def __init__(
-            self, *, msg: str = 'Internal Server Error', data: Any = None, background: BackgroundTask | None = None
+        self, *, msg: str = 'Internal Server Error', data: Any = None, background: BackgroundTask | None = None
     ):
         super().__init__(msg=msg, data=data, background=background)
 
@@ -104,6 +104,7 @@ class DataValidationError(BaseExceptionMixin):
     # 数据验证错误 不是利用pydantic自身的验证报错，而是自定义在何处使用
     code = StandardResponseCode.HTTP_422
 
-    def __init__(self, *, msg: str = 'Data Validation Error', data: Any = None,
-                 background: BackgroundTask | None = None):
+    def __init__(
+        self, *, msg: str = 'Data Validation Error', data: Any = None, background: BackgroundTask | None = None
+    ):
         super().__init__(msg=msg, data=data, background=background)

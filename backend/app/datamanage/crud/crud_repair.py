@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：crud_repair.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/1/16 14:52 
-'''
+@Date    ：2025/1/16 14:52
+"""
+
 from typing import Any
 
-from sqlalchemy import Sequence, Select, select, desc, distinct
+from sqlalchemy import Select, Sequence, desc, distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -17,7 +18,6 @@ from backend.app.datamanage.model import Repair
 
 
 class CRUDRepair(CRUDPlus[Repair]):
-
     async def get_distinct_column_values(self, db: AsyncSession, column_name: str) -> Sequence[Any]:
         """
         获取指定列的所有唯一值
@@ -27,7 +27,7 @@ class CRUDRepair(CRUDPlus[Repair]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f"Column {column_name} does not exist in model {self.model.__name__}")
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
         # 构建查询
         column = getattr(self.model, column_name)
@@ -38,7 +38,7 @@ class CRUDRepair(CRUDPlus[Repair]):
         # 返回结果
         return result.scalars().all()
 
-    async def get_list(self,model: str = None,state_now: bool = None) -> Select:
+    async def get_list(self, model: str = None, state_now: bool = None) -> Select:
         """
         获取修程级别列表
         :param model: 产品型号
@@ -55,7 +55,7 @@ class CRUDRepair(CRUDPlus[Repair]):
             stmt = stmt.where(*where_list)
         return stmt
 
-    async def get_by_model(self,db: AsyncSession, model: str) -> Sequence[Repair]:
+    async def get_by_model(self, db: AsyncSession, model: str) -> Sequence[Repair]:
         """
         根据产品型号修程级别
         :param db: 数据库会话
@@ -72,4 +72,4 @@ class CRUDRepair(CRUDPlus[Repair]):
         return results.scalars().all()
 
 
-repair_dao : CRUDRepair = CRUDRepair(Repair)
+repair_dao: CRUDRepair = CRUDRepair(Repair)

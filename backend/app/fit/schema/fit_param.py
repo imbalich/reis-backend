@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : fit_param.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/2/28 下午3:49
-'''
+"""
+
 from datetime import date
 
 from pydantic import ConfigDict
@@ -17,18 +18,19 @@ from backend.common.schema import SchemaBase
 
 class FitMethodType(StrEnum):
     """拟合方法"""
-    MLE = "MLE"  # 极大似然估计
-    LS = "LS"  # 最小二乘估计
-    RRX = "RRX"  # x轴回归
-    RRY = "RRY"  # y轴回归
+
+    MLE = 'MLE'  # 极大似然估计
+    LS = 'LS'  # 最小二乘估计
+    RRX = 'RRX'  # x轴回归
+    RRY = 'RRY'  # y轴回归
 
 
 class FitCheckType(StrEnum):
     # 拟合优度检验方法
-    BIC = "BIC"
-    AICc = "AICc"
-    AD = "AD"
-    Log = "Log-likelihood"
+    BIC = 'BIC'
+    AICc = 'AICc'
+    AD = 'AD'
+    Log = 'Log-likelihood'
 
 
 class CreateFitProductInParam(SchemaBase):

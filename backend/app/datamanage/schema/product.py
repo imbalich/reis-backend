@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
+"""
 @Project ：fastapi-base-backend
 @File    ：product.py
 @IDE     ：PyCharm
 @Author  ：imbalich
 @Date    ：2025/1/16 14:56
-'''
+"""
+
 from datetime import date
 from typing import Optional
 
@@ -70,5 +71,5 @@ class GetProductDetails(GetProductParam):
 class GetProductListResponse(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[GetProductDetails] = Field(default_factory=list, description="查询结果列表")
-    total: int = Field(default=0, ge=0, description="总记录数")
+    items: list[GetProductDetails] = Field(default_factory=list, description='查询结果列表')
+    total: int = Field(default=0, ge=0, description='总记录数')

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：product_tag_process_service.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/1/16 17:09 
-'''
+@Date    ：2025/1/16 17:09
+"""
 
 from datetime import date
-from typing import Any, Union
+from typing import Any
 
 from backend.app.datamanage.model import Despatch, Failure, Product
 from backend.app.fit.schema.base_param import DespatchParam, FailureParam
@@ -18,9 +18,14 @@ from backend.app.fit.utils.time_utils import dateutils
 
 
 class ProductTagProcessService(TagProcessService):
-
-    async def process_data(self, despatch_data: list[Despatch], failure_data: list[Failure], product_data: Product,
-                           input_date: Union[str, date] = None, **kwargs: Any) -> list[list]:
+    async def process_data(
+            self,
+            despatch_data: list[Despatch],
+            failure_data: list[Failure],
+            product_data: Product,
+            input_date: str | date = None,
+            **kwargs: Any,
+    ) -> list[list]:
         """
         处理数据，包括发运数据和故障数据，并计算标签数据。
         :param despatch_data: 发运数据列表
@@ -74,15 +79,19 @@ class ProductTagProcessService(TagProcessService):
             cur = {  # 为当前 despatch 对象创建一个新的字典
                 'identifier': despatch.identifier,  # 添加 despatch 的标识符
                 'despatch_date': despatch.life_cycle_time,  # 添加 despatch 的生命周期时间
-                'fault_date_list': [despatch.life_cycle_time],  # 假设将生命周期时间作为故障列表的一部分（可能需要根据实际情况调整）
-                'fault_part_list': []  # 初始化一个空列表，用于存储故障部件（可能需要后续填充）
+                # 假设将生命周期时间作为故障列表的一部分（可能需要根据实际情况调整）
+                'fault_date_list': [
+                    despatch.life_cycle_time
+                ],
+                'fault_part_list': [],  # 初始化一个空列表，用于存储故障部件（可能需要后续填充）
             }
             item_dict[despatch.identifier] = cur  # 将当前 despatch 的字典添加到 item_dict 中，以 identifier 为键
         return item_dict  # 返回填充好的 item_dict
 
     @staticmethod
-    async def container_inspect(container: dict[str, dict[str, Any]], failure_data: list[FailureParam]
-                                ) -> dict[str, dict[str, Any]]:
+    async def container_inspect(
+            container: dict[str, dict[str, Any]], failure_data: list[FailureParam]
+    ) -> dict[str, dict[str, Any]]:
         """
         在 container 中检查故障数据，并更新 fault_list 和 fault_part_list。
         参数:
@@ -93,12 +102,12 @@ class ProductTagProcessService(TagProcessService):
         """
         for failure in failure_data:
             # 确保 product_number 是字符串类型
-            product_number = str(failure.product_number) if failure.product_number is not None else ""
+            product_number = str(failure.product_number) if failure.product_number is not None else ''
             if not product_number:  # 跳过空的产品编号
                 continue
             discovery_date = failure.discovery_date
             # 确保 fault_part_number 是有效值
-            failure_part = failure.fault_part_number if failure.fault_part_number not in [None, "", "无"] else "#"
+            failure_part = failure.fault_part_number if failure.fault_part_number not in [None, '', '无'] else '#'
 
             if product_number in container:
                 # 向 fault_list 中插入发现时间
@@ -108,27 +117,34 @@ class ProductTagProcessService(TagProcessService):
             else:
                 # 如果 container 中不存在 product_number
                 # 添加一个新的字典,fault_list中插入[发运时间,发现时间],fault_part_list插入故障部件
-                # 加一个判断，如果发现时间大于发运时间，不插入,新表利用production_date(转换后的manufacturing_date)字段来判断
+                # 加一个判断，如果发现时间大于发运时间，不插入
+                # 新表利用production_date(转换后的manufacturing_date)字段来判断
                 if discovery_date < failure.manufacturing_date:
                     continue
                 cur = {
                     'identifier': product_number,
                     'despatch_date': failure.manufacturing_date,
-                    'fault_date_list': [failure.manufacturing_date, discovery_date],  # 初始化 fault_list，插入[发运时间,发现时间]
-                    'fault_part_list': [failure_part]  # 初始化 fault_part_list，插入故障部件
+                    # 初始化 fault_list，插入[发运时间,发现时间]
+                    'fault_date_list': [
+                        failure.manufacturing_date,
+                        discovery_date,
+                    ],
+                    'fault_part_list': [failure_part],  # 初始化 fault_part_list，插入故障部件
                 }
                 # 将新字典添加到 container 中
                 container[product_number] = cur
         return container
 
     @staticmethod
-    async def tag_create(container: dict[str, dict[str, Any]], product_data: Product, input_date: date) -> list[
-        list[Any]]:
+    async def tag_create(
+            container: dict[str, dict[str, Any]], product_data: Product, input_date: date
+    ) -> list[list[Any]]:
         """
         根据给定的容器（包含产品编号和故障日期列表）和产品数据，为每个故障日期对创建标签列表。
 
         Args:
-            container (Dict[str, Dict[str, Any]]): 包含产品编号（键）和对应数据的字典。每个对应数据也是一个字典，包含'fault_date_list'键，其值为一个日期列表。
+            container (Dict[str, Dict[str, Any]]): 包含产品编号（键）和对应数据的字典。
+            每个对应数据也是一个字典，包含'fault_date_list'键，其值为一个日期列表。
             product_data (Product): 产品数据对象，包含产品的相关信息（如年工作日数、平均工作时间等）。
             input_date (date): 当前的输入日期，用于添加到'fault_date_list'中作为最后一个故障日期。
 

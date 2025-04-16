@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : distribute_service.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/3/28 10:54
-'''
+"""
+
 import math
+
 from datetime import date
-from typing import Optional, Callable, Union
+from typing import Callable, Optional
 
 from backend.app.datamanage.crud.crud_ebom import ebom_dao
 from backend.app.datamanage.crud.crud_product import product_dao
@@ -17,13 +19,16 @@ from backend.app.fit.crud.crud_fit_part import fit_part_dao
 from backend.app.fit.crud.crud_fit_product import fit_product_dao
 from backend.app.fit.model import FitProduct
 from backend.app.fit.model.fit_part import FitPart
-from backend.app.fit.schema.base_param import ProductParam, EbomParam
-from backend.app.fit.schema.fit_param import FitMethodType, FitCheckType
+from backend.app.fit.schema.base_param import EbomParam, ProductParam
+from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 from backend.app.fit.service.part_fit_service import part_fit_service
 from backend.app.fit.service.part_strategy_service import part_strategy_service
 from backend.app.fit.service.product_strategy_service import product_strategy_service
-from backend.app.fit.utils.convert_model import convert_to_pydantic_model, convert_to_pydantic_models, \
-    convert_to_total_quantity
+from backend.app.fit.utils.convert_model import (
+    convert_to_pydantic_model,
+    convert_to_pydantic_models,
+    convert_to_total_quantity,
+)
 from backend.app.fit.utils.time_utils import dateutils
 from backend.app.predict.conf import predict_settings
 from backend.app.predict.schema.distribute_param import DistributeType, DistributionParams
@@ -32,13 +37,12 @@ from backend.database.db import async_db_session
 
 
 class DistributeService:
-
     @staticmethod
     async def get_product_distribution_params(
-            model: str,
-            distribution: Optional[str] = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC
+        model: str,
+        distribution: Optional[str] = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
     ) -> FitProduct | None:
         """
         根据名称和参数自动获取分布
@@ -64,11 +68,11 @@ class DistributeService:
 
     @staticmethod
     async def get_part_distribution_params(
-            model: str,
-            part: str,
-            distribution: Optional[str] = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC
+        model: str,
+        part: str,
+        distribution: Optional[str] = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
     ) -> FitPart | None:
         """
         根据名称和参数自动获取分布
@@ -99,7 +103,6 @@ class DistributeService:
 
     @staticmethod
     async def get_distribution(params: DistributionParams):
-
         distribute_type = DistributeType(params.distribution)
         distribution_class = predict_settings.DISTRIBUTION_FUNCTIONS.get(distribute_type)
         if not distribution_class:
@@ -121,17 +124,17 @@ class DistributeService:
 
     @staticmethod
     async def get_product_distribution(
-            model: str,
-            distribution_type: DistributeType = DistributeType.Weibull_2P,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
+        model: str,
+        distribution_type: DistributeType = DistributeType.Weibull_2P,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
     ):
-
         """
         产品级别分布对象:单个计算的时候允许选择分布
         """
         distribution_params = await DistributeService.get_product_distribution_params(
-            model, distribution_type, method, check)
+            model, distribution_type, method, check
+        )
         if distribution_params:
             # 转换pydantic模型
             distribution_params = convert_to_pydantic_model(distribution_params, DistributionParams)
@@ -141,17 +144,18 @@ class DistributeService:
 
     @staticmethod
     async def get_part_distribution(
-            model: str,
-            part: str,
-            distribution_type: DistributeType = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
+        model: str,
+        part: str,
+        distribution_type: DistributeType = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
     ):
         """
         零部件级别分布对象:单个计算的时候允许选择分布
         """
         distribution_params = await DistributeService.get_part_distribution_params(
-            model, part, distribution_type, method, check)
+            model, part, distribution_type, method, check
+        )
         if distribution_params:
             # 转换pydantic模型
             distribution_params = convert_to_pydantic_model(distribution_params, DistributionParams)
@@ -161,11 +165,7 @@ class DistributeService:
 
     @staticmethod
     async def get_spare_num(
-            tags: list[list],
-            start_date: date,
-            end_date: date,
-            product_data: ProductParam,
-            distribution
+        tags: list[list], start_date: date, end_date: date, product_data: ProductParam, distribution
     ):
         # 备件量计算方法
         result = 0
@@ -173,29 +173,27 @@ class DistributeService:
         for tag in tags:
             # 遍历标签，给每个产品编号找到发运日期
             if tag[0] not in product_list:
-                product_list[tag[0]] = {
-                    "despetch": tag[-5]
-                }
+                product_list[tag[0]] = {'despetch': tag[-5]}
             else:
-                if tag[-5] < product_list[tag[0]]["despetch"]:
-                    product_list[tag[0]]["despetch"] = tag[-5]
+                if tag[-5] < product_list[tag[0]]['despetch']:
+                    product_list[tag[0]]['despetch'] = tag[-5]
         for key, product in product_list.items():
-            product["xvals"] = [
-                (start_date - product["despetch"]).days * product_data.year_days * product_data.avg_worktime / 365,
-                (end_date - product["despetch"]).days * product_data.year_days * product_data.avg_worktime / 365
+            product['xvals'] = [
+                (start_date - product['despetch']).days * product_data.year_days * product_data.avg_worktime / 365,
+                (end_date - product['despetch']).days * product_data.year_days * product_data.avg_worktime / 365,
             ]
-            product["yvals"] = distribution.CDF(xvals=product["xvals"], show_plot=False)
-            product["predict"] = product["yvals"][1] - product["yvals"][0]
-            result += product["predict"]
+            product['yvals'] = distribution.CDF(xvals=product['xvals'], show_plot=False)
+            product['predict'] = product['yvals'][1] - product['yvals'][0]
+            result += product['predict']
         return math.ceil(result)
 
     @staticmethod
     async def get_spare_num_by_fit(
-            tags: list[list],
-            start_date: date,
-            end_date: date,
-            product_data: ProductParam,
-            method: FitMethodType,
+        tags: list[list],
+        start_date: date,
+        end_date: date,
+        product_data: ProductParam,
+        method: FitMethodType,
     ):
         """
         重新拟合出结果,只能选取最优分布
@@ -206,32 +204,30 @@ class DistributeService:
         for tag in tags:
             # 遍历标签，给每个产品编号找到发运日期
             if tag[0] not in product_list:
-                product_list[tag[0]] = {
-                    "despetch": tag[-5]
-                }
+                product_list[tag[0]] = {'despetch': tag[-5]}
             else:
-                if tag[-5] < product_list[tag[0]]["despetch"]:
-                    product_list[tag[0]]["despetch"] = tag[-5]
+                if tag[-5] < product_list[tag[0]]['despetch']:
+                    product_list[tag[0]]['despetch'] = tag[-5]
         distribution = await part_fit_service.tag_fit(tags, method)
         for key, product in product_list.items():
-            product["xvals"] = [
-                (start_date - product["despetch"]).days * product_data.year_days * product_data.avg_worktime / 365,
-                (end_date - product["despetch"]).days * product_data.year_days * product_data.avg_worktime / 365
+            product['xvals'] = [
+                (start_date - product['despetch']).days * product_data.year_days * product_data.avg_worktime / 365,
+                (end_date - product['despetch']).days * product_data.year_days * product_data.avg_worktime / 365,
             ]
-            product["yvals"] = distribution.best_distribution.CDF(xvals=product["xvals"], show_plot=False)
-            product["predict"] = product["yvals"][1] - product["yvals"][0]
-            result += product["predict"]
+            product['yvals'] = distribution.best_distribution.CDF(xvals=product['xvals'], show_plot=False)
+            product['predict'] = product['yvals'][1] - product['yvals'][0]
+            result += product['predict']
         return math.ceil(result)
 
     @staticmethod
     async def get_product_spare_num(
-            model: str,
-            distribution_type: DistributeType = DistributeType.Weibull_2P,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            input_date: Union[str, date] = None,
-            start_date: Union[str, date] = None,
-            end_date: Union[str, date] = None
+        model: str,
+        distribution_type: DistributeType = DistributeType.Weibull_2P,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        input_date: str | date = None,
+        start_date: str | date = None,
+        end_date: str | date = None,
     ):
         """
         获取产品级备件量
@@ -252,14 +248,14 @@ class DistributeService:
 
     @staticmethod
     async def get_part_spare_num(
-            model: str,
-            part: str,
-            distribution_type: DistributeType = DistributeType.Weibull_2P,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            input_date: Union[str, date] = None,
-            start_date: Union[str, date] = None,
-            end_date: Union[str, date] = None
+        model: str,
+        part: str,
+        distribution_type: DistributeType = DistributeType.Weibull_2P,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        input_date: str | date = None,
+        start_date: str | date = None,
+        end_date: str | date = None,
     ):
         """
         获取零部件级备件量
@@ -289,13 +285,13 @@ class DistributeService:
 
     @staticmethod
     async def get_all_parts_spare_num_by_model(
-            model: str,
-            distribution_type: DistributeType = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            input_date: Union[str, date] = None,
-            start_date: Union[str, date] = None,
-            end_date: Union[str, date] = None
+        model: str,
+        distribution_type: DistributeType = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        input_date: str | date = None,
+        start_date: str | date = None,
+        end_date: str | date = None,
     ):
         # 1. 确定哪些零部件有分布
         async with async_db_session() as db:

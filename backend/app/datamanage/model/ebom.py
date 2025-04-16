@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：ebom.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2024/12/25 14:08 
-'''
+@Date    ：2024/12/25 14:08
+"""
 
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -97,7 +97,10 @@ class Ebom(DataClassBase):
     y8_materialtype: Mapped[str] = mapped_column(String(200), nullable=True, comment='材料类型')
     y8_mat_provis: Mapped[str] = mapped_column(String(200), nullable=True, comment='外协自买料')
     y8_cllx: Mapped[str] = mapped_column(String(100), nullable=True, comment='材料类型')
-    y8_gyfg: Mapped[str] = mapped_column(String(200), nullable=True, )
+    y8_gyfg: Mapped[str] = mapped_column(
+        String(200),
+        nullable=True,
+    )
     y8_sjjx2: Mapped[str] = mapped_column(String(100), nullable=True, comment='设计基线图号版本号')
     y8_xlcc: Mapped[str] = mapped_column(String(200), nullable=True, comment='下料尺寸')
     y8_sjjx1: Mapped[str] = mapped_column(String(100), nullable=True, comment='设计基线技术协议')

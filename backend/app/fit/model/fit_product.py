@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : fit_product.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/3/3 上午11:35
-'''
+"""
+
 from datetime import date
 
-from sqlalchemy import String, Date, Integer
+from sqlalchemy import Date, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import DataClassBase, id_key

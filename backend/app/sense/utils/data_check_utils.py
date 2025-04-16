@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：data_check_utils.py.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/3/28 08:53 
-'''
-import re
-from typing import List
+@Date    ：2025/3/28 08:53
+"""
 
-from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.datamanage.crud.crud_configuration import configuration_dao
+from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.datamanage.crud.crud_pc import pc_dao
 from backend.database.db import async_db_session
-class DataCheckUtils:
 
+
+class DataCheckUtils:
     @staticmethod
-    async def check_model_and_part_in_product(model: str, part:str) -> bool:
+    async def check_model_and_part_in_product(model: str, part: str) -> bool:
         """
         检查型号和零部件是否在Failure表中,检查下顺序 1
         :param model: 产品型号

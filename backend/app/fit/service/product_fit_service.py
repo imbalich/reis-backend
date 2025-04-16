@@ -1,32 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : product_fit_service.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/2/28 下午3:42
-'''
+"""
+
 from datetime import date, datetime
-from typing import Any, Union
+from typing import Any
 
 from reliability.Fitters import Fit_Everything
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.fit.crud.crud_fit_product import fit_product_dao
-from backend.app.fit.schema.fit_param import FitMethodType, FitCheckType, CreateFitProductInParam
+from backend.app.fit.schema.fit_param import CreateFitProductInParam, FitCheckType, FitMethodType
 from backend.app.fit.service.product_strategy_service import product_strategy_service
-from backend.app.fit.utils.convert_model import convert_to_product_distribution_params, convert_method_to_str
+from backend.app.fit.utils.convert_model import convert_method_to_str, convert_to_product_distribution_params
 from backend.app.fit.utils.time_utils import dateutils
 from backend.database.db import async_db_session
 
 
 class ProductFitService:
-
     @staticmethod
     async def tag_fit(
-            tags: dict[str, Any],
-            method: FitMethodType | str | None = FitMethodType.MLE,
+        tags: dict[str, Any],
+        method: FitMethodType | str | None = FitMethodType.MLE,
     ) -> Fit_Everything:
         """
         单个产品拟合
@@ -61,9 +61,9 @@ class ProductFitService:
 
     @staticmethod
     async def create_old(
-            model: str,
-            input_date: Union[str, date] = None,
-            method: FitMethodType = FitMethodType.MLE,
+        model: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
     ) -> None:
         """
         单个产品拟合：
@@ -86,8 +86,9 @@ class ProductFitService:
                 tags = await product_strategy_service.model_tag_process(model, input_date)
                 fit = await ProductFitService.tag_fit(tags, method)
                 # 1.将fit.result转换为数据模型
-                distribution_params = convert_to_product_distribution_params(fit.results, model, input_date, method,
-                                                                             not is_system_default)
+                distribution_params = convert_to_product_distribution_params(
+                    fit.results, model, input_date, method, not is_system_default
+                )
                 # 2.将数据模型保存到数据库
                 await fit_product_dao.creates(db, distribution_params)
                 return
@@ -96,8 +97,9 @@ class ProductFitService:
             tags = await product_strategy_service.model_tag_process(model, input_date)
             fit = await ProductFitService.tag_fit(tags, method)
             # 1.将fit.result转换为数据模型
-            distribution_params = convert_to_product_distribution_params(fit.results, model, input_date, method,
-                                                                         not is_system_default)
+            distribution_params = convert_to_product_distribution_params(
+                fit.results, model, input_date, method, not is_system_default
+            )
             # 2.将数据模型保存到数据库
             await fit_product_dao.creates(db, distribution_params)
             return
@@ -128,23 +130,23 @@ class ProductFitService:
         return False
 
     @staticmethod
-    async def _perform_and_save_fit(model: str, input_date: date, method: FitMethodType,
-                                    is_user_input: bool) -> None:
+    async def _perform_and_save_fit(model: str, input_date: date, method: FitMethodType, is_user_input: bool) -> None:
         async with async_db_session() as db:
             async with db.begin():
                 tags = await product_strategy_service.model_tag_process(model, input_date)
                 fit = await ProductFitService.tag_fit(tags, method)
-                distribution_params = convert_to_product_distribution_params(fit.results, model, input_date, method,
-                                                                             is_user_input)
+                distribution_params = convert_to_product_distribution_params(
+                    fit.results, model, input_date, method, is_user_input
+                )
                 await fit_product_dao.creates(db, distribution_params)
 
     @staticmethod
     async def get_by_model(
-            model: str,
-            input_date: Union[str, date] = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        model: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -162,11 +164,11 @@ class ProductFitService:
 
     @staticmethod
     async def get_best_by_model(
-            model: str,
-            input_date: Union[str, date] = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        model: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,查询最优的拟合信息

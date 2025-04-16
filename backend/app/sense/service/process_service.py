@@ -1,24 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：process_service.py.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/3/27 14:48 
-'''
+@Date    ：2025/3/27 14:48
+"""
+
 import re
+
 from itertools import groupby
-from typing import List, Dict, Any
-from collections import defaultdict
+from typing import Any, Dict, List
 
 from backend.app.datamanage.crud.crud_configuration import configuration_dao
 from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.datamanage.crud.crud_pc import pc_dao
-from backend.app.sense.utils.data_check_utils import datacheckutils
-from backend.app.sense.utils.format_format_utils import split_rela_self_value, split_part_into_sub_values, \
-    process_sub_value, standard_data
+from backend.app.sense.utils.format_format_utils import (
+    process_sub_value,
+    split_part_into_sub_values,
+    split_rela_self_value,
+    standard_data,
+)
 from backend.database.db import async_db_session
+
 
 class ProcessService:
     @staticmethod
@@ -42,16 +47,16 @@ class ProcessService:
                         pc_item = {
                             # "product_no": config.product_no,
                             # "process_name": config.process_name,
-                            "extra_source_code": config.extra_source_code,
-                            "check_tools_sign": pc.check_tools_sign,
-                            "rela_self_value": pc.rela_self_value,
-                            "self_create_by": pc.self_create_by,
+                            'extra_source_code': config.extra_source_code,
+                            'check_tools_sign': pc.check_tools_sign,
+                            'rela_self_value': pc.rela_self_value,
+                            'self_create_by': pc.self_create_by,
                             # "check_project": pc.check_project,
                             # "check_bezier": pc.check_bezier,
                             # "check_tools": pc.check_tools,
                             # "repair_level": pc.repair_level,
                             # "manufaucture_date": pc.manufaucture_date,
-                            "is_figure": 1 if config.product_no in figure_product_numbers else 0,
+                            'is_figure': 1 if config.product_no in figure_product_numbers else 0,
                         }
                         # print(pc_item)
                         processed_pc_item = ProcessService.process_pc_item(pc_item)
@@ -62,15 +67,10 @@ class ProcessService:
                 #     freq_encoded_data = ProcessService._apply_frequency_encoding(processed_data)
                 #     formatted_data = ProcessService._format_to_table(freq_encoded_data)
 
-                return {
-                    "model": model,
-                    "part": part,
-                    "count": len(processed_data),
-                    "data": processed_data
-                }
+                return {'model': model, 'part': part, 'count': len(processed_data), 'data': processed_data}
 
             except Exception as e:
-                return {"error": f"处理失败: {str(e)}"}
+                return {'error': f'处理失败: {str(e)}'}
 
     @staticmethod
     async def _get_base_data(db, model, part):
@@ -92,20 +92,14 @@ class ProcessService:
             return {}
         # 批量获取所有相关PC记录
         all_pcs = await pc_dao.get_batch_by_products(
-            db,
-            model=model,
-            process_names=process_names,
-            product_nos=product_nos
+            db, model=model, process_names=process_names, product_nos=product_nos
         )
 
         # 使用内存分组建立快速索引
         sorted_pcs = sorted(all_pcs, key=lambda x: (x.product_serial_no, x.process_name))
         return {
             (key[0], key[1]): list(group)
-            for key, group in groupby(
-                sorted_pcs,
-                key=lambda x: (x.product_serial_no, x.process_name)
-            )
+            for key, group in groupby(sorted_pcs, key=lambda x: (x.product_serial_no, x.process_name))
         }
 
     @staticmethod
@@ -149,7 +143,7 @@ class ProcessService:
 
                 # 生成当前条目
                 item = base_data.copy()
-                item['check_tools_sign'] = f"{tool}-{tool_counters[tool]}"
+                item['check_tools_sign'] = f'{tool}-{tool_counters[tool]}'
                 item['rela_self_value'] = num_val
                 processed_items.append(item)
         # print(processed_items)
@@ -212,5 +206,6 @@ class ProcessService:
     #         table_data.append(row)
     #
     #     return table_data
+
 
 process_service: ProcessService = ProcessService()

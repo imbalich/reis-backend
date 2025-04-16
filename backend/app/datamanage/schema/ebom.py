@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
+"""
 @Project ：fastapi-base-backend
 @File    ：ebom.py
 @IDE     ：PyCharm
 @Author  ：imbalich
 @Date    ：2025/1/13 14:56
-'''
+"""
+
 from typing import Optional
 
 from pydantic import ConfigDict, Field
@@ -62,5 +63,5 @@ class GetEbomDetails(GetEbomParam):
 class GetEbomListResponse(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[GetEbomDetails] = Field(default_factory=list, description="查询结果列表")
-    total: int = Field(default=0, ge=0, description="总记录数")
+    items: list[GetEbomDetails] = Field(default_factory=list, description='查询结果列表')
+    total: int = Field(default=0, ge=0, description='总记录数')

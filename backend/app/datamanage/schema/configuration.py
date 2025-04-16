@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：configuration.py.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/3/27 15:37 
-'''
+@Date    ：2025/3/27 15:37
+"""
+
 from datetime import date, datetime
 from typing import Optional
 
@@ -93,5 +94,5 @@ class GetConfigurationDetails(GetConfigurationParam):
 class GetConfigurationListResponse(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[GetConfigurationDetails] = Field(default_factory=list, description="查询结果列表")
-    total: int = Field(default=0, ge=0, description="总记录数")
+    items: list[GetConfigurationDetails] = Field(default_factory=list, description='查询结果列表')
+    total: int = Field(default=0, ge=0, description='总记录数')

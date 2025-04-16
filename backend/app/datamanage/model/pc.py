@@ -1,23 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：pc.py.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/3/24 10:35 
-'''
+@Date    ：2025/3/24 10:35
+"""
+
 from datetime import date
 
-from sqlalchemy import String, Date
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Date, String
 from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import DataClassBase, id_key
 
 
 class PC(DataClassBase):
-    __tablename__ = "dm_pc"
+    __tablename__ = 'dm_pc'
 
     id: Mapped[id_key] = mapped_column(init=False)
     prod_model: Mapped[str] = mapped_column(String(255), nullable=True, comment='产品型号')

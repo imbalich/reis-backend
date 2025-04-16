@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
+"""
 @Project ：fastapi-base-backend
 @File    ：crud_failure.py
 @IDE     ：PyCharm
 @Author  ：imbalich
 @Date    ：2024/12/26 16:51
-'''
-from typing import Sequence, Any, List, Tuple
+"""
 
-from sqlalchemy import Select, select, distinct, desc, and_, Row
+from typing import Any, List, Sequence
+
+from sqlalchemy import Row, Select, desc, distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -26,7 +27,7 @@ class CRUDFailure(CRUDPlus[Failure]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f"Column {column_name} does not exist in model {self.model.__name__}")
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
         # 构建查询
         column = getattr(self.model, column_name)
@@ -37,8 +38,9 @@ class CRUDFailure(CRUDPlus[Failure]):
         # 返回结果
         return result.scalars().all()
 
-    async def get_distinct_column_values_by_product_model(self, db: AsyncSession, product_model: str,
-                                                          column_name: str) -> Sequence[Any]:
+    async def get_distinct_column_values_by_product_model(
+        self, db: AsyncSession, product_model: str, column_name: str
+    ) -> Sequence[Any]:
         """
         获取指定列的所有唯一值，根据产品型号
         :param db: 数据库会话
@@ -48,14 +50,12 @@ class CRUDFailure(CRUDPlus[Failure]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f"Column {column_name} does not exist in model {self.model.__name__}")
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
         # 构建查询
         column = getattr(self.model, column_name)
         # 先查产品型号==column下的所有product_model，然后针对product_model去重
-        stmt = (select(distinct(column))
-                .where(self.model.product_model == product_model)
-                .order_by(column))
+        stmt = select(distinct(column)).where(self.model.product_model == product_model).order_by(column)
         # 执行查询
         result = await db.execute(stmt)
 
@@ -63,10 +63,7 @@ class CRUDFailure(CRUDPlus[Failure]):
         return result.scalars().all()
 
     async def get_distinct_columns_values_by_product_model(
-            self,
-            db: AsyncSession,
-            product_model: str,
-            column_names: List[str]
+        self, db: AsyncSession, product_model: str, column_names: List[str]
     ) -> Sequence[Row[tuple[Any, ...]]]:
         """
         获取指定两列的所有唯一值，根据产品型号
@@ -77,28 +74,35 @@ class CRUDFailure(CRUDPlus[Failure]):
         """
         for col in column_names:
             if not hasattr(self.model, col):
-                raise ValueError(f"Column {col} does not exist in model {self.model.__name__}")
+                raise ValueError(f'Column {col} does not exist in model {self.model.__name__}')
         columns = [getattr(self.model, col) for col in column_names]
         # 构建查询，按列排序
         stmt = select(*columns).distinct().where(self.model.product_model == product_model).order_by(*columns)
         result = await db.execute(stmt)
         return result.all()
 
-    async def get_list(self, product_model: str = None, fault_location: str = None, product_lifetime_stage: str = None,
-                       product_number: str = None,
-                       fault_mode: str = None, time_range: list[str] = None, is_zero_distance: int = 1,
-                       fault_material_code: str = None) -> Select:
+    async def get_list(
+        self,
+        product_model: str = None,
+        fault_location: str = None,
+        product_lifetime_stage: str = None,
+        product_number: str = None,
+        fault_mode: str = None,
+        time_range: list[str] = None,
+        is_zero_distance: int = 1,
+        fault_material_code: str = None,
+    ) -> Select:
         """
-            获取数据列表
-            :param product_model:
-            :param fault_location:
-            :param product_lifetime_stage:
-            :param product_number:
-            :param fault_mode:
-            :param time_range:
-            :param is_zero_distance:
-            :param fault_material_code:
-            :return: 查询语句
+        获取数据列表
+        :param product_model:
+        :param fault_location:
+        :param product_lifetime_stage:
+        :param product_number:
+        :param fault_mode:
+        :param time_range:
+        :param is_zero_distance:
+        :param fault_material_code:
+        :return: 查询语句
         """
         stmt = select(self.model).order_by(desc(self.model.product_model))
         where_list = []
@@ -176,9 +180,7 @@ class CRUDFailure(CRUDPlus[Failure]):
         return result.scalars().all()
 
     async def get_number_by_model(self, db: AsyncSession, model: str, part: str) -> Sequence[str]:
-        '''
-
-        '''
+        """ """
         stmt = select(distinct(self.model.product_number))
         where_list = []
         where_list.append(self.model.product_model == model)

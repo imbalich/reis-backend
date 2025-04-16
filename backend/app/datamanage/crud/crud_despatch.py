@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：crud_despatch.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2024/12/26 16:51 
-'''
-from typing import Sequence, Any
+@Date    ：2024/12/26 16:51
+"""
 
-from sqlalchemy import Select, select, distinct, desc, and_, asc
+from typing import Any, Sequence
+
+from sqlalchemy import Select, asc, desc, distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -17,7 +18,6 @@ from backend.app.datamanage.model import Despatch
 
 
 class CRUDDespatch(CRUDPlus[Despatch]):
-
     async def get_distinct_column_values(self, db: AsyncSession, column_name: str) -> Sequence[Any]:
         """
         获取指定列的所有唯一值
@@ -27,7 +27,7 @@ class CRUDDespatch(CRUDPlus[Despatch]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f"Column {column_name} does not exist in model {self.model.__name__}")
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
         # 构建查询
         column = getattr(self.model, column_name)
@@ -38,8 +38,9 @@ class CRUDDespatch(CRUDPlus[Despatch]):
         # 返回结果
         return result.scalars().all()
 
-    async def get_list(self, model: str = None, identifier: str = None, repair_level: str = None,
-                       time_range: list[str] = None) -> Select:
+    async def get_list(
+        self, model: str = None, identifier: str = None, repair_level: str = None, time_range: list[str] = None
+    ) -> Select:
         """
         获取数据列表
         :param model: 产品型号

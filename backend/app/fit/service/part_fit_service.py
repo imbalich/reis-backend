@@ -1,32 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : part_fit_service.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/3/24 14:33
-'''
+"""
+
 from datetime import date, datetime
-from typing import Union
 
 from reliability.Fitters import Fit_Everything
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
-from backend.app.fit.schema.fit_param import FitMethodType, CreateFitPartInParam, FitCheckType
+from backend.app.fit.schema.fit_param import CreateFitPartInParam, FitCheckType, FitMethodType
 from backend.app.fit.service.part_strategy_service import part_strategy_service
-from backend.app.fit.utils.convert_model import convert_to_part_distribution_params, convert_method_to_str
+from backend.app.fit.utils.convert_model import convert_method_to_str, convert_to_part_distribution_params
 from backend.app.fit.utils.time_utils import dateutils
 from backend.database.db import async_db_session
 
 
 class PartFitService:
-
     @staticmethod
     async def tag_fit(
-            tags: list[list],
-            method: FitMethodType | str | None = FitMethodType.MLE,
+        tags: list[list],
+        method: FitMethodType | str | None = FitMethodType.MLE,
     ) -> Fit_Everything:
         """
         单个产品+部件拟合
@@ -70,20 +69,18 @@ class PartFitService:
         input_date = dateutils.validate_and_parse_date(obj.input_date)
         is_system_default = input_date == date.today() and obj.method == FitMethodType.MLE
         async with async_db_session() as db:
-            if is_system_default and await PartFitService._recent_fit_exists(db, obj.model, obj.part, input_date,
-                                                                             obj.method):
+            if is_system_default and await PartFitService._recent_fit_exists(
+                db, obj.model, obj.part, input_date, obj.method
+            ):
                 return
 
-            await PartFitService._perform_and_save_fit(obj.model, obj.part, input_date, obj.method,
-                                                       not is_system_default)
+            await PartFitService._perform_and_save_fit(
+                obj.model, obj.part, input_date, obj.method, not is_system_default
+            )
 
     @staticmethod
     async def _recent_fit_exists(
-            db: AsyncSession,
-            model: str,
-            part: str,
-            input_date: date,
-            method: FitMethodType
+        db: AsyncSession, model: str, part: str, input_date: date, method: FitMethodType
     ) -> bool:
         distribution = await fit_part_dao.get_last(db, model, part, input_date, method)
         if distribution and distribution.created_time:
@@ -93,28 +90,25 @@ class PartFitService:
 
     @staticmethod
     async def _perform_and_save_fit(
-            model: str,
-            part: str,
-            input_date: date,
-            method: FitMethodType,
-            is_user_input: bool
+        model: str, part: str, input_date: date, method: FitMethodType, is_user_input: bool
     ) -> None:
         async with async_db_session() as db:
             async with db.begin():
                 tags = await part_strategy_service.part_tag_process(model, part, input_date)
                 fit = await PartFitService.tag_fit(tags, method)
-                distribution_params = convert_to_part_distribution_params(fit.results, model, part, input_date, method,
-                                                                          is_user_input)
+                distribution_params = convert_to_part_distribution_params(
+                    fit.results, model, part, input_date, method, is_user_input
+                )
                 await fit_part_dao.creates(db, distribution_params)
 
     @staticmethod
     async def get_by_model_and_part(
-            model: str,
-            part: str,
-            input_date: Union[str, date] = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        model: str,
+        part: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ):
         """
         根据型号+部件查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -133,12 +127,12 @@ class PartFitService:
 
     @staticmethod
     async def get_best_by_model_and_part(
-            model: str,
-            part: str,
-            input_date: Union[str, date] = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        model: str,
+        part: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,查询最优的拟合信息

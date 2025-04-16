@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : time_utils.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/2/24 下午5:21
-'''
+"""
+
 from datetime import date, datetime
-from typing import Union
 
 from backend.common.exception.errors import DataValidationError
 
 
 class DateUtils:
-
     @staticmethod
     def run_time(diff: int, day: int, hour: int) -> float:
         """
@@ -32,7 +31,7 @@ class DateUtils:
         return round(t, 2)
 
     @staticmethod
-    def validate_and_parse_date(input_date: Union[str, date, None]) -> date:
+    def validate_and_parse_date(input_date: str | date | None) -> date:
         """
         验证并解析日期参数
 
@@ -50,7 +49,7 @@ class DateUtils:
         elif isinstance(input_date, date):
             return input_date.today()
         else:
-            raise DataValidationError(msg="input_date 必须是字符串或 date 对象")
+            raise DataValidationError(msg='input_date 必须是字符串或 date 对象')
 
 
 dateutils: DateUtils = DateUtils()

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import zoneinfo
 
-from datetime import datetime, date
+from datetime import date, datetime
 from datetime import timezone as datetime_timezone
 
 from backend.core.conf import settings

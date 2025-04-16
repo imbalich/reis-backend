@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : router.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/3/28 14:31
-'''
+"""
+
 from fastapi import APIRouter
 
 from backend.app.predict.api.v1 import router

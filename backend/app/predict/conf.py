@@ -1,18 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : conf.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/3/28 16:26
-'''
+"""
+
 from functools import lru_cache
 from typing import Callable
 
 from pydantic_settings import BaseSettings
-from reliability.Distributions import Weibull_Distribution, Normal_Distribution, Gamma_Distribution, \
-    Loglogistic_Distribution, Lognormal_Distribution, Exponential_Distribution, Gumbel_Distribution
+from reliability.Distributions import (
+    Exponential_Distribution,
+    Gamma_Distribution,
+    Gumbel_Distribution,
+    Loglogistic_Distribution,
+    Lognormal_Distribution,
+    Normal_Distribution,
+    Weibull_Distribution,
+)
 
 from backend.app.predict.schema.distribute_param import DistributeType
 
@@ -31,7 +39,7 @@ class PredictSettings(BaseSettings):
         DistributeType.Lognormal_3P: Lognormal_Distribution,
         DistributeType.Exponential_1P: Exponential_Distribution,
         DistributeType.Exponential_2P: Exponential_Distribution,
-        DistributeType.Gumbel_2P: Gumbel_Distribution
+        DistributeType.Gumbel_2P: Gumbel_Distribution,
     }
 
     PARAM_MAPPING: dict[DistributeType, dict[str, str]] = {

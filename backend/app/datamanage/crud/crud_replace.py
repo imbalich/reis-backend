@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：crud_replace.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/1/16 14:56 
-'''
+@Date    ：2025/1/16 14:56
+"""
+
 from typing import Any
 
-from sqlalchemy import Sequence, Select, select, desc,distinct
+from sqlalchemy import Select, Sequence, desc, distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -17,7 +18,6 @@ from backend.app.datamanage.model import Replace
 
 
 class CRUDReplace(CRUDPlus[Replace]):
-
     async def get_distinct_column_values(self, db: AsyncSession, column_name: str) -> Sequence[Any]:
         """
         获取指定列的所有唯一值
@@ -27,7 +27,7 @@ class CRUDReplace(CRUDPlus[Replace]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f"Column {column_name} does not exist in model {self.model.__name__}")
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
         # 构建查询
         column = getattr(self.model, column_name)
@@ -38,7 +38,7 @@ class CRUDReplace(CRUDPlus[Replace]):
         # 返回结果
         return result.scalars().all()
 
-    async def get_list(self, model: str = None,state_now: bool = None) -> Select:
+    async def get_list(self, model: str = None, state_now: bool = None) -> Select:
         """
         获取数据列表
         :param model: 产品型号

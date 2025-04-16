@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：product.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2024/12/25 14:00 
-'''
+@Date    ：2024/12/25 14:00
+"""
+
 from datetime import date
 
-from sqlalchemy import String, Date, Float
+from sqlalchemy import Date, Float, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import DataClassBase, id_key

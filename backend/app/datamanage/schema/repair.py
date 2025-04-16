@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：repair.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2025/1/20 09:38 
-'''
+@Date    ：2025/1/20 09:38
+"""
+
 from datetime import date
 from typing import Optional
 
-from pydantic import Field, ConfigDict
+from pydantic import ConfigDict, Field
 
 from backend.common.schema import SchemaBase
 
@@ -48,5 +49,5 @@ class GetRepairDetails(GetRepairParam):
 class GetRepairListResponse(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[GetRepairDetails] = Field(default_factory=list, description="查询结果列表")
-    total: int = Field(default=0, ge=0, description="总记录数")
+    items: list[GetRepairDetails] = Field(default_factory=list, description='查询结果列表')
+    total: int = Field(default=0, ge=0, description='总记录数')

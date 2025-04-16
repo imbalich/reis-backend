@@ -1,32 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 @Project : fastapi-base-backend
 @File    : crud_fit_part.py
 @IDE     : PyCharm
 @Author  : imbalich
 @Time    : 2025/3/18 10:55
-'''
+"""
+
 from datetime import date
 from typing import Sequence
 
-from sqlalchemy import select, desc, and_, case, func, literal, asc, distinct
+from sqlalchemy import and_, asc, case, desc, distinct, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.fit.model.fit_part import FitPart
-from backend.app.fit.schema.fit_param import FitMethodType, FitCheckType
+from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 
 
 class CRUDFitPart(CRUDPlus[FitPart]):
-
     async def get_last(
-            self,
-            db: AsyncSession,
-            model: str,
-            part: str,
-            input_date: date = None,
-            method: FitMethodType = FitMethodType.MLE
+        self,
+        db: AsyncSession,
+        model: str,
+        part: str,
+        input_date: date = None,
+        method: FitMethodType = FitMethodType.MLE,
     ) -> FitPart | None:
         """
         获取单零部件最后的一条分布信息
@@ -79,14 +79,14 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         await self.create_models(db, objs)
 
     async def get_by_model_and_part(
-            self,
-            db: AsyncSession,
-            model: str,
-            part: str,
-            input_date: date = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        self,
+        db: AsyncSession,
+        model: str,
+        part: str,
+        input_date: date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ) -> Sequence[FitPart]:
         """
         根据型号和零部件查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -113,7 +113,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             self.model.model == model,
             self.model.part == part,
             self.model.method == method,
-            self.model.source == source
+            self.model.source == source,
         ]
 
         # 如果提供了 input_date，添加到查询条件中
@@ -140,15 +140,15 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         return result.scalars().all()
 
     async def get_by_model_and_part_and_distribution(
-            self,
-            db: AsyncSession,
-            model: str,
-            part: str,
-            distribution: str,
-            input_date: date = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        self,
+        db: AsyncSession,
+        model: str,
+        part: str,
+        distribution: str,
+        input_date: date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ) -> FitPart:
         """
         根据型号和零部件查询拟合信息:查询最新的拟合信息,只选取一个
@@ -177,7 +177,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             self.model.part == part,
             self.model.distribution == distribution,
             self.model.method == method,
-            self.model.source == source
+            self.model.source == source,
         ]
 
         # 如果提供了 input_date，添加到查询条件中

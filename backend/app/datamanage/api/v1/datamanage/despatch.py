@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
-@Project ：fastapi-base-backend 
+"""
+@Project ：fastapi-base-backend
 @File    ：despatch.py
-@IDE     ：PyCharm 
+@IDE     ：PyCharm
 @Author  ：imbalich
-@Date    ：2024/12/25 16:40 
-'''
+@Date    ：2024/12/25 16:40
+"""
+
 from typing import Annotated
 
 from fastapi import APIRouter, Query
 
 from backend.app.datamanage.schema.despatch import GetDespatchDetails
 from backend.app.datamanage.service.despatch_service import despatch_service
-from backend.common.pagination import paging_data, DependsPagination, PageData
-from backend.common.response.response_schema import response_base, ResponseModel, ResponseSchemaModel
+from backend.common.pagination import DependsPagination, PageData, paging_data
+from backend.common.response.response_schema import ResponseModel, ResponseSchemaModel, response_base
 from backend.database.db import CurrentSession
 
 router = APIRouter()
@@ -39,15 +40,16 @@ async def get_despatch_repair_levels() -> ResponseModel:
     return response_base.success(data=repair_levels)
 
 
-@router.get('', summary='（模糊条件）分页获取所有发运数据',dependencies=[DependsPagination])
+@router.get('', summary='（模糊条件）分页获取所有发运数据', dependencies=[DependsPagination])
 async def get_pagination_despatch(
-        db: CurrentSession,
-        model: Annotated[str | None, Query()] = None,
-        identifier: Annotated[str | None, Query()] = None,
-        repair_level: Annotated[str | None, Query()] = None,
-        time_range: Annotated[list[str] | None, Query()] = None,
+    db: CurrentSession,
+    model: Annotated[str | None, Query()] = None,
+    identifier: Annotated[str | None, Query()] = None,
+    repair_level: Annotated[str | None, Query()] = None,
+    time_range: Annotated[list[str] | None, Query()] = None,
 ) -> ResponseSchemaModel[PageData[GetDespatchDetails]]:
-    despatch_select = await despatch_service.get_select(model=model, identifier=identifier, repair_level=repair_level,
-                                                        time_range=time_range)
+    despatch_select = await despatch_service.get_select(
+        model=model, identifier=identifier, repair_level=repair_level, time_range=time_range
+    )
     page_data = await paging_data(db, despatch_select)
     return response_base.success(data=page_data)

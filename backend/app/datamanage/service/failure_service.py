@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-'''
+"""
 @Project ：fastapi-base-backend
 @File    ：despatch_service.py
 @IDE     ：PyCharm
 @Author  ：imbalich
 @Date    ：2024/12/26 16:52
-'''
+"""
+
 from typing import Sequence
 
 from sqlalchemy import Select
@@ -17,7 +18,6 @@ from backend.database.db import async_db_session
 
 
 class FailureService:
-
     @staticmethod
     async def get_product_lifetime_stage() -> Sequence[str]:
         async with async_db_session() as db:
@@ -54,17 +54,24 @@ class FailureService:
             models = []
             for fl, mc in results:
                 if mc:
-                    combined = f"{fl}（{mc}）"
+                    combined = f'{fl}（{mc}）'
                 else:
                     combined = fl
                 models.append(combined)
             return list(dict.fromkeys(models))
 
     @staticmethod
-    async def get_select(*, product_model: str = None, fault_location: str = None, product_lifetime_stage: str = None,
-                         product_number: str = None,
-                         fault_mode: str = None, time_range: list[str] = None, is_zero_distance: int = 1,
-                         fault_material_code: str = None ) -> Select:
+    async def get_select(
+        *,
+        product_model: str = None,
+        fault_location: str = None,
+        product_lifetime_stage: str = None,
+        product_number: str = None,
+        fault_mode: str = None,
+        time_range: list[str] = None,
+        is_zero_distance: int = 1,
+        fault_material_code: str = None,
+    ) -> Select:
         # 时间范围
         return await failure_dao.get_list(
             product_model=product_model,
@@ -81,9 +88,7 @@ class FailureService:
     async def get_parts_by_model(product_model: str = None) -> Sequence[str]:
         async with async_db_session() as db:
             parts = await failure_dao.get_distinct_column_values_by_product_model(
-                db,
-                product_model,
-                'fault_material_code'
+                db, product_model, 'fault_material_code'
             )
             return parts
 
