@@ -41,10 +41,10 @@ class TaskSettings(BaseSettings):
 
     # Celery 定时任务配置
     CELERY_SCHEDULE: dict[str, dict[str, Any]] = {
-        'exec-every-10-seconds': {
-            'task': 'task_demo_async',
-            'schedule': 10,
-        },
+        # 'exec-every-10-seconds': {
+        #     'task': 'task_demo_async',
+        #     'schedule': 10,
+        # },
         'exec-every-sunday': {
             'task': 'delete_db_opera_log',
             'schedule': crontab('0', '0', day_of_week='6'),
@@ -52,6 +52,14 @@ class TaskSettings(BaseSettings):
         'exec-every-15-of-month': {
             'task': 'delete_db_login_log',
             'schedule': crontab('0', '0', day_of_month='15'),
+        },
+        'product-fit-exec-every-1-of-month': {
+            'task': 'product_fit_all_task',
+            'schedule': crontab('0', '0', day_of_month='1'),  # 每个月1号执行
+        },
+        'part-fit-exec-every-1-of-month': {
+            'task': 'part_fit_all_task',
+            'schedule': crontab('0', '0', day_of_month='1'),  # 每个月1号执行
         },
     }
 
