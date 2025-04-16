@@ -43,9 +43,9 @@ class Settings(BaseSettings):
 
     # FastAPI
     FASTAPI_API_V1_PATH: str = '/api/v1'
-    FASTAPI_TITLE: str = 'FastAPI'
+    FASTAPI_TITLE: str = 'REIS'
     FASTAPI_VERSION: str = '0.0.1'
-    FASTAPI_DESCRIPTION: str = 'FastAPI Best Architecture'
+    FASTAPI_DESCRIPTION: str = 'Reliability And Economical Integration System'
     FASTAPI_DOCS_URL: str = '/docs'
     FASTAPI_REDOC_URL: str = '/redoc'
     FASTAPI_OPENAPI_URL: str | None = '/openapi'
@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     # 数据库
     DATABASE_ECHO: bool = False
     DATABASE_POOL_ECHO: bool = False
-    DATABASE_SCHEMA: str = 'fba'
+    DATABASE_SCHEMA: str = 'reis'
     DATABASE_CHARSET: str = 'utf8mb4'
 
     # Redis
