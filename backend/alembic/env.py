@@ -20,9 +20,9 @@ from backend.plugin.tools import get_plugin_models
 
 # import your new model here
 from backend.app.admin.model import *  # noqa: F401
+from backend.plugin.code_generator.model import *  # noqa: F401
 from backend.app.datamanage.model import *  # noqa: F401
 from backend.app.fit.model import *  # noqa: F401
-from backend.plugin.code_generator.model import *  # noqa: F401
 
 # import plugin model
 for cls in get_plugin_models():

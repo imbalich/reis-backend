@@ -14,4 +14,4 @@ from backend.app.sense.api.v1.sense import router as sense_router
 
 router = APIRouter(prefix='/sense')
 
-router.include_router(sense_router, tags=['产品级曲线拟合'])
+router.include_router(sense_router, tags=['敏感度分析'])
