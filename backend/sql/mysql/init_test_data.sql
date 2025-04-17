@@ -25,9 +25,7 @@ values  (1, '测试', 'Test', 'test', 0, null, 0, null, null, 0, 0, 1, null, nul
         (16, '服务器监控', 'Server', 'server', 0, null, 1, '/monitor/server/index.vue', null, 1, 1, 1, null, null, 14, '2023-07-27 19:28:29', null),
         (17, '日志', 'Log', 'log', 0, 'carbon:cloud-logging', 0, null, null, 1, 1, 1, null, null, null, '2023-07-27 19:19:59', null),
         (18, '登录日志', 'Login', 'login', 0, null, 1, '/log/login/index.vue', null, 1, 1, 1, null, null, 17, '2023-07-27 19:20:56', null),
-        (19, '操作日志', 'Opera', 'opera', 0, null, 1, '/log/opera/index.vue', null, 1, 1, 1, null, null, 17, '2023-07-27 19:21:28', null),
-        (20, '官网', 'Site', '', 998, 'dashicons:admin-site', 1, null, null, 1, 1, 1, 'https://fastapi-practices.github.io/fastapi_best_architecture_docs/', null, null, '2023-07-27 19:22:24', null),
-        (21, '赞助', 'Sponsor', '', 999, 'material-icon-theme:github-sponsors', 1, null, null, 1, 1, 1, 'https://wu-clan.github.io/sponsor/', null, null, '2024-07-27 12:39:57', null);
+        (19, '操作日志', 'Opera', 'opera', 0, null, 1, '/log/opera/index.vue', null, 1, 1, 1, null, null, 17, '2023-07-27 19:21:28', null);
 
 insert into sys_role (id, name, status, remark, created_time, updated_time)
 values  (1, 'test', 1, null, '2023-06-26 17:13:45', null);

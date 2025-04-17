@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     # 数据库
     DATABASE_ECHO: bool = False
     DATABASE_POOL_ECHO: bool = False
-    DATABASE_SCHEMA: str = 'reis'
+    DATABASE_SCHEMA: str = 'fba'
     DATABASE_CHARSET: str = 'utf8mb4'
 
     # Redis
