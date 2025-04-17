@@ -8,7 +8,7 @@
 @Date    ：2024/12/25 14:08
 """
 
-from sqlalchemy import String
+from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import DataClassBase
@@ -39,7 +39,7 @@ class Ebom(DataClassBase):
     y8_weight: Mapped[str] = mapped_column(String(200), nullable=True, comment='重量')
     y8_matisdesc: Mapped[str] = mapped_column(String(100), nullable=True, comment='工业标准描述')
     bl_sequence_no: Mapped[str] = mapped_column(String(100), nullable=True, comment='序号')
-    y8_gylx: Mapped[str] = mapped_column(String(255), nullable=True, comment='工艺分工')
+    y8_gylx: Mapped[str] = mapped_column(Text, nullable=True, comment='工艺分工')
     y8_wxsccj: Mapped[str] = mapped_column(String(100), nullable=True, comment='生产厂家技术状态')
     last_mod_date: Mapped[str] = mapped_column(String(100), nullable=True, comment='日期')
     y8_gx: Mapped[str] = mapped_column(String(100), nullable=True, comment='工序')
@@ -51,7 +51,7 @@ class Ebom(DataClassBase):
     y8_gyde: Mapped[str] = mapped_column(String(200), nullable=True, comment='工艺定额')
     y8_wxpc: Mapped[str] = mapped_column(String(100), nullable=True, comment='批次号')
     y8_knowledgeno: Mapped[str] = mapped_column(String(100), nullable=True, comment='结构树编码')
-    y8_gjxd: Mapped[str] = mapped_column(String(255), nullable=True, comment='关键项点')
+    y8_gjxd: Mapped[str] = mapped_column(Text, nullable=True, comment='关键项点')
     y8_materialcode: Mapped[str] = mapped_column(String(200), nullable=True, comment='材料编码/规格')
     y8_beizhu: Mapped[str] = mapped_column(String(200), nullable=True, comment='备注')
     y8_configurationcode: Mapped[str] = mapped_column(String(200), nullable=True, comment='构型编码')

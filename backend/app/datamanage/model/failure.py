@@ -70,10 +70,10 @@ class Failure(DataClassBase):
         String(128), nullable=True, comment='责任用户', name='respons'
     )
     vehicle_fault_codes: Mapped[str] = mapped_column(String(128), nullable=True, comment='车载故障代码')
-    fault_part_number: Mapped[str] = mapped_column(String(255), nullable=True, comment='故障件编号')
+    fault_part_number: Mapped[str] = mapped_column(String(500), nullable=True, comment='故障件编号')
     fault_part_batch_no: Mapped[str] = mapped_column(String(128), nullable=True, comment='故障件批次号')
     fault_part_serial_number: Mapped[str] = mapped_column(String(128), nullable=True, comment='故障件序列号')
-    replacement_part_number: Mapped[str] = mapped_column(String(255), nullable=True, comment='更换件编号')
+    replacement_part_number: Mapped[str] = mapped_column(String(500), nullable=True, comment='更换件编号')
     repl_part_batch_no: Mapped[str] = mapped_column(String(128), nullable=True, comment='更换件批次号')
     repl_part_serial_number: Mapped[str] = mapped_column(String(128), nullable=True, comment='更换件序列号')
     disposal_end_date: Mapped[str] = mapped_column(String(30), nullable=True, comment='处置完成日期')
