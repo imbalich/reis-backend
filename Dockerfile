@@ -2,7 +2,7 @@
 ARG SERVER_TYPE=fastapi_server
 
 # === Python environment from uv ===
-FROM python:3.10-slim AS builder
+FROM python:3.12-slim AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Used for build Python packages
@@ -24,7 +24,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-default-groups --group server
 
 # === Runtime base server image ===
-FROM python:3.10-slim AS base_server
+FROM python:3.12-slim AS base_server
 
 SHELL ["/bin/bash", "-c"]
 
