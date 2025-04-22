@@ -10,7 +10,7 @@
 
 from fastapi import APIRouter
 
-from backend.app.predict.api.v1 import router
+from backend.app.calcu.api.v1.spare import router
 from backend.core.conf import settings
 
 v1 = APIRouter(prefix=settings.FASTAPI_API_V1_PATH)

@@ -30,8 +30,8 @@ from backend.app.fit.utils.convert_model import (
     convert_to_total_quantity,
 )
 from backend.app.fit.utils.time_utils import dateutils
-from backend.app.predict.conf import predict_settings
-from backend.app.predict.schema.distribute_param import DistributeType, DistributionParams
+from backend.app.calcu.conf import predict_settings
+from backend.app.calcu.schema.distribute_param import DistributeType, DistributionParams
 from backend.common.exception import errors
 from backend.database.db import async_db_session
 
@@ -183,8 +183,8 @@ class DistributeService:
                 (end_date - product['despetch']).days * product_data.year_days * product_data.avg_worktime / 365,
             ]
             product['yvals'] = distribution.CDF(xvals=product['xvals'], show_plot=False)
-            product['predict'] = product['yvals'][1] - product['yvals'][0]
-            result += product['predict']
+            product['calcu'] = product['yvals'][1] - product['yvals'][0]
+            result += product['calcu']
         return math.ceil(result)
 
     @staticmethod
@@ -215,8 +215,8 @@ class DistributeService:
                 (end_date - product['despetch']).days * product_data.year_days * product_data.avg_worktime / 365,
             ]
             product['yvals'] = distribution.best_distribution.CDF(xvals=product['xvals'], show_plot=False)
-            product['predict'] = product['yvals'][1] - product['yvals'][0]
-            result += product['predict']
+            product['calcu'] = product['yvals'][1] - product['yvals'][0]
+            result += product['calcu']
         return math.ceil(result)
 
     @staticmethod

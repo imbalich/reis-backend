@@ -22,7 +22,7 @@ from reliability.Distributions import (
     Weibull_Distribution,
 )
 
-from backend.app.predict.schema.distribute_param import DistributeType
+from backend.app.calcu.schema.distribute_param import DistributeType
 
 
 class PredictSettings(BaseSettings):

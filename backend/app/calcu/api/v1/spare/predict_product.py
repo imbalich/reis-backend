@@ -13,14 +13,14 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
-from backend.app.predict.schema.distribute_param import DistributeType
-from backend.app.predict.service.distribute_service import distribute_service
+from backend.app.calcu.schema.distribute_param import DistributeType
+from backend.app.calcu.service.distribute_service import distribute_service
 from backend.common.response.response_schema import response_base
 
 router = APIRouter()
 
 
-@router.get('/spare-predict', summary='整机级别:预测')
+@router.get('/predict', summary='整机级别:预测')
 async def product_spare_predict(
     model: str = Query(..., description='产品型号'),
     distribution: Annotated[DistributeType | None, Query(description='分布类型')] = None,
