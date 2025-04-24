@@ -7,9 +7,10 @@
 @Author  : imbalich
 @Time    : 2025/2/28 下午3:42
 """
+
 import math
+
 from datetime import date, datetime
-from typing import Any
 
 from reliability.Distributions import Exponential_Distribution
 from reliability.Fitters import Fit_Everything
@@ -19,8 +20,11 @@ from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.fit.crud.crud_fit_product import fit_product_dao
 from backend.app.fit.schema.fit_param import CreateFitProductInParam, FitCheckType, FitMethodType
 from backend.app.fit.service.product_strategy_service import product_strategy_service
-from backend.app.fit.utils.convert_model import convert_method_to_str, convert_to_product_distribution_params, \
-    convert_to_product_exponential_distribution_params
+from backend.app.fit.utils.convert_model import (
+    convert_method_to_str,
+    convert_to_product_distribution_params,
+    convert_to_product_exponential_distribution_params,
+)
 from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
 from backend.common.exception.errors import DataValidationError, FailureCheckError
@@ -30,8 +34,8 @@ from backend.database.db import async_db_session
 class ProductFitService:
     @staticmethod
     async def tag_fit(
-            tags: list[list],
-            method: FitMethodType | str | None = FitMethodType.MLE,
+        tags: list[list],
+        method: FitMethodType | str | None = FitMethodType.MLE,
     ) -> Fit_Everything:
         """
         单个产品拟合
@@ -86,9 +90,9 @@ class ProductFitService:
 
     @staticmethod
     async def create_old(
-            model: str,
-            input_date: str | date = None,
-            method: FitMethodType = FitMethodType.MLE,
+        model: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
     ) -> None:
         """
         单个产品拟合：
@@ -174,11 +178,11 @@ class ProductFitService:
 
     @staticmethod
     async def get_by_model(
-            model: str,
-            input_date: str | date = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        model: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -196,11 +200,11 @@ class ProductFitService:
 
     @staticmethod
     async def get_best_by_model(
-            model: str,
-            input_date: str | date = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        model: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,查询最优的拟合信息

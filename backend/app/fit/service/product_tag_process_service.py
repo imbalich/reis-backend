@@ -19,12 +19,12 @@ from backend.app.fit.utils.time_utils import dateutils
 
 class ProductTagProcessService(TagProcessService):
     async def process_data(
-            self,
-            despatch_data: list[Despatch],
-            failure_data: list[Failure],
-            product_data: Product,
-            input_date: str | date = None,
-            **kwargs: Any,
+        self,
+        despatch_data: list[Despatch],
+        failure_data: list[Failure],
+        product_data: Product,
+        input_date: str | date = None,
+        **kwargs: Any,
     ) -> list[list]:
         """
         处理数据，包括发运数据和故障数据，并计算标签数据。
@@ -80,9 +80,7 @@ class ProductTagProcessService(TagProcessService):
                 'identifier': despatch.identifier,  # 添加 despatch 的标识符
                 'despatch_date': despatch.life_cycle_time,  # 添加 despatch 的生命周期时间
                 # 假设将生命周期时间作为故障列表的一部分（可能需要根据实际情况调整）
-                'fault_date_list': [
-                    despatch.life_cycle_time
-                ],
+                'fault_date_list': [despatch.life_cycle_time],
                 'fault_part_list': [],  # 初始化一个空列表，用于存储故障部件（可能需要后续填充）
             }
             item_dict[despatch.identifier] = cur  # 将当前 despatch 的字典添加到 item_dict 中，以 identifier 为键
@@ -90,7 +88,7 @@ class ProductTagProcessService(TagProcessService):
 
     @staticmethod
     async def container_inspect(
-            container: dict[str, dict[str, Any]], failure_data: list[FailureParam]
+        container: dict[str, dict[str, Any]], failure_data: list[FailureParam]
     ) -> dict[str, dict[str, Any]]:
         """
         在 container 中检查故障数据，并更新 fault_list 和 fault_part_list。
@@ -137,7 +135,7 @@ class ProductTagProcessService(TagProcessService):
 
     @staticmethod
     async def tag_create(
-            container: dict[str, dict[str, Any]], product_data: Product, input_date: date
+        container: dict[str, dict[str, Any]], product_data: Product, input_date: date
     ) -> list[list[Any]]:
         """
         根据给定的容器（包含产品编号和故障日期列表）和产品数据，为每个故障日期对创建标签列表。

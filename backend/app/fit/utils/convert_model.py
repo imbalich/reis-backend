@@ -55,7 +55,7 @@ def convert_dict_to_pydantic_model(value: dict, model: Type[T]) -> T:
 
 
 def convert_to_product_distribution_params(
-        fit_results: pd.DataFrame, model: str, input_date: date, method: FitMethodType, source: bool
+    fit_results: pd.DataFrame, model: str, input_date: date, method: FitMethodType, source: bool
 ) -> List[CreateProductDistributionParam]:
     distribution_params = []
     # 计算group_id
@@ -95,7 +95,7 @@ def convert_to_product_distribution_params(
 
 
 def convert_to_part_distribution_params(
-        fit_results: pd.DataFrame, model: str, part: str, input_date: date, method: FitMethodType, source: bool
+    fit_results: pd.DataFrame, model: str, part: str, input_date: date, method: FitMethodType, source: bool
 ) -> List[CreatePartDistributionParam]:
     distribution_params = []
     # 计算group_id
@@ -136,7 +136,7 @@ def convert_to_part_distribution_params(
 
 
 def convert_to_product_exponential_distribution_params(
-        model: str, input_date: date, method: FitMethodType, source: bool, lambda_: float
+    model: str, input_date: date, method: FitMethodType, source: bool, lambda_: float
 ) -> CreateProductDistributionParam:
     group_id = uuid4_str()
     param = CreateProductDistributionParam(
@@ -168,7 +168,7 @@ def convert_to_product_exponential_distribution_params(
 
 
 def convert_to_part_exponential_distribution_params(
-        model: str, part: str, input_date: date, method: FitMethodType, source: bool, lambda_: float
+    model: str, part: str, input_date: date, method: FitMethodType, source: bool, lambda_: float
 ) -> CreatePartDistributionParam:
     group_id = uuid4_str()
     param = CreatePartDistributionParam(

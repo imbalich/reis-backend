@@ -17,8 +17,8 @@ from backend.app.fit.schema.fit_param import CreateFitPartInParam, CreateFitProd
 from backend.app.fit.service.part_fit_service import part_fit_service
 from backend.app.fit.service.product_fit_service import product_fit_service
 from backend.app.task.celery import celery_app
-from backend.common.log import log
 from backend.common.exception.errors import DataValidationError
+from backend.common.log import log
 
 
 @celery_app.task(name='cleanup_redis_keys')

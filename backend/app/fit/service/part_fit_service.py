@@ -7,7 +7,9 @@
 @Author  : imbalich
 @Time    : 2025/3/24 14:33
 """
+
 import math
+
 from datetime import date, datetime
 
 from reliability.Distributions import Exponential_Distribution
@@ -17,19 +19,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
 from backend.app.fit.schema.fit_param import CreateFitPartInParam, FitCheckType, FitMethodType
 from backend.app.fit.service.part_strategy_service import part_strategy_service
-from backend.app.fit.utils.convert_model import convert_method_to_str, convert_to_part_distribution_params, \
-    convert_to_part_exponential_distribution_params
+from backend.app.fit.utils.convert_model import (
+    convert_method_to_str,
+    convert_to_part_distribution_params,
+    convert_to_part_exponential_distribution_params,
+)
 from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
-from backend.common.exception.errors import FailureCheckError, DataValidationError
+from backend.common.exception.errors import DataValidationError, FailureCheckError
 from backend.database.db import async_db_session
 
 
 class PartFitService:
     @staticmethod
     async def tag_fit(
-            tags: list[list],
-            method: FitMethodType | str | None = FitMethodType.MLE,
+        tags: list[list],
+        method: FitMethodType | str | None = FitMethodType.MLE,
     ) -> Fit_Everything:
         """
         单个产品+部件拟合
@@ -94,7 +99,7 @@ class PartFitService:
         is_system_default = input_date == date.today() and obj.method == FitMethodType.MLE
         async with async_db_session() as db:
             if is_system_default and await PartFitService._recent_fit_exists(
-                    db, obj.model, obj.part, input_date, obj.method
+                db, obj.model, obj.part, input_date, obj.method
             ):
                 return
 
@@ -104,7 +109,7 @@ class PartFitService:
 
     @staticmethod
     async def _recent_fit_exists(
-            db: AsyncSession, model: str, part: str, input_date: date, method: FitMethodType
+        db: AsyncSession, model: str, part: str, input_date: date, method: FitMethodType
     ) -> bool:
         distribution = await fit_part_dao.get_last(db, model, part, input_date, method)
         if distribution and distribution.created_time:
@@ -114,7 +119,7 @@ class PartFitService:
 
     @staticmethod
     async def _perform_and_save_fit(
-            model: str, part: str, input_date: date, method: FitMethodType, is_user_input: bool
+        model: str, part: str, input_date: date, method: FitMethodType, is_user_input: bool
     ) -> None:
         async with async_db_session() as db:
             async with db.begin():
@@ -134,12 +139,12 @@ class PartFitService:
 
     @staticmethod
     async def get_by_model_and_part(
-            model: str,
-            part: str,
-            input_date: str | date = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        model: str,
+        part: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ):
         """
         根据型号+部件查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -158,12 +163,12 @@ class PartFitService:
 
     @staticmethod
     async def get_best_by_model_and_part(
-            model: str,
-            part: str,
-            input_date: str | date = None,
-            method: FitMethodType = FitMethodType.MLE,
-            check: FitCheckType = FitCheckType.BIC,
-            source: bool = False,
+        model: str,
+        part: str,
+        input_date: str | date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+        source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,查询最优的拟合信息

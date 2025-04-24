@@ -78,7 +78,8 @@ class TagProcessService(ABC):
                 # 使用 FailureParam 模型来验证和转换数据
                 processed_failure = FailureParam.model_validate(failure)
                 if (
-                    processed_failure.discovery_date <= input_date and processed_failure.manufacturing_date <= input_date
+                    processed_failure.discovery_date <= input_date
+                    and processed_failure.manufacturing_date <= input_date
                 ):
                     # 将验证后的 FailureParam 模型实例添加到处理列表中
                     processed_data.append(processed_failure)

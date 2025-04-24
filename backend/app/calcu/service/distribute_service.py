@@ -13,6 +13,8 @@ import math
 from datetime import date
 from typing import Callable, Optional
 
+from backend.app.calcu.conf import predict_settings
+from backend.app.calcu.schema.distribute_param import DistributeType, DistributionParams
 from backend.app.datamanage.crud.crud_ebom import ebom_dao
 from backend.app.datamanage.crud.crud_product import product_dao
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
@@ -30,8 +32,6 @@ from backend.app.fit.utils.convert_model import (
     convert_to_total_quantity,
 )
 from backend.app.fit.utils.time_utils import dateutils
-from backend.app.calcu.conf import predict_settings
-from backend.app.calcu.schema.distribute_param import DistributeType, DistributionParams
 from backend.common.exception import errors
 from backend.database.db import async_db_session
 
@@ -320,11 +320,7 @@ class DistributeService:
         errors_info = {}
         for part in parts:
             try:
-                # part_distribution = await DistributeService.get_part_distribution(model, part, distribution_type,
-                #                                                                   method, check)
                 tags = await part_strategy_service.part_tag_process(model, part, input_date)
-                # 利用之前计算的分布计算备件量
-                # result = await DistributeService.get_spare_num(tags, start_date, end_date, product_data, part_distribution)
                 # 利用标签现算最优分布，进行计算
                 result = await DistributeService.get_spare_num_by_fit(tags, start_date, end_date, product_data, method)
                 # 需要再乘以bom数量

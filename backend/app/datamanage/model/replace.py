@@ -29,5 +29,6 @@ class Replace(DataClassBase):
     replace_unit: Mapped[str] = mapped_column(String(50), nullable=True, comment='必换数量单位')
     material_code: Mapped[str] = mapped_column(String(50), nullable=True, comment='材料编码')
     mark: Mapped[str] = mapped_column(String(50), nullable=True, comment='备注预留字段')
-    state_now: Mapped[bool] = mapped_column(Integer, nullable=True, default=True,
-                                            comment='当前是否启用，1启用；0未启用,默认为1')
+    state_now: Mapped[bool] = mapped_column(
+        Integer, nullable=True, default=True, comment='当前是否启用，1启用；0未启用,默认为1'
+    )

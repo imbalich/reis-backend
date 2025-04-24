@@ -47,7 +47,7 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         result = await db.execute(stmt)
         return result.scalars().first()
 
-    async def create(self,db: AsyncSession, obj) -> None:
+    async def create(self, db: AsyncSession, obj) -> None:
         """
         创建单型号单条分布信息
         """

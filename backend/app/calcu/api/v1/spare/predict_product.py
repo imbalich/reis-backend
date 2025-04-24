@@ -12,9 +12,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 
-from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 from backend.app.calcu.schema.distribute_param import DistributeType
 from backend.app.calcu.service.distribute_service import distribute_service
+from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 from backend.common.response.response_schema import response_base
 
 router = APIRouter()

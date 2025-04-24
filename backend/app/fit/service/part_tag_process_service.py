@@ -19,13 +19,13 @@ from backend.app.fit.utils.time_utils import dateutils
 
 class PartTagProcessService(TagProcessService):
     async def process_data(
-            self,
-            despatch_data: list[Despatch],
-            failure_data: list[Failure],
-            product_data: Product,
-            bom_data: Ebom,
-            input_date: str | date = None,
-            **kwargs: Any,
+        self,
+        despatch_data: list[Despatch],
+        failure_data: list[Failure],
+        product_data: Product,
+        bom_data: Ebom,
+        input_date: str | date = None,
+        **kwargs: Any,
     ) -> list[list]:
         if 'replace_data' not in kwargs:
             # 非必换件
@@ -44,12 +44,12 @@ class PartTagProcessService(TagProcessService):
             )
 
     async def _process_non_essential(
-            self,
-            despatch_data: list[Despatch],
-            failure_data: list[Failure],
-            product_data: Product,
-            bom_data: Ebom,
-            input_date: str | date = None,
+        self,
+        despatch_data: list[Despatch],
+        failure_data: list[Failure],
+        product_data: Product,
+        bom_data: Ebom,
+        input_date: str | date = None,
     ) -> list[list]:
         # 处理基础数据
         despatch_data = await self.process_despatch_data(despatch_data, input_date)
@@ -68,15 +68,15 @@ class PartTagProcessService(TagProcessService):
         return data['tags']
 
     async def _process_essential(
-            self,
-            despatch_data: list[Despatch],
-            failure_data: list[Failure],
-            product_data: Product,
-            bom_data: Ebom,
-            replace_data: list[ReplaceParam],
-            repair_data: list[RepairParam],
-            repair_despatch_data: list[Despatch],
-            input_date: str | date = None,
+        self,
+        despatch_data: list[Despatch],
+        failure_data: list[Failure],
+        product_data: Product,
+        bom_data: Ebom,
+        replace_data: list[ReplaceParam],
+        repair_data: list[RepairParam],
+        repair_despatch_data: list[Despatch],
+        input_date: str | date = None,
     ) -> list[list]:
         # 1.发运根据发运数据先创建基础数据结构
         despatch_data = await self.process_despatch_data(despatch_data, input_date)
@@ -145,7 +145,7 @@ class PartTagProcessService(TagProcessService):
 
     @staticmethod
     async def container_inspect(
-            container: dict[str, Any], failure_data: list[FailureParam], bom_data: EbomParam
+        container: dict[str, Any], failure_data: list[FailureParam], bom_data: EbomParam
     ) -> dict[str, Any]:
         # 故障数据补充容器
         for failure in failure_data:
@@ -167,7 +167,7 @@ class PartTagProcessService(TagProcessService):
 
     @staticmethod
     async def container_insert_non_essential(
-            container: dict[str, Any], failure_data: list[FailureParam]
+        container: dict[str, Any], failure_data: list[FailureParam]
     ) -> tuple[dict, list]:
         """
         非必换件故障数据插入
@@ -196,9 +196,9 @@ class PartTagProcessService(TagProcessService):
             for vmc, pt in container['part_container'][failure.product_number]['sub_container'].items():
                 # 优先去找fault_part_list中最后一个是否匹配当前故障件编号
                 if (
-                        len(pt['fault_part_list']) > 0
-                        and pt['fault_part_list'][-1] == failure.fault_part_number
-                        and not is_used
+                    len(pt['fault_part_list']) > 0
+                    and pt['fault_part_list'][-1] == failure.fault_part_number
+                    and not is_used
                 ):
                     pt['fault_part_list'].append(failure.replacement_part_number)
                     pt['fault_date_list'].append((failure.discovery_date, 'failure', 0))
@@ -222,22 +222,24 @@ class PartTagProcessService(TagProcessService):
             if not is_used:
                 container['part_container'][failure.product_number]['sub_container'][
                     failure.fault_material_code + '-1'
-                    ]['fault_part_list'].append(failure.replacement_part_number)
+                ]['fault_part_list'].append(failure.replacement_part_number)
                 container['part_container'][failure.product_number]['sub_container'][
                     failure.fault_material_code + '-1'
-                    ]['fault_date_list'].append((failure.discovery_date, 'failure', 0))
+                ]['fault_date_list'].append((failure.discovery_date, 'failure', 0))
                 is_used = True
             if not is_used:
                 # 插入失败
-                error_info_message = f'型号 {failure.product_model} 部件 {failure.fault_location} ' \
-                                     f'物料编码 {failure.fault_material_code} 故障报告ID {failure.report_id} ' \
-                                     f'故障插入失败,请联系数字化管理部大数据室查询该故障信息完整性'
+                error_info_message = (
+                    f'型号 {failure.product_model} 部件 {failure.fault_location} '
+                    f'物料编码 {failure.fault_material_code} 故障报告ID {failure.report_id} '
+                    f'故障插入失败,请联系数字化管理部大数据室查询该故障信息完整性'
+                )
                 error_info_list.append(error_info_message)
         return container, error_info_list
 
     @staticmethod
     async def tag_create_non_essential(
-            container: dict[str, Any], product_data: Product, input_date: date
+        container: dict[str, Any], product_data: Product, input_date: date
     ) -> list[list[Any]]:
         result = []
         # 循环遍历 container 容器中的每个键和值
@@ -257,8 +259,8 @@ class PartTagProcessService(TagProcessService):
 
     @staticmethod
     async def container_insert_essential_repair(
-            container: dict[str, Any],
-            repair_despatch_data: list[DespatchParam],
+        container: dict[str, Any],
+        repair_despatch_data: list[DespatchParam],
     ) -> tuple[dict, list]:
         error_info_list = []  # 失败信息
         # 必换件:先考虑插入发运信息，查询该型号所有发运信息
@@ -270,10 +272,12 @@ class PartTagProcessService(TagProcessService):
                     # (despatch.life_cycle_time,'repair', despatch.repair_level_num)
                     if despatch.life_cycle_time <= pt['fault_date_list'][-1][0]:
                         # 判断条件:despatch.life_cycle_time不能超过前一个的值，不然认为时间有问题
-                        error_info_message = f'产品 {despatch.model} 编号 {despatch.identifier} ' \
-                                             f'等级修 {despatch.repair_level} 插入失败,' \
-                                             f'时间 {despatch.life_cycle_time} ' \
-                                             f'小于前值 {pt["fault_date_list"][-1][0]}'
+                        error_info_message = (
+                            f'产品 {despatch.model} 编号 {despatch.identifier} '
+                            f'等级修 {despatch.repair_level} 插入失败,'
+                            f'时间 {despatch.life_cycle_time} '
+                            f'小于前值 {pt["fault_date_list"][-1][0]}'
+                        )
                         error_info_list.append(error_info_message)
                         break
                     pt['fault_date_list'].append((despatch.life_cycle_time, 'repair', despatch.repair_level_num))
@@ -281,7 +285,7 @@ class PartTagProcessService(TagProcessService):
 
     @staticmethod
     async def tag_create_essential(
-            container: dict[str, Any], product_data: Product, input_date: date
+        container: dict[str, Any], product_data: Product, input_date: date
     ) -> list[list[Any]]:
         result = []
         # 循环遍历 container 容器中的每个键和值
