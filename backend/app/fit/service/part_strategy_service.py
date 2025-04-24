@@ -54,14 +54,14 @@ class PartStrategyService:
         product_check = await datacheckutils.check_model_in_product(model)
         if not product_check:
             raise errors.DataValidationError(msg=f'型号{model}的产品信息不存在')
-        # 2.检查故障信息Failure数量
-        fault_check = await datacheckutils.check_model_and_part_in_failure(model, part)
-        if not fault_check:
-            raise errors.DataValidationError(msg=f'型号{model}+零部件{part}的故障信息数量不足')
-        # 3.检查累计运行时间Despatch
+        # 2.检查累计运行时间Despatch
         run_time_check = await datacheckutils.check_model_in_despatch(model)
         if not run_time_check:
             raise errors.DataValidationError(msg=f'型号{model}的累计运行时间不足')
+        # 3.检查故障信息Failure数量
+        fault_check = await datacheckutils.check_model_and_part_in_failure(model, part)
+        if not fault_check:
+            raise errors.FailureCheckError(msg=f'型号{model}+零部件{part}的故障信息数量不足')
 
         async with async_db_session() as db:
             try:

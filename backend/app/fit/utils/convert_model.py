@@ -55,7 +55,7 @@ def convert_dict_to_pydantic_model(value: dict, model: Type[T]) -> T:
 
 
 def convert_to_product_distribution_params(
-    fit_results: pd.DataFrame, model: str, input_date: date, method: FitMethodType, source: bool
+        fit_results: pd.DataFrame, model: str, input_date: date, method: FitMethodType, source: bool
 ) -> List[CreateProductDistributionParam]:
     distribution_params = []
     # 计算group_id
@@ -84,9 +84,9 @@ def convert_to_product_distribution_params(
             log_likelihood=float(row['Log-likelihood'])
             if pd.notna(row['Log-likelihood']) and row['Log-likelihood'] != ''
             else None,
-            aicc=float(row['AICc']),
-            bic=float(row['BIC']),
-            ad=float(row['AD']),
+            aicc=float(row['AICc']) if pd.notna(row['AICc']) and not pd.isna(row['AICc']) else None,
+            bic=float(row['BIC']) if pd.notna(row['BIC']) and not pd.isna(row['BIC']) else None,
+            ad=float(row['AD']) if pd.notna(row['AD']) and not pd.isna(row['AD']) else None,
             optimizer=row['optimizer'] if pd.notna(row['optimizer']) and row['optimizer'] != '' else None,
             source=source,
         )
@@ -95,7 +95,7 @@ def convert_to_product_distribution_params(
 
 
 def convert_to_part_distribution_params(
-    fit_results: pd.DataFrame, model: str, part: str, input_date: date, method: FitMethodType, source: bool
+        fit_results: pd.DataFrame, model: str, part: str, input_date: date, method: FitMethodType, source: bool
 ) -> List[CreatePartDistributionParam]:
     distribution_params = []
     # 计算group_id
@@ -125,14 +125,79 @@ def convert_to_part_distribution_params(
             log_likelihood=float(row['Log-likelihood'])
             if pd.notna(row['Log-likelihood']) and row['Log-likelihood'] != ''
             else None,
-            aicc=float(row['AICc']),
-            bic=float(row['BIC']),
-            ad=float(row['AD']),
+            aicc=float(row['AICc']) if pd.notna(row['AICc']) and not pd.isna(row['AICc']) else None,
+            bic=float(row['BIC']) if pd.notna(row['BIC']) and not pd.isna(row['BIC']) else None,
+            ad=float(row['AD']) if pd.notna(row['AD']) and not pd.isna(row['AD']) else None,
             optimizer=row['optimizer'] if pd.notna(row['optimizer']) and row['optimizer'] != '' else None,
             source=source,
         )
         distribution_params.append(param)
     return distribution_params
+
+
+def convert_to_product_exponential_distribution_params(
+        model: str, input_date: date, method: FitMethodType, source: bool, lambda_: float
+) -> CreateProductDistributionParam:
+    group_id = uuid4_str()
+    param = CreateProductDistributionParam(
+        group_id=group_id,
+        model=model,
+        input_date=input_date,  # 注意：这里移除了 .today()
+        method=method,
+        distribution='Exponential_1P',
+        alpha=None,
+        beta=None,
+        gamma=None,
+        alpha_1=None,
+        beta_1=None,
+        alpha_2=None,
+        beta_2=None,
+        proportion_1=None,
+        ds=None,
+        mu=None,
+        sigma=None,
+        lambda_=lambda_,
+        log_likelihood=None,
+        aicc=None,
+        bic=None,
+        ad=None,
+        optimizer=None,
+        source=source,
+    )
+    return param
+
+
+def convert_to_part_exponential_distribution_params(
+        model: str, part: str, input_date: date, method: FitMethodType, source: bool, lambda_: float
+) -> CreatePartDistributionParam:
+    group_id = uuid4_str()
+    param = CreatePartDistributionParam(
+        group_id=group_id,
+        model=model,
+        part=part,
+        input_date=input_date,  # 注意：这里移除了 .today()
+        method=method,
+        distribution='Exponential_1P',
+        alpha=None,
+        beta=None,
+        gamma=None,
+        alpha_1=None,
+        beta_1=None,
+        alpha_2=None,
+        beta_2=None,
+        proportion_1=None,
+        ds=None,
+        mu=None,
+        sigma=None,
+        lambda_=lambda_,
+        log_likelihood=None,
+        aicc=None,
+        bic=None,
+        ad=None,
+        optimizer=None,
+        source=source,
+    )
+    return param
 
 
 def convert_to_total_quantity(ebom_data: list[EbomParam]) -> int:

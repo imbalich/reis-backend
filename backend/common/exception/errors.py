@@ -68,7 +68,7 @@ class ServerError(BaseExceptionMixin):
     code = StandardResponseCode.HTTP_500
 
     def __init__(
-        self, *, msg: str = 'Internal Server Error', data: Any = None, background: BackgroundTask | None = None
+            self, *, msg: str = 'Internal Server Error', data: Any = None, background: BackgroundTask | None = None
     ):
         super().__init__(msg=msg, data=data, background=background)
 
@@ -105,6 +105,16 @@ class DataValidationError(BaseExceptionMixin):
     code = StandardResponseCode.HTTP_422
 
     def __init__(
-        self, *, msg: str = 'Data Validation Error', data: Any = None, background: BackgroundTask | None = None
+            self, *, msg: str = 'Data Validation Error', data: Any = None, background: BackgroundTask | None = None
+    ):
+        super().__init__(msg=msg, data=data, background=background)
+
+
+class FailureCheckError(BaseExceptionMixin):
+    # 故障数据验证错误，特殊使用渠道
+    code = StandardResponseCode.HTTP_417
+
+    def __init__(
+            self, *, msg: str = 'Failure Check Error', data: Any = None, background: BackgroundTask | None = None
     ):
         super().__init__(msg=msg, data=data, background=background)

@@ -18,6 +18,7 @@ from backend.app.fit.service.part_fit_service import part_fit_service
 from backend.app.fit.service.product_fit_service import product_fit_service
 from backend.app.task.celery import celery_app
 from backend.common.log import log
+from backend.common.exception.errors import DataValidationError
 
 
 @celery_app.task(name='cleanup_redis_keys')
@@ -38,10 +39,14 @@ async def product_fit_task(model: str, input_date: str, method: FitMethodType = 
     :param input_date: 输入日期 YYYY-MM-DD
     :param method: 拟合方法
     """
-    fit_param = CreateFitProductInParam(model=model, input_date=input_date, method=method)
-    await product_fit_service.create(obj=fit_param)
-
-    return f'Task completed for model: {model}'
+    try:
+        fit_param = CreateFitProductInParam(model=model, input_date=input_date, method=method)
+        await product_fit_service.create(obj=fit_param)
+        return f'Task completed for model: {model}'
+    except DataValidationError as e:
+        return f'Error processing model {model}: {str(e.msg)}'
+    except Exception as e:
+        return f'Unexpected Error processing model {model}: {str(e)}'
 
 
 @celery_app.task(name='part_fit_task')
@@ -55,10 +60,15 @@ async def part_fit_task(model: str, part: str, input_date: str, method: FitMetho
     :param input_date: 输入日期 YYYY-MM-DD
     :param method: 拟合方法
     """
-    fit_param = CreateFitPartInParam(model=model, part=part, input_date=input_date, method=method)
-    await part_fit_service.create(obj=fit_param)
+    try:
+        fit_param = CreateFitPartInParam(model=model, part=part, input_date=input_date, method=method)
+        await part_fit_service.create(obj=fit_param)
 
-    return f'Task completed for model: {model}, part: {part}'
+        return f'Task completed for model: {model}, part: {part}'
+    except DataValidationError as e:
+        return f'Error processing model {model}, part {part}: {str(e.msg)}'
+    except Exception as e:
+        return f'Unexpected Error processing model {model}, part {part}: {str(e)}'
 
 
 @celery_app.task(name='product_fit_all_task')
@@ -83,12 +93,15 @@ async def product_fit_all_task(input_date: str, method: FitMethodType = FitMetho
                 fit_param = CreateFitProductInParam(model=model, input_date=input_date, method=method)
                 await product_fit_service.create(obj=fit_param)
                 successful_models += 1
+            except DataValidationError as e:
+                log.error(f'Error processing model {model}: {str(e.msg)}')
+                problematic_models.append(model)
             except Exception as e:
-                log.error(f'Error processing model {model}: {str(e)}')
+                log.error(f'Unexpected Error processing model {model}: {str(e)}')
                 problematic_models.append(model)
 
     except Exception as e:
-        log.error(f'Error in product_fit_all_task: {str(e)}')
+        log.error(f'Unexpected Error in product_fit_all_task: {str(e)}')
 
     end_time = time.time()
     execution_time = end_time - start_time
@@ -135,8 +148,11 @@ async def part_fit_all_task(input_date: str, method: FitMethodType = FitMethodTy
                         fit_param = CreateFitPartInParam(model=model, part=part, input_date=input_date, method=method)
                         await part_fit_service.create(obj=fit_param)
                         successful_parts += 1
+                    except DataValidationError as e:
+                        log.error(f'Error processing model {model}, part {part}: {str(e.msg)}')
+                        problematic_parts.append(f'{model} + {part}')
                     except Exception as e:
-                        log.error(f'Error processing model {model}, part {part}: {str(e)}')
+                        log.error(f'Unexpected Error processing model {model}, part {part}: {str(e)}')
                         problematic_parts.append(f'{model} + {part}')
 
                 result_part_summary = (
@@ -153,13 +169,13 @@ async def part_fit_all_task(input_date: str, method: FitMethodType = FitMethodTy
 
                 log.info(result_part_summary)
             except Exception as e:
-                log.error(f'Error processing model {model}: {str(e)}')
+                log.error(f'Unexpected Error processing model {model}: {str(e)}')
                 problematic_models.append(model)
 
             successful_models += 1
 
     except Exception as e:
-        log.error(f'Error in product_fit_all_task: {str(e)}')
+        log.error(f'Unexpected Error in product_fit_all_task: {str(e)}')
 
     end_time = time.time()
     execution_time = end_time - start_time

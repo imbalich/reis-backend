@@ -7,26 +7,31 @@
 @Author  : imbalich
 @Time    : 2025/2/28 下午3:42
 """
-
+import math
 from datetime import date, datetime
 from typing import Any
 
+from reliability.Distributions import Exponential_Distribution
 from reliability.Fitters import Fit_Everything
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.fit.crud.crud_fit_product import fit_product_dao
 from backend.app.fit.schema.fit_param import CreateFitProductInParam, FitCheckType, FitMethodType
 from backend.app.fit.service.product_strategy_service import product_strategy_service
-from backend.app.fit.utils.convert_model import convert_method_to_str, convert_to_product_distribution_params
+from backend.app.fit.utils.convert_model import convert_method_to_str, convert_to_product_distribution_params, \
+    convert_to_product_exponential_distribution_params
+from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
+from backend.common.exception.errors import DataValidationError, FailureCheckError
 from backend.database.db import async_db_session
 
 
 class ProductFitService:
     @staticmethod
     async def tag_fit(
-        tags: dict[str, Any],
-        method: FitMethodType | str | None = FitMethodType.MLE,
+            tags: list[list],
+            method: FitMethodType | str | None = FitMethodType.MLE,
     ) -> Fit_Everything:
         """
         单个产品拟合
@@ -60,10 +65,30 @@ class ProductFitService:
         return fit
 
     @staticmethod
+    async def none_tag_fit(db: AsyncSession, model: str) -> float:
+        """
+        无标签(无故障)拟合:指定为指数分布
+        """
+        # 1. 计算故障总数,总运行时间
+        failures = await failure_dao.get_by_model(db, model)
+        t = await datacheckutils.total_run_time(db, model)
+        if t == 0:
+            raise DataValidationError(msg=f'型号{model}的累计运行时间为0')
+        # 2. 按照故障数量划分计算指数分布
+        if len(failures) > 0:
+            # 2.1 存在故障，计算指数分布公式:λ = n / T
+            lambda_ = len(failures) / t
+        else:
+            # 2.2 不存在故障，计算指数分布公式:λ = t/-ln(1/e)
+            lambda_ = -(math.log(1 / math.e)) / t
+        distribution_lambda = Exponential_Distribution(Lambda=lambda_).Lambda
+        return distribution_lambda
+
+    @staticmethod
     async def create_old(
-        model: str,
-        input_date: str | date = None,
-        method: FitMethodType = FitMethodType.MLE,
+            model: str,
+            input_date: str | date = None,
+            method: FitMethodType = FitMethodType.MLE,
     ) -> None:
         """
         单个产品拟合：
@@ -133,20 +158,27 @@ class ProductFitService:
     async def _perform_and_save_fit(model: str, input_date: date, method: FitMethodType, is_user_input: bool) -> None:
         async with async_db_session() as db:
             async with db.begin():
-                tags = await product_strategy_service.model_tag_process(model, input_date)
-                fit = await ProductFitService.tag_fit(tags, method)
-                distribution_params = convert_to_product_distribution_params(
-                    fit.results, model, input_date, method, is_user_input
-                )
-                await fit_product_dao.creates(db, distribution_params)
+                try:
+                    tags = await product_strategy_service.model_tag_process(model, input_date)
+                    fit = await ProductFitService.tag_fit(tags, method)
+                    distribution_params = convert_to_product_distribution_params(
+                        fit.results, model, input_date, method, is_user_input
+                    )
+                    await fit_product_dao.creates(db, distribution_params)
+                except FailureCheckError:
+                    lambda_ = await ProductFitService.none_tag_fit(db, model)
+                    distribution_param = convert_to_product_exponential_distribution_params(
+                        model, input_date, method, is_user_input, lambda_
+                    )
+                    await fit_product_dao.create_model(db, distribution_param)
 
     @staticmethod
     async def get_by_model(
-        model: str,
-        input_date: str | date = None,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        source: bool = False,
+            model: str,
+            input_date: str | date = None,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -164,11 +196,11 @@ class ProductFitService:
 
     @staticmethod
     async def get_best_by_model(
-        model: str,
-        input_date: str | date = None,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        source: bool = False,
+            model: str,
+            input_date: str | date = None,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,查询最优的拟合信息

@@ -21,12 +21,12 @@ from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 
 class CRUDFitPart(CRUDPlus[FitPart]):
     async def get_last(
-        self,
-        db: AsyncSession,
-        model: str,
-        part: str,
-        input_date: date = None,
-        method: FitMethodType = FitMethodType.MLE,
+            self,
+            db: AsyncSession,
+            model: str,
+            part: str,
+            input_date: date = None,
+            method: FitMethodType = FitMethodType.MLE,
     ) -> FitPart | None:
         """
         获取单零部件最后的一条分布信息
@@ -69,6 +69,15 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         result = await db.execute(stmt)
         return result.scalars().all()
 
+    async def create(self, db: AsyncSession, obj) -> None:
+        """
+        创建单型号单零部件一条分布信息
+        :param db:
+        :param obj:
+        :return:
+        """
+        await self.create_model(db, obj)
+
     async def creates(self, db: AsyncSession, objs) -> None:
         """
         创建单型号单零部件多条分布信息
@@ -79,14 +88,14 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         await self.create_models(db, objs)
 
     async def get_by_model_and_part(
-        self,
-        db: AsyncSession,
-        model: str,
-        part: str,
-        input_date: date = None,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        source: bool = False,
+            self,
+            db: AsyncSession,
+            model: str,
+            part: str,
+            input_date: date = None,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            source: bool = False,
     ) -> Sequence[FitPart]:
         """
         根据型号和零部件查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -140,15 +149,15 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         return result.scalars().all()
 
     async def get_by_model_and_part_and_distribution(
-        self,
-        db: AsyncSession,
-        model: str,
-        part: str,
-        distribution: str,
-        input_date: date = None,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        source: bool = False,
+            self,
+            db: AsyncSession,
+            model: str,
+            part: str,
+            distribution: str,
+            input_date: date = None,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            source: bool = False,
     ) -> FitPart:
         """
         根据型号和零部件查询拟合信息:查询最新的拟合信息,只选取一个

@@ -82,9 +82,9 @@ class CreateProductDistributionParam(SchemaBase):
     sigma: float | None = None
     lambda_: float | None = None  # lambda
     log_likelihood: float | None = None
-    aicc: float
-    bic: float
-    ad: float
+    aicc: float | None = None
+    bic: float | None = None
+    ad: float | None = None
     optimizer: str | None = None
 
     source: bool
@@ -113,9 +113,9 @@ class CreatePartDistributionParam(SchemaBase):
     sigma: float | None = None
     lambda_: float | None = None  # lambda
     log_likelihood: float | None = None
-    aicc: float
-    bic: float
-    ad: float
+    aicc: float | None = None
+    bic: float | None = None
+    ad: float | None = None
     optimizer: str | None = None
 
     source: bool

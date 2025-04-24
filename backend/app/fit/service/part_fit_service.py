@@ -7,25 +7,29 @@
 @Author  : imbalich
 @Time    : 2025/3/24 14:33
 """
-
+import math
 from datetime import date, datetime
 
+from reliability.Distributions import Exponential_Distribution
 from reliability.Fitters import Fit_Everything
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
 from backend.app.fit.schema.fit_param import CreateFitPartInParam, FitCheckType, FitMethodType
 from backend.app.fit.service.part_strategy_service import part_strategy_service
-from backend.app.fit.utils.convert_model import convert_method_to_str, convert_to_part_distribution_params
+from backend.app.fit.utils.convert_model import convert_method_to_str, convert_to_part_distribution_params, \
+    convert_to_part_exponential_distribution_params
+from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
+from backend.common.exception.errors import FailureCheckError, DataValidationError
 from backend.database.db import async_db_session
 
 
 class PartFitService:
     @staticmethod
     async def tag_fit(
-        tags: list[list],
-        method: FitMethodType | str | None = FitMethodType.MLE,
+            tags: list[list],
+            method: FitMethodType | str | None = FitMethodType.MLE,
     ) -> Fit_Everything:
         """
         单个产品+部件拟合
@@ -59,6 +63,26 @@ class PartFitService:
         return fit
 
     @staticmethod
+    async def none_tag_fit(db: AsyncSession, model: str, part: str) -> float:
+        """
+        无标签(无故障)拟合:指定为指数分布
+        """
+        # 1. 计算故障总数,总运行时间
+        failures = await fit_part_dao.get_by_model_and_part(db, model, part)
+        t = await datacheckutils.total_run_time(db, model)
+        if t == 0:
+            raise DataValidationError(msg=f'型号 {model} 部件 {part} 的累计运行时间为0')
+        # 2. 按照故障数量划分计算指数分布
+        if len(failures) > 0:
+            # 2.1 存在故障，计算指数分布公式:λ = n / T
+            lambda_ = len(failures) / t
+        else:
+            # 2.2 不存在故障，计算指数分布公式:λ = t/-ln(1/e)
+            lambda_ = -(math.log(1 / math.e)) / t
+        distribution_lambda = Exponential_Distribution(Lambda=lambda_).Lambda
+        return distribution_lambda
+
+    @staticmethod
     async def create(*, obj: CreateFitPartInParam) -> None:
         """
         单个产品拟合：
@@ -70,7 +94,7 @@ class PartFitService:
         is_system_default = input_date == date.today() and obj.method == FitMethodType.MLE
         async with async_db_session() as db:
             if is_system_default and await PartFitService._recent_fit_exists(
-                db, obj.model, obj.part, input_date, obj.method
+                    db, obj.model, obj.part, input_date, obj.method
             ):
                 return
 
@@ -80,7 +104,7 @@ class PartFitService:
 
     @staticmethod
     async def _recent_fit_exists(
-        db: AsyncSession, model: str, part: str, input_date: date, method: FitMethodType
+            db: AsyncSession, model: str, part: str, input_date: date, method: FitMethodType
     ) -> bool:
         distribution = await fit_part_dao.get_last(db, model, part, input_date, method)
         if distribution and distribution.created_time:
@@ -90,25 +114,32 @@ class PartFitService:
 
     @staticmethod
     async def _perform_and_save_fit(
-        model: str, part: str, input_date: date, method: FitMethodType, is_user_input: bool
+            model: str, part: str, input_date: date, method: FitMethodType, is_user_input: bool
     ) -> None:
         async with async_db_session() as db:
             async with db.begin():
-                tags = await part_strategy_service.part_tag_process(model, part, input_date)
-                fit = await PartFitService.tag_fit(tags, method)
-                distribution_params = convert_to_part_distribution_params(
-                    fit.results, model, part, input_date, method, is_user_input
-                )
-                await fit_part_dao.creates(db, distribution_params)
+                try:
+                    tags = await part_strategy_service.part_tag_process(model, part, input_date)
+                    fit = await PartFitService.tag_fit(tags, method)
+                    distribution_params = convert_to_part_distribution_params(
+                        fit.results, model, part, input_date, method, is_user_input
+                    )
+                    await fit_part_dao.creates(db, distribution_params)
+                except FailureCheckError:
+                    lambda_ = await PartFitService.none_tag_fit(db, model, part)
+                    distribution_param = convert_to_part_exponential_distribution_params(
+                        model, part, input_date, method, is_user_input, lambda_
+                    )
+                    await fit_part_dao.create(db, distribution_param)
 
     @staticmethod
     async def get_by_model_and_part(
-        model: str,
-        part: str,
-        input_date: str | date = None,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        source: bool = False,
+            model: str,
+            part: str,
+            input_date: str | date = None,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            source: bool = False,
     ):
         """
         根据型号+部件查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -127,12 +158,12 @@ class PartFitService:
 
     @staticmethod
     async def get_best_by_model_and_part(
-        model: str,
-        part: str,
-        input_date: str | date = None,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        source: bool = False,
+            model: str,
+            part: str,
+            input_date: str | date = None,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            source: bool = False,
     ):
         """
         根据型号查询拟合信息:查询最新的拟合信息,查询最优的拟合信息

@@ -10,6 +10,8 @@
 
 from datetime import date
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from backend.app.datamanage.crud.crud_despatch import despatch_dao
 from backend.app.datamanage.crud.crud_ebom import ebom_dao
 from backend.app.datamanage.crud.crud_failure import failure_dao
@@ -67,24 +69,29 @@ class DataCheckUtils:
         :return:布尔类型
         """
         async with async_db_session() as db:
-            despatchs = await despatch_dao.get_despatchs_by_model(db, model)
-            product = await product_dao.get_by_model(db, model)
-            if despatchs:
-                # 当前日期
-                now = date.today()
-                total_hours = 0
-                for despatch in despatchs:
-                    dispatch_date = despatch.life_cycle_time
-                    if isinstance(dispatch_date, str):
-                        dispatch_date = dateutils.validate_and_parse_date(dispatch_date)
-                    # 计算日期差
-                    date_diff = (now - dispatch_date).days
-                    hours = dateutils.run_time(date_diff, product.year_days, product.avg_worktime)
-                    total_hours += hours
-
-                # 检查总运行时间是否达到或超过10万小时
-                return total_hours >= 100000
+            total_hours = await DataCheckUtils.total_run_time(db, model)
+            if total_hours >= 100000:
+                return True
             return False
+
+    @staticmethod
+    async def total_run_time(db: AsyncSession, model: str) -> float:
+        despatchs = await despatch_dao.get_despatchs_by_model(db, model)
+        product = await product_dao.get_by_model(db, model)
+        if despatchs:
+            # 当前日期
+            now = date.today()
+            total_hours = 0
+            for despatch in despatchs:
+                dispatch_date = despatch.life_cycle_time
+                if isinstance(dispatch_date, str):
+                    dispatch_date = dateutils.validate_and_parse_date(dispatch_date)
+                # 计算日期差
+                date_diff = (now - dispatch_date).days
+                hours = dateutils.run_time(date_diff, product.year_days, product.avg_worktime)
+                total_hours += hours
+            return total_hours
+        return 0
 
     @staticmethod
     async def check_model_and_part_in_ebom(model: str, part: str) -> bool:
