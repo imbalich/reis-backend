@@ -14,6 +14,7 @@ from fastapi import APIRouter, Query
 
 from backend.app.calcu.schema.distribute_param import DistributeType
 from backend.app.calcu.service.distribute_service import distribute_service
+from backend.app.calcu.service.spare_service import spare_service
 from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 from backend.common.response.response_schema import response_base
 
@@ -30,7 +31,7 @@ async def product_spare_predict(
     start_date: Annotated[str | None, Query(description='计算起始日期')] = None,
     end_date: Annotated[str | None, Query(description='计算截止日期')] = None,
 ):
-    spare_num = await distribute_service.get_product_spare_num(
+    spare_num = await spare_service.get_product_spare_num(
         model, distribution, method, check, input_date, start_date, end_date
     )
     return response_base.success(data=spare_num)
