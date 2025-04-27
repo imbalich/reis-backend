@@ -89,7 +89,7 @@ class DistributeService:
         return predict_settings.DISTRIBUTION_FUNCTIONS[distribute_type]
 
     @staticmethod
-    async def get_distribution(params: DistributionParams):
+    async def get_distribution_by_params(params: DistributionParams):
         distribute_type = DistributeType(params.distribution)
         distribution_class = predict_settings.DISTRIBUTION_FUNCTIONS.get(distribute_type)
         if not distribution_class:
@@ -125,7 +125,7 @@ class DistributeService:
             # 转换pydantic模型
             distribution_params = convert_to_pydantic_model(distribution_params, DistributionParams)
             # 获取分布对象
-            return await DistributeService.get_distribution(distribution_params)
+            return await DistributeService.get_distribution_by_params(distribution_params)
         return None
 
     @staticmethod
@@ -146,8 +146,25 @@ class DistributeService:
             # 转换pydantic模型
             distribution_params = convert_to_pydantic_model(distribution_params, DistributionParams)
             # 获取分布对象
-            return await DistributeService.get_distribution(distribution_params)
+            return await DistributeService.get_distribution_by_params(distribution_params)
         return None
+
+    @staticmethod
+    async def get_distribution(
+        model: str,
+        part: str | None = None,
+        distribution_type: DistributeType = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+    ):
+        """
+        通过指定分布类型获取产品/零部件的分布对象obj
+        """
+        if not distribution_type:
+            return None
+        if part:
+            return await DistributeService.get_part_distribution(model, part, distribution_type, method, check)
+        return await DistributeService.get_product_distribution(model, distribution_type, method, check)
 
 
 distribute_service: DistributeService = DistributeService()

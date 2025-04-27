@@ -83,9 +83,11 @@ class ReliabilityIndexService:
             return min(t, replace_max_time) if t else replace_max_time
 
     @staticmethod
-    async def get_fpmh(model: str, part: str | None = None, t: float | None = None):
+    async def get_fpmh(model: str, part: str | None = None, t: float | None = None, distribution=None) -> float:
         # 计算FPMH值:pdf函数中t位置的y值
-        best_distribution = await ReliabilityIndexService._get_best_distribution(model, part)
+        best_distribution = distribution
+        if not distribution:
+            best_distribution = await ReliabilityIndexService._get_best_distribution(model, part)
         if not best_distribution:
             raise errors.DataValidationError(msg=f'型号{model} 零部件{part} 的分布信息不存在')
         time = await ReliabilityIndexService._get_t(model, part, t)
@@ -93,16 +95,72 @@ class ReliabilityIndexService:
         return fpmh
 
     @staticmethod
-    async def get_fpmk():
+    async def get_fpmk(model: str, part: str | None = None, t: float | None = None) -> float:
+        # 获取FPMK值:fpmh/v
+        product = await ReliabilityIndexService._get_product_params(model)
+        v = product.avg_speed
+        fpmk = await ReliabilityIndexService.get_fpmh(model, part, t) / v
+        return fpmk
+
+    @staticmethod
+    async def get_mtbf(model: str, part: str | None = None, t: float | None = None) -> float:
+        # 获取MTBF值:1000000/FPMH
+        mtbf = 1000000 / await ReliabilityIndexService.get_fpmh(model, part, t)
+        return mtbf
+
+    @staticmethod
+    async def get_r(model: str, part: str | None = None, t: float | None = None, distribution=None) -> float:
+        # 获取R值,t时间下的可靠度
+        best_distribution = distribution
+        if not distribution:
+            best_distribution = await ReliabilityIndexService._get_best_distribution(model, part)
+        if not t:
+            t = await ReliabilityIndexService._get_t(model, part)
+        r = best_distribution.SF(t)
+        return r
+
+    @staticmethod
+    async def get_inverse_r(model: str, part: str | None = None, r: float = 0.9, distribution=None) -> float:
+        # 计算R的逆函数,R值下的使用时间
+        if r < 0 or r > 1:
+            raise errors.DataValidationError(msg='可用度R值必须在0和1之间')
+        best_distribution = distribution
+        if not distribution:
+            best_distribution = await ReliabilityIndexService._get_best_distribution(model, part)
+        inverse_r = best_distribution.inverse_SF(r)
+        return inverse_r
+
+    @staticmethod
+    async def get_mean_residual_life(model: str, part: str | None = None, t: float | None = None, distribution=None) -> float:
+        # 获取平均剩余寿命值
+        best_distribution = distribution
+        if not distribution:
+            best_distribution = await ReliabilityIndexService._get_best_distribution(model, part)
+        if not t:
+            t = await ReliabilityIndexService._get_t(model, part)
+        mean_residual_life = best_distribution.mean_residual_life(t)
+        return mean_residual_life
+
+    @staticmethod
+    async def get_mttr():
+        # 获取MTTR值
         pass
 
     @staticmethod
-    async def get_mtbf():
+    async def get_ai():
+        # 获取AI值
         pass
 
     @staticmethod
-    async def get_r():
-        pass
+    async def get_all_index(model: str, part: str | None = None, t: float | None = None, distribution=None):
+        # 获取所有指标值
+        fpmh = await ReliabilityIndexService.get_fpmh(model, part, t, distribution)
+        fpmk = await ReliabilityIndexService.get_fpmk(model, part, t)
+        mtbf = await ReliabilityIndexService.get_mtbf(model, part, t)
+        r = await ReliabilityIndexService.get_r(model, part, t, distribution)
+        inverse_r = await ReliabilityIndexService.get_inverse_r(model, part, r, distribution)
+        mean_residual_life = await ReliabilityIndexService.get_mean_residual_life(model, part, t, distribution)
+        return fpmh, fpmk, mtbf, r, inverse_r, mean_residual_life
 
 
 reliability_index_service: ReliabilityIndexService = ReliabilityIndexService()
