@@ -7,7 +7,7 @@
 @Author  ：imbalich
 @Date    ：2025/3/31 17:39
 """
-
+import json
 import re
 
 from typing import List
@@ -78,3 +78,27 @@ def process_sub_value(sub_val: str) -> str:
     else:
         numbers = re.findall(r'-?\d+\.?\d*', sub_val)
         return numbers[0] if numbers else sub_val
+
+
+def self_create_by(name_str):
+    if not name_str:
+        return ""
+
+    # 尝试解析 JSON（如果是 JSON 格式）
+    if name_str.startswith("[{"):
+        try:
+            data = json.loads(name_str)
+            if isinstance(data, list) and data:
+                # 优先取 "name" 字段
+                name_str = data[0].get("name", next(iter(data[0].values()), ""))
+        except json.JSONDecodeError:
+            pass
+
+    # 统一按换行、空格、逗号等拆分，取第一个非空部分
+    separators = ["\n", " ", ",", "，", "\t"]
+    for sep in separators:
+        if sep in name_str:
+            name_str = name_str.split(sep)[0]
+            break
+
+    return name_str.strip()

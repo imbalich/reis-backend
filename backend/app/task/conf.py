@@ -36,7 +36,7 @@ class TaskSettings(BaseSettings):
     CELERY_TASK_PACKAGES: list[str] = [
         'app.task.celery_task',
         'app.task.celery_task.db_log',
-        'app.task.celery_task.fit_task',  # 拟合模块任务
+        'app.task.celery_task.sense_task', # 敏感度分析
     ]
     CELERY_TASK_MAX_RETRIES: int = 5
 

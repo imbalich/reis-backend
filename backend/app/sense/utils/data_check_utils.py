@@ -16,7 +16,7 @@ from backend.database.db import async_db_session
 
 class DataCheckUtils:
     @staticmethod
-    async def check_model_and_part_in_product(model: str, part: str) -> bool:
+    async def check_model_and_part_in_failure(model: str, part: str) -> bool:
         """
         检查型号和零部件是否在Failure表中,检查下顺序 1
         :param model: 产品型号
@@ -24,8 +24,8 @@ class DataCheckUtils:
         :return:布尔类型
         """
         async with async_db_session() as db:
-            products = await failure_dao.get_by_model_and_part(db, model, part)
-            if products:
+            failures = await failure_dao.get_by_model_and_part(db, model, part)
+            if failures and len(failures) > 4:
                 return True
             return False
 
@@ -38,7 +38,7 @@ class DataCheckUtils:
         :return:布尔类型
         """
         async with async_db_session() as db:
-            configurations = await configuration_dao.get_by_model_and_part(db, model, part)
+            configurations = await configuration_dao.get_by_model_and_part_check(db, model, part)
             if configurations:
                 return True
             return False
@@ -57,4 +57,4 @@ class DataCheckUtils:
             return False
 
 
-datacheckutils: DataCheckUtils = DataCheckUtils()
+data_check_utils: DataCheckUtils = DataCheckUtils()

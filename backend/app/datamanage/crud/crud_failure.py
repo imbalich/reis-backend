@@ -179,12 +179,24 @@ class CRUDFailure(CRUDPlus[Failure]):
         result = await db.execute(stmt)
         return result.scalars().all()
 
-    async def get_number_by_model(self, db: AsyncSession, model: str, part: str) -> Sequence[str]:
-        """ """
+    async def get_number_by_model(self, db: AsyncSession, model: str, part: str, stage: str,
+                                  time_range: list[str]) -> Sequence[str]:
+        """
+        查询单型号零部件下的故障件编号
+        :param db: 数据库会话
+        :param model: 产品型号
+        :param part: 零部件
+        :param stage: 造修阶段
+        :param time_range: 时间范围
+        :return: 故障件编号列表
+        """
         stmt = select(distinct(self.model.product_number))
         where_list = []
         where_list.append(self.model.product_model == model)
         where_list.append(self.model.fault_material_code == part)
+        where_list.append(self.model.product_lifetime_stage == stage)
+        if time_range:
+            where_list.append(self.model.manufacturing_date.between(time_range[0], time_range[1]))
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
