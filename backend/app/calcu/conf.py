@@ -52,9 +52,9 @@ class PredictSettings(BaseSettings):
         DistributeType.Loglogistic_3P: {'alpha': 'alpha', 'beta': 'beta', 'gamma': 'gamma'},
         DistributeType.Lognormal_2P: {'mu': 'mu', 'sigma': 'sigma'},
         DistributeType.Lognormal_3P: {'mu': 'mu', 'sigma': 'sigma', 'gamma': 'gamma'},
-        DistributeType.Exponential_1P: {'lambda': 'lambda'},
-        DistributeType.Exponential_2P: {'lambda': 'lambda', 'gamma': 'gamma'},
-        DistributeType.Gumbel_2P: {'mu': 'mu', 'beta': 'beta'},
+        DistributeType.Exponential_1P: {'Lambda': 'lambda_'},
+        DistributeType.Exponential_2P: {'Lambda': 'lambda_', 'gamma': 'gamma'},
+        DistributeType.Gumbel_2P: {'mu': 'mu', 'sigma': 'sigma'},
     }
 
 

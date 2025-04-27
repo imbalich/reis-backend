@@ -14,7 +14,7 @@ from sqlalchemy import Select, Sequence, desc, distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
-from backend.app.datamanage.model import Replace
+from backend.app.datamanage.model import Replace, Repair
 
 
 class CRUDReplace(CRUDPlus[Replace]):
@@ -72,6 +72,31 @@ class CRUDReplace(CRUDPlus[Replace]):
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()
+
+    async def get_first_by_model_with_min_repair_level(self, db: AsyncSession, model: str, part: str) -> Replace | None:
+        """
+        获取指定型号下repair_level最小且在replace中存在的那条replace数据
+        :param db: 数据库会话
+        :param model: 产品型号
+        :param part: 零部件
+        :return: Replace对象或None
+        """
+        stmt = (
+            select(self.model)
+            .join(Repair, self.model.replace_level == Repair.repair_levels)
+            .where(
+                self.model.model == model,
+                self.model.part_code == part,
+                self.model.state_now == 1,
+                Repair.state_now == 1,
+                Repair.model == model
+            )
+            .order_by(Repair.id_repair)
+            .limit(1)
+        )
+
+        result = await db.execute(stmt)
+        return result.scalars().first()
 
 
 replace_dao: CRUDReplace = CRUDReplace(Replace)
