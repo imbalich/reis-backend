@@ -143,12 +143,12 @@ class ReliabilityIndexService:
 
     @staticmethod
     async def get_mttr():
-        # 获取MTTR值
+        # 平均修复时间MTTR:从何工那里要一张表
         pass
 
     @staticmethod
     async def get_ai():
-        # 获取AI值
+        # 固有可用度AI:MTBF/(MTBF+MTTR)
         pass
 
     @staticmethod
