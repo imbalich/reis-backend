@@ -48,6 +48,7 @@ dependencies = [
     "redis[hiredis]>=5.2.0",
     "reliability>=0.9.0",
     "rtoml>=0.12.0",
+    "sqlalchemy-crud-plus>=1.8.0",
     "scikit-learn>=1.6.1",
     "shap>=0.47.2",
     "sqlalchemy-crud-plus==1.6.0",
