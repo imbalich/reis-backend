@@ -77,6 +77,7 @@ async def product_fit_all_task(input_date: str, method: FitMethodType = FitMetho
     后台任务:手动触发/自动执行
     :return:
     """
+    # TODO:增加定时任务执行时，入参没有input_date的情况
     start_time = time.time()
     problematic_models: list[str] = []
     total_models = 0
@@ -125,6 +126,7 @@ async def part_fit_all_task(input_date: str, method: FitMethodType = FitMethodTy
     后台任务:手动触发/自动执行
     :return:
     """
+    # TODO:增加定时任务执行时，入参没有input_date的情况
     start_time = time.time()
     problematic_models: list[str] = []
     total_models = 0
