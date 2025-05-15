@@ -218,15 +218,13 @@ class Settings(BaseSettings):
     CELERY_TASK_PACKAGES: list[str] = [
         'app.task.celery_task',
         'app.task.celery_task.db_log',
+        'app.task.celery_task.fit_task',  # 产品拟合
+        'app.task.celery_task.sense_task',  # 敏感度分析
     ]
     CELERY_TASK_MAX_RETRIES: int = 5
 
     # 定时任务配置
     CELERY_SCHEDULE: dict[str, dict[str, Any]] = {
-        'exec-every-10-seconds': {
-            'task': 'task_demo_async',
-            'schedule': 10,
-        },
         'exec-every-sunday': {
             'task': 'delete_db_opera_log',
             'schedule': crontab('0', '0', day_of_week='6'),
@@ -234,6 +232,14 @@ class Settings(BaseSettings):
         'exec-every-15-of-month': {
             'task': 'delete_db_login_log',
             'schedule': crontab('0', '0', day_of_month='15'),
+        },
+        'product-fit-exec-every-1-of-month': {
+            'task': 'product_fit_all_task',
+            'schedule': crontab('0', '0', day_of_month='1'),  # 每个月1号执行
+        },
+        'part-fit-exec-every-1-of-month': {
+            'task': 'part_fit_all_task',
+            'schedule': crontab('0', '0', day_of_month='1'),  # 每个月1号执行
         },
     }
 
