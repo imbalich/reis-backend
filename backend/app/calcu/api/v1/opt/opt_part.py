@@ -9,17 +9,14 @@
 '''
 from fastapi import APIRouter, Query
 
+from backend.app.calcu.schema.opt_param import OptPartParam
+from backend.app.calcu.service.opt_service import opt_service
 from backend.common.response.response_schema import response_base
 
 router = APIRouter()
 
 
-@router.get('', summary='部件最佳维护周期')
-async def opt_part(
-        model: str = Query(..., description='产品型号'),
-        part: str = Query(..., description='零部件物料编码'),
-        cm_price: float = Query(..., description='CM价格'),
-        pm_price: float = Query(..., description='PM价格'),
-):
-    data = f"model: {model}, part: {part}, cm_price: {cm_price}, pm_price: {pm_price}"
-    return response_base.success(data=data)
+@router.post('', summary='部件最佳维护周期')
+async def opt_part(obj: OptPartParam):
+    result = await opt_service.get_opt_part(obj=obj)
+    return response_base.success(data=result)
