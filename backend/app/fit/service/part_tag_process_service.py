@@ -178,19 +178,6 @@ class PartTagProcessService(TagProcessService):
         # 非必换件:不管是否出质保,直接从头算到尾
         error_info_list = []  # 失败信息
         for failure in failure_data:
-            # 检查产品编号是否存在
-            # if failure.product_number not in container['part_container']:
-            #     error_info_message = (
-            #         f'型号 {failure.product_model} 部件 {failure.fault_location} '
-            #         f'物料编码 {failure.fault_material_code} 故障报告ID {failure.report_id} '
-            #         f'故障插入失败,产品编号 {failure.product_number} 不存在'
-            #     )
-            #     error_info_list.append(error_info_message)
-            #     continue
-            # # 检查是否有sub_container
-            # if 'sub_container' not in container['part_container'][failure.product_number]:
-            #     container['part_container'][failure.product_number]['sub_container'] = {}
-
             # 故障匹配:在产品编号container['part_container'][product_number],寻找虚拟件编号
             is_used = False  # 故障部件是否被插入
             for vmc, pt in container['part_container'][failure.product_number]['sub_container'].items():
@@ -287,6 +274,7 @@ class PartTagProcessService(TagProcessService):
     async def tag_create_essential(
         container: dict[str, Any], product_data: Product, input_date: date
     ) -> list[list[Any]]:
+        # TODO:故障数据插入时需要考虑必换件和必换周期，隔周期打断
         result = []
         # 循环遍历 container 容器中的每个键和值
         for bh, part in container['part_container'].items():

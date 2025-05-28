@@ -72,12 +72,11 @@ async def part_fit_task(model: str, part: str, input_date: str, method: FitMetho
 
 
 @celery_app.task(name='product_fit_all_task')
-async def product_fit_all_task(input_date: str, method: FitMethodType = FitMethodType.MLE) -> str:
+async def product_fit_all_task(input_date: str | None = None, method: FitMethodType = FitMethodType.MLE) -> str:
     """
     后台任务:手动触发/自动执行
     :return:
     """
-    # TODO:增加定时任务执行时，入参没有input_date的情况
     start_time = time.time()
     problematic_models: list[str] = []
     total_models = 0
@@ -121,12 +120,11 @@ async def product_fit_all_task(input_date: str, method: FitMethodType = FitMetho
 
 
 @celery_app.task(name='part_fit_all_task')
-async def part_fit_all_task(input_date: str, method: FitMethodType = FitMethodType.MLE) -> str:
+async def part_fit_all_task(input_date: str | None = None, method: FitMethodType = FitMethodType.MLE) -> str:
     """
     后台任务:手动触发/自动执行
     :return:
     """
-    # TODO:增加定时任务执行时，入参没有input_date的情况
     start_time = time.time()
     problematic_models: list[str] = []
     total_models = 0
