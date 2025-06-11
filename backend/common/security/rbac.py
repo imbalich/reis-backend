@@ -60,17 +60,22 @@ async def rbac_verify(request: Request, _token: str = DependsJwtAuth) -> None:
         if path_auth_perm in settings.RBAC_ROLE_MENU_EXCLUDE:
             return
 
-        # 已分配菜单权限校验
-        allow_perms = []
+        # 菜单去重
+        unique_menus = {}
         for role in user_roles:
             for menu in role.menus:
-                if menu.perms and menu.status == StatusType.enable:
-                    allow_perms.extend(menu.perms.split(','))
+                unique_menus[menu.id] = menu
+
+        # 已分配菜单权限校验
+        allow_perms = []
+        for menu in list(unique_menus.values()):
+            if menu.perms and menu.status == StatusType.enable:
+                allow_perms.extend(menu.perms.split(','))
         if path_auth_perm not in allow_perms:
             raise AuthorizationError
     else:
         try:
-            casbin_rbac = import_module_cached('backend.plugin.casbin.utils.rbac')
+            casbin_rbac = import_module_cached('backend.plugin.casbin_rbac.rbac')
             casbin_verify = getattr(casbin_rbac, 'casbin_verify')
         except (ImportError, AttributeError) as e:
             log.error(f'正在通过 casbin 执行 RBAC 权限校验，但此插件不存在: {e}')

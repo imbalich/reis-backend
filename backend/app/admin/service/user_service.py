@@ -2,20 +2,19 @@
 # -*- coding: utf-8 -*-
 import random
 
+from typing import Sequence
+
 from fastapi import Request
 from sqlalchemy import Select
 
 from backend.app.admin.crud.crud_dept import dept_dao
 from backend.app.admin.crud.crud_role import role_dao
 from backend.app.admin.crud.crud_user import user_dao
-from backend.app.admin.model import User
+from backend.app.admin.model import Role, User
 from backend.app.admin.schema.user import (
     AddUserParam,
-    AvatarParam,
-    RegisterUserParam,
     ResetPasswordParam,
     UpdateUserParam,
-    UpdateUserRoleParam,
 )
 from backend.common.exception import errors
 from backend.common.security.jwt import get_hash_password, get_token, jwt_decode, password_verify, superuser_verify
@@ -26,29 +25,6 @@ from backend.database.redis import redis_client
 
 class UserService:
     """用户服务类"""
-
-    @staticmethod
-    async def register(*, obj: RegisterUserParam) -> None:
-        """
-        注册新用户
-
-        :param obj: 用户注册参数
-        :return:
-        """
-        async with async_db_session.begin() as db:
-            if not obj.password:
-                raise errors.ForbiddenError(msg='密码为空')
-            username = await user_dao.get_by_username(db, obj.username)
-            if username:
-                raise errors.ForbiddenError(msg='用户已注册')
-            obj.nickname = obj.nickname if obj.nickname else f'#{random.randrange(10000, 88888)}'
-            nickname = await user_dao.get_by_nickname(db, obj.nickname)
-            if nickname:
-                raise errors.ForbiddenError(msg='昵称已注册')
-            email = await user_dao.check_email(db, obj.email)
-            if email:
-                raise errors.ForbiddenError(msg='邮箱已注册')
-            await user_dao.create(db, obj)
 
     @staticmethod
     async def add(*, request: Request, obj: AddUserParam) -> None:
@@ -70,9 +46,6 @@ class UserService:
                 raise errors.ForbiddenError(msg='昵称已注册')
             if not obj.password:
                 raise errors.ForbiddenError(msg='密码为空')
-            email = await user_dao.check_email(db, obj.email)
-            if email:
-                raise errors.ForbiddenError(msg='邮箱已注册')
             dept = await dept_dao.get(db, obj.dept_id)
             if not dept:
                 raise errors.NotFoundError(msg='部门不存在')
@@ -83,16 +56,16 @@ class UserService:
             await user_dao.add(db, obj)
 
     @staticmethod
-    async def pwd_reset(*, request: Request, obj: ResetPasswordParam) -> int:
+    async def pwd_reset(*, username: str, obj: ResetPasswordParam) -> int:
         """
         重置用户密码
 
-        :param request: FastAPI 请求对象
+        :param username: 用户名
         :param obj: 密码重置参数
         :return:
         """
         async with async_db_session.begin() as db:
-            user = await user_dao.get(db, request.user.id)
+            user = await user_dao.get_by_username(db, username)
             if not user:
                 raise errors.NotFoundError(msg='用户不存在')
             if not password_verify(obj.old_password, user.password):
@@ -100,11 +73,11 @@ class UserService:
             if obj.new_password != obj.confirm_password:
                 raise errors.ForbiddenError(msg='密码输入不一致')
             new_pwd = get_hash_password(obj.new_password, user.salt)
-            count = await user_dao.reset_password(db, request.user.id, new_pwd)
+            count = await user_dao.reset_password(db, user.id, new_pwd)
             key_prefix = [
-                f'{settings.TOKEN_REDIS_PREFIX}:{request.user.id}',
-                f'{settings.TOKEN_REFRESH_REDIS_PREFIX}:{request.user.id}',
-                f'{settings.JWT_USER_REDIS_PREFIX}:{request.user.id}',
+                f'{settings.TOKEN_REDIS_PREFIX}:{user.id}',
+                f'{settings.TOKEN_REFRESH_REDIS_PREFIX}:{user.id}',
+                f'{settings.JWT_USER_REDIS_PREFIX}:{user.id}',
             ]
             for prefix in key_prefix:
                 await redis_client.delete_prefix(prefix)
@@ -123,6 +96,33 @@ class UserService:
             if not user:
                 raise errors.NotFoundError(msg='用户不存在')
             return user
+
+    @staticmethod
+    async def get_roles(*, username: str) -> Sequence[Role]:
+        """
+        获取用户所有角色
+
+        :param username: 用户名
+        :return:
+        """
+        async with async_db_session() as db:
+            user = await user_dao.get_with_relation(db, username=username)
+            if not user:
+                raise errors.NotFoundError(msg='用户不存在')
+            return user.roles
+
+    @staticmethod
+    async def get_select(*, dept: int, username: str, phone: str, status: int) -> Select:
+        """
+        获取用户列表查询条件
+
+        :param dept: 部门 ID
+        :param username: 用户名
+        :param phone: 手机号
+        :param status: 状态
+        :return:
+        """
+        return await user_dao.get_list(dept=dept, username=username, phone=phone, status=status)
 
     @staticmethod
     async def update(*, request: Request, username: str, obj: UpdateUserParam) -> int:
@@ -148,69 +148,13 @@ class UserService:
                 nickname = await user_dao.get_by_nickname(db, obj.nickname)
                 if nickname:
                     raise errors.ForbiddenError(msg='昵称已注册')
-            if user.email != obj.email:
-                email = await user_dao.check_email(db, obj.email)
-                if email:
-                    raise errors.ForbiddenError(msg='邮箱已注册')
-            count = await user_dao.update_userinfo(db, user.id, obj)
-            await redis_client.delete(f'{settings.JWT_USER_REDIS_PREFIX}:{user.id}')
-            return count
-
-    @staticmethod
-    async def update_roles(*, request: Request, username: str, obj: UpdateUserRoleParam) -> None:
-        """
-        更新用户角色
-
-        :param request: FastAPI 请求对象
-        :param username: 用户名
-        :param obj: 角色更新参数
-        :return:
-        """
-        async with async_db_session.begin() as db:
-            if not request.user.is_superuser and request.user.username != username:
-                raise errors.ForbiddenError(msg='你只能修改自己的信息')
-            input_user = await user_dao.get_with_relation(db, username=username)
-            if not input_user:
-                raise errors.NotFoundError(msg='用户不存在')
             for role_id in obj.roles:
                 role = await role_dao.get(db, role_id)
                 if not role:
                     raise errors.NotFoundError(msg='角色不存在')
-            await user_dao.update_role(db, input_user, obj)
-            await redis_client.delete(f'{settings.JWT_USER_REDIS_PREFIX}:{input_user.id}')
-
-    @staticmethod
-    async def update_avatar(*, request: Request, username: str, avatar: AvatarParam) -> int:
-        """
-        更新用户头像
-
-        :param request: FastAPI 请求对象
-        :param username: 用户名
-        :param avatar: 头像参数
-        :return:
-        """
-        async with async_db_session.begin() as db:
-            if request.user.username != username:
-                raise errors.AuthorizationError(msg='你只能修改自己的信息')
-            user = await user_dao.get_by_username(db, username)
-            if not user:
-                raise errors.NotFoundError(msg='用户不存在')
-            count = await user_dao.update_avatar(db, user.id, avatar)
+            count = await user_dao.update(db, user, obj)
             await redis_client.delete(f'{settings.JWT_USER_REDIS_PREFIX}:{user.id}')
             return count
-
-    @staticmethod
-    async def get_select(*, dept: int, username: str, phone: str, status: int) -> Select:
-        """
-        获取用户列表查询条件
-
-        :param dept: 部门 ID
-        :param username: 用户名
-        :param phone: 手机号
-        :param status: 状态
-        :return:
-        """
-        return await user_dao.get_list(dept=dept, username=username, phone=phone, status=status)
 
     @staticmethod
     async def update_permission(*, request: Request, pk: int) -> int:

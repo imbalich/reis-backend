@@ -288,13 +288,14 @@ create index ix_sys_opera_log_id
 
 create table sys_role
 (
-    id           int auto_increment comment '主键 ID'
+    id               int auto_increment comment '主键 ID'
         primary key,
-    name         varchar(20) not null comment '角色名称',
-    status       int         not null comment '角色状态（0停用 1正常）',
-    remark       longtext    null comment '备注',
-    created_time datetime    not null comment '创建时间',
-    updated_time datetime    null comment '更新时间',
+    name             varchar(20) not null comment '角色名称',
+    status           int         not null comment '角色状态（0停用 1正常）',
+    is_filter_scopes tinyint(1)  not null comment '过滤数据权限(0否 1是)',
+    remark           longtext    null comment '备注',
+    created_time     datetime    not null comment '创建时间',
+    updated_time     datetime    null comment '更新时间',
     constraint name
         unique (name)
 )
@@ -418,9 +419,9 @@ create table sys_user_social
     id           int auto_increment comment '主键 ID'
         primary key,
     source       varchar(20)  not null comment '第三方用户来源',
-    open_id      varchar(20)  null comment '第三方用户的 open id',
-    uid          varchar(20)  null comment '第三方用户的 ID',
-    union_id     varchar(20)  null comment '第三方用户的 union id',
+    open_id      varchar(20)  null comment '第三方用户 open id',
+    sid          varchar(20)  null comment '第三方用户 ID',
+    union_id     varchar(20)  null comment '第三方用户 union id',
     scope        varchar(120) null comment '第三方用户授予的权限',
     code         varchar(50)  null comment '用户的授权 code',
     user_id      int          null comment '用户关联ID',
@@ -437,3 +438,4 @@ create index ix_sys_user_social_id
 
 create index user_id
     on sys_user_social (user_id);
+

@@ -1,3 +1,123 @@
+<a id="v1.5.0"></a>
+# [v1.5.0](https://github.com/fastapi-practices/fastapi_best_architecture/releases/tag/v1.5.0) - 2025-06-09
+
+## What's Changed
+* Update changelog for v1.4.3 by [@wu-clan](https://github.com/wu-clan) in [#651](https://github.com/fastapi-practices/fastapi_best_architecture/pull/651)
+* Update OAuth2 callback interface return by [@wu-clan](https://github.com/wu-clan) in [#653](https://github.com/fastapi-practices/fastapi_best_architecture/pull/653)
+* Update user email and phone operation logic by [@wu-clan](https://github.com/wu-clan) in [#654](https://github.com/fastapi-practices/fastapi_best_architecture/pull/654)
+* Simplify OAuth2 model and optimize auth service by [@wu-clan](https://github.com/wu-clan) in [#655](https://github.com/fastapi-practices/fastapi_best_architecture/pull/655)
+* Add OAuth2 user to auto bind a role by [@wu-clan](https://github.com/wu-clan) in [#656](https://github.com/fastapi-practices/fastapi_best_architecture/pull/656)
+* Update data scope and rule to m2m by [@wu-clan](https://github.com/wu-clan) in [#657](https://github.com/fastapi-practices/fastapi_best_architecture/pull/657)
+* Update code generate interface permission by [@wu-clan](https://github.com/wu-clan) in [#658](https://github.com/fastapi-practices/fastapi_best_architecture/pull/658)
+* Update the plugin download interface permission by [@wu-clan](https://github.com/wu-clan) in [#659](https://github.com/fastapi-practices/fastapi_best_architecture/pull/659)
+* Update auth failed default status code by [@wu-clan](https://github.com/wu-clan) in [#660](https://github.com/fastapi-practices/fastapi_best_architecture/pull/660)
+* Update menu sort in init test sql by [@wu-clan](https://github.com/wu-clan) in [#661](https://github.com/fastapi-practices/fastapi_best_architecture/pull/661)
+* Add data permission in init test sql by [@wu-clan](https://github.com/wu-clan) in [#662](https://github.com/fastapi-practices/fastapi_best_architecture/pull/662)
+* Update the version to 1.5.0 by [@wu-clan](https://github.com/wu-clan) in [#663](https://github.com/fastapi-practices/fastapi_best_architecture/pull/663)
+
+
+**Full Changelog**: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.4.3...v1.5.0
+
+[Changes][v1.5.0]
+
+
+<a id="v1.4.3"></a>
+# [v1.4.3](https://github.com/fastapi-practices/fastapi_best_architecture/releases/tag/v1.4.3) - 2025-06-02
+
+## What's Changed
+* Update changelog for v1.4.2 by [@wu-clan](https://github.com/wu-clan) in [#639](https://github.com/fastapi-practices/fastapi_best_architecture/pull/639)
+* Fix the role update business variables by [@wu-clan](https://github.com/wu-clan) in [#640](https://github.com/fastapi-practices/fastapi_best_architecture/pull/640)
+* Fix the menu delete interface arg description by [@wu-clan](https://github.com/wu-clan) in [#641](https://github.com/fastapi-practices/fastapi_best_architecture/pull/641)
+* Fix the filter of query all menus by [@wu-clan](https://github.com/wu-clan) in [#642](https://github.com/fastapi-practices/fastapi_best_architecture/pull/642)
+* Refactor routes to better align with RESTful by [@wu-clan](https://github.com/wu-clan) in [#645](https://github.com/fastapi-practices/fastapi_best_architecture/pull/645)
+* Update the server startup time to string by [@wu-clan](https://github.com/wu-clan) in [#646](https://github.com/fastapi-practices/fastapi_best_architecture/pull/646)
+* Add get all data scope rules interface by [@wu-clan](https://github.com/wu-clan) in [#647](https://github.com/fastapi-practices/fastapi_best_architecture/pull/647)
+* Add data permission condition for filter data by [@wu-clan](https://github.com/wu-clan) in [#648](https://github.com/fastapi-practices/fastapi_best_architecture/pull/648)
+* Update default value for role filter scopes by [@wu-clan](https://github.com/wu-clan) in [#649](https://github.com/fastapi-practices/fastapi_best_architecture/pull/649)
+* Fix data permission condition for filter data by [@wu-clan](https://github.com/wu-clan) in [#650](https://github.com/fastapi-practices/fastapi_best_architecture/pull/650)
+
+
+**Full Changelog**: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.4.2...v1.4.3
+
+[Changes][v1.4.3]
+
+
+<a id="v1.4.2"></a>
+# [v1.4.2](https://github.com/fastapi-practices/fastapi_best_architecture/releases/tag/v1.4.2) - 2025-05-29
+
+## What's Changed
+* Update changelog for v1.4.1 by [@wu-clan](https://github.com/wu-clan) in [#630](https://github.com/fastapi-practices/fastapi_best_architecture/pull/630)
+* Update non-linked sidebar support by [@wu-clan](https://github.com/wu-clan) in [#633](https://github.com/fastapi-practices/fastapi_best_architecture/pull/633)
+* Update the captcha invalidation error class by [@wu-clan](https://github.com/wu-clan) in [#634](https://github.com/fastapi-practices/fastapi_best_architecture/pull/634)
+* Optimize role-related data processing performance by [@wu-clan](https://github.com/wu-clan) in [#635](https://github.com/fastapi-practices/fastapi_best_architecture/pull/635)
+* Optimize install and build of plugin zip by [@wu-clan](https://github.com/wu-clan) in [#636](https://github.com/fastapi-practices/fastapi_best_architecture/pull/636)
+* Fix auto-increment id for postgres init data by [@huyuwei1996](https://github.com/huyuwei1996) in [#632](https://github.com/fastapi-practices/fastapi_best_architecture/pull/632)
+* Fix: prevent overwriting existing init files in code generator by [@lin-wu-1990](https://github.com/lin-wu-1990) in [#637](https://github.com/fastapi-practices/fastapi_best_architecture/pull/637)
+* Simplify the user info update business by [@wu-clan](https://github.com/wu-clan) in [#638](https://github.com/fastapi-practices/fastapi_best_architecture/pull/638)
+
+## New Contributors
+* [@lin-wu-1990](https://github.com/lin-wu-1990) made their first contribution in [#637](https://github.com/fastapi-practices/fastapi_best_architecture/pull/637)
+
+**Full Changelog**: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.4.1...v1.4.2
+
+[Changes][v1.4.2]
+
+
+<a id="v1.4.1"></a>
+# [v1.4.1](https://github.com/fastapi-practices/fastapi_best_architecture/releases/tag/v1.4.1) - 2025-05-25
+
+## What's Changed
+* Update changelog for v1.4.0 by [@wu-clan](https://github.com/wu-clan) in [#621](https://github.com/fastapi-practices/fastapi_best_architecture/pull/621)
+* Update the menu path and type columns by [@wu-clan](https://github.com/wu-clan) in [#622](https://github.com/fastapi-practices/fastapi_best_architecture/pull/622)
+* Add the deepwiki badge to README by [@wu-clan](https://github.com/wu-clan) in [#623](https://github.com/fastapi-practices/fastapi_best_architecture/pull/623)
+* Refactor the system token to online users by [@wu-clan](https://github.com/wu-clan) in [#624](https://github.com/fastapi-practices/fastapi_best_architecture/pull/624)
+* Update the token check for logout interface by [@wu-clan](https://github.com/wu-clan) in [#625](https://github.com/fastapi-practices/fastapi_best_architecture/pull/625)
+* Update the token decode for logout interface by [@wu-clan](https://github.com/wu-clan) in [#629](https://github.com/fastapi-practices/fastapi_best_architecture/pull/629)
+
+
+**Full Changelog**: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.4.0...v1.4.1
+
+[Changes][v1.4.1]
+
+
+<a id="v1.4.0"></a>
+# [v1.4.0](https://github.com/fastapi-practices/fastapi_best_architecture/releases/tag/v1.4.0) - 2025-05-22
+
+## What's Changed
+* Update changelog for v1.3.0 by [@wu-clan](https://github.com/wu-clan) in [#605](https://github.com/fastapi-practices/fastapi_best_architecture/pull/605)
+* Add new plugin status check interface by [@wu-clan](https://github.com/wu-clan) in [#606](https://github.com/fastapi-practices/fastapi_best_architecture/pull/606)
+* Update the new plugin status to changed by [@wu-clan](https://github.com/wu-clan) in [#607](https://github.com/fastapi-practices/fastapi_best_architecture/pull/607)
+* Fix the task result schema param type by [@wu-clan](https://github.com/wu-clan) in [#611](https://github.com/fastapi-practices/fastapi_best_architecture/pull/611)
+* Fix the plugin status update logic by [@wu-clan](https://github.com/wu-clan) in [#613](https://github.com/fastapi-practices/fastapi_best_architecture/pull/613)
+* Update uninstall and build plugin api method by [@wu-clan](https://github.com/wu-clan) in [#614](https://github.com/fastapi-practices/fastapi_best_architecture/pull/614)
+* Fix non-asyncio nested async IO by [@wu-clan](https://github.com/wu-clan) in [#610](https://github.com/fastapi-practices/fastapi_best_architecture/pull/610)
+* Update the build plugin api params by [@wu-clan](https://github.com/wu-clan) in [#615](https://github.com/fastapi-practices/fastapi_best_architecture/pull/615)
+* Update uv installation in docker deploy by [@wu-clan](https://github.com/wu-clan) in [#619](https://github.com/fastapi-practices/fastapi_best_architecture/pull/619)
+* Update the OAuth2 module to plugin by [@wu-clan](https://github.com/wu-clan) in [#620](https://github.com/fastapi-practices/fastapi_best_architecture/pull/620)
+
+
+**Full Changelog**: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.3.0...v1.4.0
+
+[Changes][v1.4.0]
+
+
+<a id="v1.3.0"></a>
+# [v1.3.0](https://github.com/fastapi-practices/fastapi_best_architecture/releases/tag/v1.3.0) - 2025-05-16
+
+## What's Changed
+* Update changelog for v1.2.0 by [@wu-clan](https://github.com/wu-clan) in [#598](https://github.com/fastapi-practices/fastapi_best_architecture/pull/598)
+* Simplify apps and plugins config method by [@wu-clan](https://github.com/wu-clan) in [#600](https://github.com/fastapi-practices/fastapi_best_architecture/pull/600)
+* Add plugin info config and interfaces by [@wu-clan](https://github.com/wu-clan) in [#601](https://github.com/fastapi-practices/fastapi_best_architecture/pull/601)
+* Fix the fastapi cli startup event loop by [@wu-clan](https://github.com/wu-clan) in [#602](https://github.com/fastapi-practices/fastapi_best_architecture/pull/602)
+* Optimize the zip plugin install logic by [@wu-clan](https://github.com/wu-clan) in [#603](https://github.com/fastapi-practices/fastapi_best_architecture/pull/603)
+* Update the casbin RBAC module path by [@wu-clan](https://github.com/wu-clan) in [#604](https://github.com/fastapi-practices/fastapi_best_architecture/pull/604)
+
+
+**Full Changelog**: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.2.0...v1.3.0
+
+[Changes][v1.3.0]
+
+
 <a id="v1.2.0"></a>
 # [v1.2.0](https://github.com/fastapi-practices/fastapi_best_architecture/releases/tag/v1.2.0) - 2025-05-01
 
@@ -494,6 +614,12 @@
 [Changes][v1.0.0]
 
 
+[v1.5.0]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.4.3...v1.5.0
+[v1.4.3]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.4.2...v1.4.3
+[v1.4.2]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.4.1...v1.4.2
+[v1.4.1]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.4.0...v1.4.1
+[v1.4.0]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.3.0...v1.4.0
+[v1.3.0]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.2.0...v1.3.0
 [v1.2.0]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.1.2...v1.2.0
 [v1.1.2]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.1.1...v1.1.2
 [v1.1.1]: https://github.com/fastapi-practices/fastapi_best_architecture/compare/v1.1.0...v1.1.1

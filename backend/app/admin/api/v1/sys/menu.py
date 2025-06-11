@@ -15,8 +15,8 @@ router = APIRouter()
 
 
 @router.get('/sidebar', summary='获取用户菜单侧边栏', description='适配 vben5', dependencies=[DependsJwtAuth])
-async def get_user_sidebar(request: Request) -> ResponseSchemaModel[list[dict[str, Any]]]:
-    menu = await menu_service.get_user_menu_tree(request=request)
+async def get_user_sidebar(request: Request) -> ResponseSchemaModel[list[dict[str, Any] | None]]:
+    menu = await menu_service.get_sidebar(request=request)
     return response_base.success(data=menu)
 
 
@@ -71,7 +71,7 @@ async def update_menu(pk: Annotated[int, Path(description='菜单 ID')], obj: Up
         DependsRBAC,
     ],
 )
-async def delete_menu(pk: Annotated[int, Path(description='菜单 ID 列表')]) -> ResponseModel:
+async def delete_menu(pk: Annotated[int, Path(description='菜单 ID')]) -> ResponseModel:
     count = await menu_service.delete(pk=pk)
     if count > 0:
         return response_base.success()

@@ -268,14 +268,15 @@ create index ix_sys_opera_log_id
 
 create table sys_role
 (
-    id           serial
+    id               serial
         primary key,
-    name         varchar(20)              not null
+    name             varchar(20)              not null
         unique,
-    status       integer                  not null,
-    remark       text,
-    created_time timestamp with time zone not null,
-    updated_time timestamp with time zone
+    status           integer                  not null,
+    is_filter_scopes integer                  not null,
+    remark           text,
+    created_time     timestamp with time zone not null,
+    updated_time     timestamp with time zone
 );
 
 comment on table sys_role is '角色表';
@@ -285,6 +286,8 @@ comment on column sys_role.id is '主键 ID';
 comment on column sys_role.name is '角色名称';
 
 comment on column sys_role.status is '角色状态（0停用 1正常）';
+
+comment on column sys_role.is_filter_scopes is '过滤数据权限(0否 1是)';
 
 comment on column sys_role.remark is '备注';
 
@@ -727,7 +730,7 @@ create table sys_user_social
         primary key,
     source       varchar(20)              not null,
     open_id      varchar(20),
-    uid          varchar(20),
+    sid          varchar(20),
     union_id     varchar(20),
     scope        varchar(120),
     code         varchar(50),
@@ -744,11 +747,11 @@ comment on column sys_user_social.id is '主键 ID';
 
 comment on column sys_user_social.source is '第三方用户来源';
 
-comment on column sys_user_social.open_id is '第三方用户的 open id';
+comment on column sys_user_social.open_id is '第三方用户 open id';
 
-comment on column sys_user_social.uid is '第三方用户的 ID';
+comment on column sys_user_social.uid is '第三方用户 ID';
 
-comment on column sys_user_social.union_id is '第三方用户的 union id';
+comment on column sys_user_social.union_id is '第三方用户 union id';
 
 comment on column sys_user_social.scope is '第三方用户授予的权限';
 

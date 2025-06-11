@@ -11,7 +11,6 @@ from backend.app.admin.schema.token import GetLoginToken, GetNewToken, GetSwagge
 from backend.app.admin.schema.user import AuthLoginParam
 from backend.app.admin.service.auth_service import auth_service
 from backend.common.response.response_schema import ResponseModel, ResponseSchemaModel, response_base
-from backend.common.security.jwt import DependsJwtAuth
 
 router = APIRouter()
 
@@ -35,13 +34,13 @@ async def user_login(
     return response_base.success(data=data)
 
 
-@router.post('/token/new', summary='创建新 token')
-async def create_new_token(request: Request) -> ResponseSchemaModel[GetNewToken]:
+@router.post('/tokens/refresh', summary='刷新 token')
+async def refresh_token(request: Request) -> ResponseSchemaModel[GetNewToken]:
     data = await auth_service.new_token(request=request)
     return response_base.success(data=data)
 
 
-@router.post('/logout', summary='用户登出', dependencies=[DependsJwtAuth])
+@router.post('/logout', summary='用户登出')
 async def user_logout(request: Request, response: Response) -> ResponseModel:
     await auth_service.logout(request=request, response=response)
     return response_base.success()

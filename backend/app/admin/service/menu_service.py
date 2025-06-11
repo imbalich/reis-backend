@@ -41,27 +41,34 @@ class MenuService:
         :return:
         """
         async with async_db_session() as db:
-            menu_select = await menu_dao.get_all(db, title=title, status=status)
-            menu_tree = get_tree_data(menu_select)
+            menu_data = await menu_dao.get_all(db, title=title, status=status)
+            menu_tree = get_tree_data(menu_data)
             return menu_tree
 
     @staticmethod
-    async def get_user_menu_tree(*, request: Request) -> list[dict[str, Any]]:
+    async def get_sidebar(*, request: Request) -> list[dict[str, Any] | None]:
         """
-        获取用户的菜单树形结构
+        获取用户的菜单侧边栏
 
         :param request: FastAPI 请求对象
         :return:
         """
         async with async_db_session() as db:
             roles = request.user.roles
-            menu_ids = []
             menu_tree = []
             if roles:
+                unique_menus = {}
                 for role in roles:
-                    menu_ids.extend([menu.id for menu in role.menus])
-                menu_select = await menu_dao.get_role_menus(db, request.user.is_superuser, menu_ids)
-                menu_tree = get_vben5_tree_data(menu_select)
+                    for menu in role.menus:
+                        unique_menus[menu.id] = menu
+                all_ids = set(unique_menus.keys())
+                valid_menu_ids = [
+                    menu_id
+                    for menu_id, menu in unique_menus.items()
+                    if menu.parent_id is None or menu.parent_id in all_ids
+                ]
+                menu_data = await menu_dao.get_sidebar(db, request.user.is_superuser, valid_menu_ids)
+                menu_tree = get_vben5_tree_data(menu_data)
             return menu_tree
 
     @staticmethod

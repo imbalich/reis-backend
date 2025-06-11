@@ -10,11 +10,9 @@ from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.admin.model import Dept, Role, User
 from backend.app.admin.schema.user import (
+    AddOAuth2UserParam,
     AddUserParam,
-    AvatarParam,
-    RegisterUserParam,
     UpdateUserParam,
-    UpdateUserRoleParam,
 )
 from backend.common.security.jwt import get_hash_password
 from backend.utils.timezone import timezone
@@ -63,26 +61,6 @@ class CRUDUser(CRUDPlus[User]):
         """
         return await self.update_model_by_column(db, {'last_login_time': timezone.now()}, username=username)
 
-    async def create(self, db: AsyncSession, obj: RegisterUserParam, *, social: bool = False) -> None:
-        """
-        创建用户
-
-        :param db: 数据库会话
-        :param obj: 注册用户参数
-        :param social: 是否社交用户
-        :return:
-        """
-        if not social:
-            salt = bcrypt.gensalt()
-            obj.password = get_hash_password(obj.password, salt)
-            dict_obj = obj.model_dump()
-            dict_obj.update({'is_staff': True, 'salt': salt})
-        else:
-            dict_obj = obj.model_dump()
-            dict_obj.update({'is_staff': True, 'salt': None})
-        new_user = self.model(**dict_obj)
-        db.add(new_user)
-
     async def add(self, db: AsyncSession, obj: AddUserParam) -> None:
         """
         添加用户
@@ -97,14 +75,33 @@ class CRUDUser(CRUDPlus[User]):
         dict_obj.update({'salt': salt})
         new_user = self.model(**dict_obj)
 
-        role_list = []
-        for role_id in obj.roles:
-            role_list.append(await db.get(Role, role_id))
-        new_user.roles.extend(role_list)
+        stmt = select(Role).where(Role.id.in_(obj.roles))
+        roles = await db.execute(stmt)
+        new_user.roles = roles.scalars().all()
 
         db.add(new_user)
 
-    async def update_userinfo(self, db: AsyncSession, input_user: int, obj: UpdateUserParam) -> int:
+    async def add_by_oauth2(self, db: AsyncSession, obj: AddOAuth2UserParam) -> None:
+        """
+        通过 OAuth2 添加用户
+
+        :param db: 数据库会话
+        :param obj: 注册用户参数
+        :return:
+        """
+        salt = bcrypt.gensalt()
+        obj.password = get_hash_password(obj.password, salt)
+        dict_obj = obj.model_dump()
+        dict_obj.update({'is_staff': True, 'salt': salt})
+        new_user = self.model(**dict_obj)
+
+        stmt = select(Role)
+        role = await db.execute(stmt)
+        new_user.roles = [role.scalars().first()]  # 默认绑定第一个角色
+
+        db.add(new_user)
+
+    async def update(self, db: AsyncSession, input_user: User, obj: UpdateUserParam) -> int:
         """
         更新用户信息
 
@@ -113,36 +110,25 @@ class CRUDUser(CRUDPlus[User]):
         :param obj: 更新用户参数
         :return:
         """
-        return await self.update_model(db, input_user, obj)
+        role_ids = obj.roles
+        del obj.roles
+        count = await self.update_model(db, input_user.id, obj)
 
-    @staticmethod
-    async def update_role(db: AsyncSession, input_user: User, obj: UpdateUserRoleParam) -> None:
-        """
-        更新用户角色
+        stmt = select(Role).where(Role.id.in_(role_ids))
+        roles = await db.execute(stmt)
+        input_user.roles = roles.scalars().all()
+        return count
 
-        :param db: 数据库会话
-        :param input_user: 用户对象
-        :param obj: 更新角色参数
-        :return:
-        """
-        for i in list(input_user.roles):
-            input_user.roles.remove(i)
-
-        role_list = []
-        for role_id in obj.roles:
-            role_list.append(await db.get(Role, role_id))
-        input_user.roles.extend(role_list)
-
-    async def update_avatar(self, db: AsyncSession, input_user: int, avatar: AvatarParam) -> int:
+    async def update_avatar(self, db: AsyncSession, user_id: int, avatar: str) -> int:
         """
         更新用户头像
 
         :param db: 数据库会话
-        :param input_user: 用户 ID
+        :param user_id: 用户 ID
         :param avatar: 头像地址
         :return:
         """
-        return await self.update_model(db, input_user, {'avatar': str(avatar.url)})
+        return await self.update_model(db, user_id, {'avatar': avatar})
 
     async def delete(self, db: AsyncSession, user_id: int) -> int:
         """
@@ -156,7 +142,7 @@ class CRUDUser(CRUDPlus[User]):
 
     async def check_email(self, db: AsyncSession, email: str) -> User | None:
         """
-        检查邮箱是否已被注册
+        检查邮箱是否已被绑定
 
         :param db: 数据库会话
         :param email: 电子邮箱
@@ -189,8 +175,7 @@ class CRUDUser(CRUDPlus[User]):
             select(self.model)
             .options(
                 selectinload(self.model.dept).options(noload(Dept.parent), noload(Dept.children), noload(Dept.users)),
-                noload(self.model.socials),
-                selectinload(self.model.roles).options(noload(Role.users), noload(Role.menus), noload(Role.rules)),
+                selectinload(self.model.roles).options(noload(Role.users), noload(Role.menus), noload(Role.scopes)),
             )
             .order_by(desc(self.model.join_time))
         )

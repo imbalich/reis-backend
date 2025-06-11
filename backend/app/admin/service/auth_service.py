@@ -92,7 +92,7 @@ class AuthService:
                 user = await self.user_verify(db, obj.username, obj.password)
                 captcha_code = await redis_client.get(f'{settings.CAPTCHA_LOGIN_REDIS_PREFIX}:{request.state.ip}')
                 if not captcha_code:
-                    raise errors.AuthorizationError(msg='验证码失效，请重新获取')
+                    raise errors.ForbiddenError(msg='验证码失效，请重新获取')
                 if captcha_code.lower() != obj.captcha.lower():
                     raise errors.CustomError(error=CustomErrorCode.CAPTCHA_ERROR)
                 await redis_client.delete(f'{settings.CAPTCHA_LOGIN_REDIS_PREFIX}:{request.state.ip}')
@@ -121,7 +121,7 @@ class AuthService:
             except errors.NotFoundError as e:
                 log.error('登陆错误: 用户名不存在')
                 raise errors.NotFoundError(msg=e.msg)
-            except (errors.AuthorizationError, errors.CustomError) as e:
+            except (errors.ForbiddenError, errors.CustomError) as e:
                 if not user:
                     log.error('登陆错误: 用户密码有误')
                 task = BackgroundTask(
@@ -136,7 +136,7 @@ class AuthService:
                         msg=e.msg,
                     ),
                 )
-                raise errors.AuthorizationError(msg=e.msg, background=task)
+                raise errors.RequestError(msg=e.msg, background=task)
             except Exception as e:
                 log.error(f'登陆错误: {e}')
                 raise e
@@ -211,11 +211,17 @@ class AuthService:
         :param response: FastAPI 响应对象
         :return:
         """
-        token = get_token(request)
-        token_payload = jwt_decode(token)
-        user_id = token_payload.id
-        refresh_token = request.cookies.get(settings.COOKIE_REFRESH_TOKEN_KEY)
-        response.delete_cookie(settings.COOKIE_REFRESH_TOKEN_KEY)
+        try:
+            token = get_token(request)
+            token_payload = jwt_decode(token)
+            user_id = token_payload.id
+            refresh_token = request.cookies.get(settings.COOKIE_REFRESH_TOKEN_KEY)
+        except errors.TokenError:
+            return
+        finally:
+            response.delete_cookie(settings.COOKIE_REFRESH_TOKEN_KEY)
+
+        # 清理缓存
         if request.user.is_multi_login:
             await redis_client.delete(f'{settings.TOKEN_REDIS_PREFIX}:{user_id}:{token_payload.session_uuid}')
             if refresh_token:
