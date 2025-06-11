@@ -184,6 +184,7 @@ class Settings(BaseSettings):
     # 插件配置
     PLUGIN_PIP_CHINA: bool = True
     PLUGIN_PIP_INDEX_URL: str = 'https://mirrors.aliyun.com/pypi/simple/'
+    PLUGIN_REDIS_PREFIX: str = 'fba:plugin'
 
     # App Admin
     # .env OAuth2
