@@ -30,6 +30,7 @@ cryptography==44.0.2
 cycler==0.12.1
 distlib==0.3.9
 dnspython==2.7.0
+dulwich==0.22.8
 ecdsa==0.19.1
 email-validator==2.2.0
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
@@ -124,6 +125,7 @@ typing-inspection==0.4.0
 tzdata==2025.1
 ua-parser==1.0.1
 ua-parser-builtins==0.18.0.post1
+urllib3==2.4.0
 user-agents==2.2.0
 uvicorn==0.34.0
 uvloop==0.21.0 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'
