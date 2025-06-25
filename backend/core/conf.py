@@ -71,6 +71,7 @@ class Settings(BaseSettings):
     TOKEN_REFRESH_REDIS_PREFIX: str = 'fba:refresh_token'
     TOKEN_REQUEST_PATH_EXCLUDE: list[str] = [  # JWT / RBAC 路由白名单
         f'{FASTAPI_API_V1_PATH}/auth/login',
+        f'{FASTAPI_API_V1_PATH}/auth/logout',
     ]
 
     # JWT
@@ -181,7 +182,7 @@ class Settings(BaseSettings):
         'confirm_password',
     ]
 
-    # 插件配置
+    # Plugin 配置
     PLUGIN_PIP_CHINA: bool = True
     PLUGIN_PIP_INDEX_URL: str = 'https://mirrors.aliyun.com/pypi/simple/'
     PLUGIN_REDIS_PREFIX: str = 'fba:plugin'
@@ -201,7 +202,7 @@ class Settings(BaseSettings):
     CAPTCHA_LOGIN_EXPIRE_SECONDS: int = 60 * 5  # 3 分钟
 
     # App Task
-    # .env Redis 配置
+    # .env Redis
     CELERY_BROKER_REDIS_DATABASE: int
     CELERY_BACKEND_REDIS_DATABASE: int
 
@@ -234,23 +235,10 @@ class Settings(BaseSettings):
             'task': 'delete_db_login_log',
             'schedule': crontab('0', '0', day_of_month='15'),
         },
-        'product-fit-exec-every-1-of-month': {
-            'task': 'product_fit_all_task',
-            'schedule': crontab('0', '0', day_of_month='1'),  # 每个月1号执行
-        },
-        'part-fit-exec-every-1-of-month': {
-            'task': 'part_fit_all_task',
-            'schedule': crontab('0', '0', day_of_month='1'),  # 每个月1号执行
-        },
     }
 
     # Plugin Code Generator
-    # 代码下载
     CODE_GENERATOR_DOWNLOAD_ZIP_FILENAME: str = 'fba_generator'
-
-    # Plugin Config
-    # 参数配置
-    CONFIG_BUILT_IN_TYPES: list[str] = ['website', 'protocol', 'policy']
 
     @model_validator(mode='before')
     @classmethod

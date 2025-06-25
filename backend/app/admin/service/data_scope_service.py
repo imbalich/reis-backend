@@ -6,7 +6,12 @@ from sqlalchemy import Select
 
 from backend.app.admin.crud.crud_data_scope import data_scope_dao
 from backend.app.admin.model import DataScope
-from backend.app.admin.schema.data_scope import CreateDataScopeParam, UpdateDataScopeParam, UpdateDataScopeRuleParam
+from backend.app.admin.schema.data_scope import (
+    CreateDataScopeParam,
+    DeleteDataScopeParam,
+    UpdateDataScopeParam,
+    UpdateDataScopeRuleParam,
+)
 from backend.common.exception import errors
 from backend.core.conf import settings
 from backend.database.db import async_db_session
@@ -73,7 +78,7 @@ class DataScopeService:
         async with async_db_session.begin() as db:
             data_scope = await data_scope_dao.get_by_name(db, obj.name)
             if data_scope:
-                raise errors.ForbiddenError(msg='数据范围已存在')
+                raise errors.ConflictError(msg='数据范围已存在')
             await data_scope_dao.create(db, obj)
 
     @staticmethod
@@ -91,7 +96,7 @@ class DataScopeService:
                 raise errors.NotFoundError(msg='数据范围不存在')
             if data_scope.name != obj.name:
                 if await data_scope_dao.get_by_name(db, obj.name):
-                    raise errors.ForbiddenError(msg='数据范围已存在')
+                    raise errors.ConflictError(msg='数据范围已存在')
             count = await data_scope_dao.update(db, pk, obj)
             for role in await data_scope.awaitable_attrs.roles:
                 for user in await role.awaitable_attrs.users:
@@ -112,17 +117,17 @@ class DataScopeService:
             return count
 
     @staticmethod
-    async def delete(*, pk: list[int]) -> int:
+    async def delete(*, obj: DeleteDataScopeParam) -> int:
         """
-        删除数据范围
+        批量删除数据范围
 
-        :param pk: 范围 ID 列表
+        :param obj: 范围 ID 列表
         :return:
         """
         async with async_db_session.begin() as db:
-            count = await data_scope_dao.delete(db, pk)
-            for _pk in pk:
-                data_rule = await data_scope_dao.get(db, _pk)
+            count = await data_scope_dao.delete(db, obj.pks)
+            for pk in obj.pks:
+                data_rule = await data_scope_dao.get(db, pk)
                 if data_rule:
                     for role in await data_rule.awaitable_attrs.roles:
                         for user in await role.awaitable_attrs.users:

@@ -36,7 +36,7 @@ class GenModelService:
         return types
 
     @staticmethod
-    async def get_by_business(*, business_id: int) -> Sequence[GenColumn]:
+    async def get_models(*, business_id: int) -> Sequence[GenColumn]:
         """
         获取指定业务的所有模型
 
@@ -76,7 +76,7 @@ class GenModelService:
             if obj.name != model.name:
                 gen_models = await gen_model_dao.get_all_by_business(db, obj.gen_business_id)
                 if obj.name in [gen_model.name for gen_model in gen_models]:
-                    raise errors.ForbiddenError(msg='模型列名已存在')
+                    raise errors.ConflictError(msg='模型列名已存在')
 
             pd_type = sql_type_to_pydantic(obj.type)
             return await gen_model_dao.update(db, pk, obj, pd_type=pd_type)

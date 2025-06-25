@@ -100,6 +100,15 @@ class TokenError(HTTPError):
         super().__init__(code=self.code, msg=msg, headers=headers or {'WWW-Authenticate': 'Bearer'})
 
 
+class ConflictError(BaseExceptionMixin):
+    """资源冲突异常"""
+
+    code = StandardResponseCode.HTTP_409
+
+    def __init__(self, *, msg: str = 'Conflict', data: Any = None, background: BackgroundTask | None = None):
+        super().__init__(msg=msg, data=data, background=background)
+
+
 class DataValidationError(BaseExceptionMixin):
     # 数据验证错误 不是利用pydantic自身的验证报错，而是自定义在何处使用
     code = StandardResponseCode.HTTP_422
