@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Path, Query
 
 from backend.app.admin.schema.data_rule import (
     CreateDataRuleParam,
+    DeleteDataRuleParam,
     GetDataRuleColumnDetail,
     GetDataRuleDetail,
     UpdateDataRuleParam,
@@ -27,7 +28,7 @@ async def get_data_rule_models() -> ResponseSchemaModel[list[str]]:
     return response_base.success(data=models)
 
 
-@router.get('/model/{model}/columns', summary='获取数据规则可用模型列', dependencies=[DependsJwtAuth])
+@router.get('/models/{model}/columns', summary='获取数据规则可用模型列', dependencies=[DependsJwtAuth])
 async def get_data_rule_model_columns(
     model: Annotated[str, Path(description='模型名称')],
 ) -> ResponseSchemaModel[list[GetDataRuleColumnDetail]]:
@@ -57,7 +58,7 @@ async def get_data_rule(
         DependsPagination,
     ],
 )
-async def get_pagination_data_rules(
+async def get_data_rules_paged(
     db: CurrentSession, name: Annotated[str | None, Query(description='规则名称')] = None
 ) -> ResponseSchemaModel[PageData[GetDataRuleDetail]]:
     data_rule_select = await data_rule_service.get_select(name=name)
@@ -103,8 +104,8 @@ async def update_data_rule(
         DependsRBAC,
     ],
 )
-async def delete_data_rule(pk: Annotated[list[int], Query(description='数据规则 ID 列表')]) -> ResponseModel:
-    count = await data_rule_service.delete(pk=pk)
+async def delete_data_rules(obj: DeleteDataRuleParam) -> ResponseModel:
+    count = await data_rule_service.delete(obj=obj)
     if count > 0:
         return response_base.success()
     return response_base.fail()

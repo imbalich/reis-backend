@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from typing import Sequence
 
 from sqlalchemy import Select
 
 from backend.common.exception import errors
-from backend.core.conf import settings
 from backend.database.db import async_db_session
 from backend.plugin.config.crud.crud_config import config_dao
 from backend.plugin.config.model import Config
 from backend.plugin.config.schema.config import (
     CreateConfigParam,
-    SaveBuiltInConfigParam,
     UpdateConfigParam,
 )
 
@@ -20,37 +17,7 @@ class ConfigService:
     """参数配置服务类"""
 
     @staticmethod
-    async def get_built_in_config(type: str) -> Sequence[Config]:
-        """
-        获取内置参数配置
-
-        :param type: 参数配置类型
-        :return:
-        """
-        async with async_db_session() as db:
-            return await config_dao.get_by_type(db, type)
-
-    @staticmethod
-    async def save_built_in_config(objs: list[SaveBuiltInConfigParam], type: str) -> None:
-        """
-        保存内置参数配置
-
-        :param objs: 参数配置参数列表
-        :param type: 参数配置类型
-        :return:
-        """
-        async with async_db_session.begin() as db:
-            for obj in objs:
-                config = await config_dao.get_by_key_and_type(db, obj.key, type)
-                if config is None:
-                    if await config_dao.get_by_key(db, obj.key):
-                        raise errors.ForbiddenError(msg=f'参数配置 {obj.key} 已存在')
-                    await config_dao.create_model(db, obj, flush=True, type=type)
-                else:
-                    await config_dao.update_model(db, config.id, obj, type=type)
-
-    @staticmethod
-    async def get(pk: int) -> Config:
+    async def get(*, pk: int) -> Config:
         """
         获取参数配置详情
 
@@ -83,11 +50,9 @@ class ConfigService:
         :return:
         """
         async with async_db_session.begin() as db:
-            if obj.type in settings.CONFIG_BUILT_IN_TYPES:
-                raise errors.ForbiddenError(msg='非法类型参数')
             config = await config_dao.get_by_key(db, obj.key)
             if config:
-                raise errors.ForbiddenError(msg=f'参数配置 {obj.key} 已存在')
+                raise errors.ConflictError(msg=f'参数配置 {obj.key} 已存在')
             await config_dao.create(db, obj)
 
     @staticmethod
@@ -106,20 +71,20 @@ class ConfigService:
             if config.key != obj.key:
                 config = await config_dao.get_by_key(db, obj.key)
                 if config:
-                    raise errors.ForbiddenError(msg=f'参数配置 {obj.key} 已存在')
+                    raise errors.ConflictError(msg=f'参数配置 {obj.key} 已存在')
             count = await config_dao.update(db, pk, obj)
             return count
 
     @staticmethod
-    async def delete(*, pk: list[int]) -> int:
+    async def delete(*, pks: list[int]) -> int:
         """
-        删除参数配置
+        批量删除参数配置
 
-        :param pk: 参数配置 ID 列表
+        :param pks: 参数配置 ID 列表
         :return:
         """
         async with async_db_session.begin() as db:
-            count = await config_dao.delete(db, pk)
+            count = await config_dao.delete(db, pks)
             return count
 
 

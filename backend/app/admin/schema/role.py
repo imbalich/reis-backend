@@ -15,6 +15,7 @@ class RoleSchemaBase(SchemaBase):
 
     name: str = Field(description='角色名称')
     status: StatusType = Field(StatusType.enable, description='状态')
+    is_filter_scopes: bool = Field(True, description='过滤数据权限')
     remark: str | None = Field(None, description='备注')
 
 
@@ -24,6 +25,12 @@ class CreateRoleParam(RoleSchemaBase):
 
 class UpdateRoleParam(RoleSchemaBase):
     """更新角色参数"""
+
+
+class DeleteRoleParam(SchemaBase):
+    """删除角色参数"""
+
+    pks: list[int] = Field(description='角色 ID 列表')
 
 
 class UpdateRoleMenuParam(SchemaBase):

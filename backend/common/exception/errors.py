@@ -85,7 +85,7 @@ class GatewayError(BaseExceptionMixin):
 class AuthorizationError(BaseExceptionMixin):
     """授权异常"""
 
-    code = StandardResponseCode.HTTP_401
+    code = StandardResponseCode.HTTP_403
 
     def __init__(self, *, msg: str = 'Permission Denied', data: Any = None, background: BackgroundTask | None = None):
         super().__init__(msg=msg, data=data, background=background)
@@ -98,6 +98,15 @@ class TokenError(HTTPError):
 
     def __init__(self, *, msg: str = 'Not Authenticated', headers: dict[str, Any] | None = None):
         super().__init__(code=self.code, msg=msg, headers=headers or {'WWW-Authenticate': 'Bearer'})
+
+
+class ConflictError(BaseExceptionMixin):
+    """资源冲突异常"""
+
+    code = StandardResponseCode.HTTP_409
+
+    def __init__(self, *, msg: str = 'Conflict', data: Any = None, background: BackgroundTask | None = None):
+        super().__init__(msg=msg, data=data, background=background)
 
 
 class DataValidationError(BaseExceptionMixin):

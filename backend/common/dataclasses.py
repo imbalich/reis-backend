@@ -35,13 +35,6 @@ class RequestCallNext:
 
 
 @dataclasses.dataclass
-class NewToken:
-    new_access_token: str
-    new_access_token_expire_time: datetime
-    session_uuid: str
-
-
-@dataclasses.dataclass
 class AccessToken:
     access_token: str
     access_token_expire_time: datetime
@@ -55,6 +48,15 @@ class RefreshToken:
 
 
 @dataclasses.dataclass
+class NewToken:
+    new_access_token: str
+    new_access_token_expire_time: datetime
+    new_refresh_token: str
+    new_refresh_token_expire_time: datetime
+    session_uuid: str
+
+
+@dataclasses.dataclass
 class TokenPayload:
     id: int
     session_uuid: str
@@ -64,3 +66,12 @@ class TokenPayload:
 @dataclasses.dataclass
 class UploadUrl:
     url: str
+
+
+@dataclasses.dataclass
+class SnowflakeInfo:
+    timestamp: int
+    datetime: str
+    cluster_id: int
+    node_id: int
+    sequence: int

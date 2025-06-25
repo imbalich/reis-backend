@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 from typing import Sequence
 
-from sqlalchemy import Select, and_, desc, select
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import noload, selectinload
 from sqlalchemy_crud_plus import CRUDPlus
 
-from backend.app.admin.model import DataScope, Menu, Role, User
+from backend.app.admin.model import DataScope, Menu, Role
 from backend.app.admin.schema.role import (
     CreateRoleParam,
     UpdateRoleMenuParam,
@@ -37,13 +36,7 @@ class CRUDRole(CRUDPlus[Role]):
         :param role_id: 角色 ID
         :return:
         """
-        stmt = (
-            select(self.model)
-            .options(selectinload(self.model.menus), selectinload(self.model.scopes))
-            .where(self.model.id == role_id)
-        )
-        role = await db.execute(stmt)
-        return role.scalars().first()
+        return await self.select_model(db, role_id, load_strategies=['menus', 'scopes'])
 
     async def get_all(self, db: AsyncSession) -> Sequence[Role]:
         """
@@ -54,18 +47,6 @@ class CRUDRole(CRUDPlus[Role]):
         """
         return await self.select_models(db)
 
-    async def get_users(self, db: AsyncSession, user_id: int) -> Sequence[Role]:
-        """
-        获取用户角色列表
-
-        :param db: 数据库会话
-        :param user_id: 用户 ID
-        :return:
-        """
-        stmt = select(self.model).join(self.model.users).where(User.id == user_id)
-        roles = await db.execute(stmt)
-        return roles.scalars().all()
-
     async def get_list(self, name: str | None, status: int | None) -> Select:
         """
         获取角色列表
@@ -74,22 +55,23 @@ class CRUDRole(CRUDPlus[Role]):
         :param status: 角色状态
         :return:
         """
-        stmt = (
-            select(self.model)
-            .options(noload(self.model.users), noload(self.model.menus), noload(self.model.scopes))
-            .order_by(desc(self.model.created_time))
-        )
 
-        filters = []
+        filters = {}
+
         if name is not None:
-            filters.append(self.model.name.like(f'%{name}%'))
+            filters['name__like'] = f'%{name}%'
         if status is not None:
-            filters.append(self.model.status == status)
+            filters['status'] = status
 
-        if filters:
-            stmt = stmt.where(and_(*filters))
-
-        return stmt
+        return await self.select_order(
+            'id',
+            load_strategies={
+                'users': 'noload',
+                'menus': 'noload',
+                'scopes': 'noload',
+            },
+            **filters,
+        )
 
     async def get_by_name(self, db: AsyncSession, name: str) -> Role | None:
         """
@@ -152,15 +134,15 @@ class CRUDRole(CRUDPlus[Role]):
         current_role.scopes = scopes.scalars().all()
         return len(current_role.scopes)
 
-    async def delete(self, db: AsyncSession, role_id: list[int]) -> int:
+    async def delete(self, db: AsyncSession, role_ids: list[int]) -> int:
         """
-        删除角色
+        批量删除角色
 
         :param db: 数据库会话
-        :param role_id: 角色 ID 列表
+        :param role_ids: 角色 ID 列表
         :return:
         """
-        return await self.delete_model_by_column(db, allow_multiple=True, id__in=role_id)
+        return await self.delete_model_by_column(db, allow_multiple=True, id__in=role_ids)
 
 
 role_dao: CRUDRole = CRUDRole(Role)

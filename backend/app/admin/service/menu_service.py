@@ -32,7 +32,7 @@ class MenuService:
             return menu
 
     @staticmethod
-    async def get_menu_tree(*, title: str | None, status: int | None) -> list[dict[str, Any]]:
+    async def get_tree(*, title: str | None, status: int | None) -> list[dict[str, Any]]:
         """
         获取菜单树形结构
 
@@ -41,27 +41,30 @@ class MenuService:
         :return:
         """
         async with async_db_session() as db:
-            menu_select = await menu_dao.get_all(db, title=title, status=status)
-            menu_tree = get_tree_data(menu_select)
+            menu_data = await menu_dao.get_all(db, title=title, status=status)
+            menu_tree = get_tree_data(menu_data)
             return menu_tree
 
     @staticmethod
-    async def get_user_menu_tree(*, request: Request) -> list[dict[str, Any]]:
+    async def get_sidebar(*, request: Request) -> list[dict[str, Any] | None]:
         """
-        获取用户的菜单树形结构
+        获取用户的菜单侧边栏
 
         :param request: FastAPI 请求对象
         :return:
         """
         async with async_db_session() as db:
-            roles = request.user.roles
-            menu_ids = []
-            menu_tree = []
-            if roles:
-                for role in roles:
-                    menu_ids.extend([menu.id for menu in role.menus])
-                menu_select = await menu_dao.get_role_menus(db, request.user.is_superuser, menu_ids)
-                menu_tree = get_vben5_tree_data(menu_select)
+            if request.user.is_superuser:
+                menu_data = await menu_dao.get_sidebar(db, None)
+            else:
+                roles = request.user.roles
+                menu_ids = set()
+                if roles:
+                    for role in roles:
+                        for menu in role.menus:
+                            menu_ids.add(menu.id)
+                    menu_data = await menu_dao.get_sidebar(db, list(menu_ids))
+            menu_tree = get_vben5_tree_data(menu_data)
             return menu_tree
 
     @staticmethod
@@ -75,7 +78,7 @@ class MenuService:
         async with async_db_session.begin() as db:
             title = await menu_dao.get_by_title(db, obj.title)
             if title:
-                raise errors.ForbiddenError(msg='菜单标题已存在')
+                raise errors.ConflictError(msg='菜单标题已存在')
             if obj.parent_id:
                 parent_menu = await menu_dao.get(db, obj.parent_id)
                 if not parent_menu:
@@ -97,7 +100,7 @@ class MenuService:
                 raise errors.NotFoundError(msg='菜单不存在')
             if menu.title != obj.title:
                 if await menu_dao.get_by_title(db, obj.title):
-                    raise errors.ForbiddenError(msg='菜单标题已存在')
+                    raise errors.ConflictError(msg='菜单标题已存在')
             if obj.parent_id:
                 parent_menu = await menu_dao.get(db, obj.parent_id)
                 if not parent_menu:
@@ -121,7 +124,7 @@ class MenuService:
         async with async_db_session.begin() as db:
             children = await menu_dao.get_children(db, pk)
             if children:
-                raise errors.ForbiddenError(msg='菜单下存在子菜单，无法删除')
+                raise errors.ConflictError(msg='菜单下存在子菜单，无法删除')
             menu = await menu_dao.get(db, pk)
             count = await menu_dao.delete(db, pk)
             if menu:

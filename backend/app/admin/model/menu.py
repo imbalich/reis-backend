@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import BigInteger, ForeignKey, String
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.dialects.postgresql import TEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -24,10 +24,10 @@ class Menu(Base):
     id: Mapped[id_key] = mapped_column(init=False)
     title: Mapped[str] = mapped_column(String(50), comment='菜单标题')
     name: Mapped[str] = mapped_column(String(50), comment='菜单名称')
-    path: Mapped[str] = mapped_column(String(200), comment='路由地址')
+    path: Mapped[str | None] = mapped_column(String(200), comment='路由地址')
     sort: Mapped[int] = mapped_column(default=0, comment='排序')
     icon: Mapped[str | None] = mapped_column(String(100), default=None, comment='菜单图标')
-    type: Mapped[int] = mapped_column(default=0, comment='菜单类型（0目录 1菜单 2按钮）')
+    type: Mapped[int] = mapped_column(default=0, comment='菜单类型（0目录 1菜单 2按钮 3内嵌 4外链）')
     component: Mapped[str | None] = mapped_column(String(255), default=None, comment='组件路径')
     perms: Mapped[str | None] = mapped_column(String(100), default=None, comment='权限标识')
     status: Mapped[int] = mapped_column(default=1, comment='菜单状态（0停用 1正常）')
@@ -42,7 +42,7 @@ class Menu(Base):
 
     # 父级菜单一对多
     parent_id: Mapped[int | None] = mapped_column(
-        ForeignKey('sys_menu.id', ondelete='SET NULL'), default=None, index=True, comment='父菜单ID'
+        BigInteger, ForeignKey('sys_menu.id', ondelete='SET NULL'), default=None, index=True, comment='父菜单ID'
     )
     parent: Mapped[Optional['Menu']] = relationship(init=False, back_populates='children', remote_side=[id])
     children: Mapped[Optional[list['Menu']]] = relationship(init=False, back_populates='parent')

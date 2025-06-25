@@ -21,12 +21,14 @@ class CRUDOperaLogDao(CRUDPlus[OperaLog]):
         :return:
         """
         filters = {}
+
         if username is not None:
-            filters.update(username__like=f'%{username}%')
+            filters['username__like'] = f'%{username}%'
         if status is not None:
-            filters.update(status=status)
+            filters['status__eq'] = status
         if ip is not None:
-            filters.update(ip__like=f'%{ip}%')
+            filters['ip__like'] = f'%{ip}%'
+
         return await self.select_order('created_time', 'desc', **filters)
 
     async def create(self, db: AsyncSession, obj: CreateOperaLogParam) -> None:
@@ -39,15 +41,15 @@ class CRUDOperaLogDao(CRUDPlus[OperaLog]):
         """
         await self.create_model(db, obj)
 
-    async def delete(self, db: AsyncSession, pk: list[int]) -> int:
+    async def delete(self, db: AsyncSession, pks: list[int]) -> int:
         """
-        删除操作日志
+        批量删除操作日志
 
         :param db: 数据库会话
-        :param pk: 操作日志 ID 列表
+        :param pks: 操作日志 ID 列表
         :return:
         """
-        return await self.delete_model_by_column(db, allow_multiple=True, id__in=pk)
+        return await self.delete_model_by_column(db, allow_multiple=True, id__in=pks)
 
     async def delete_all(self, db: AsyncSession) -> int:
         """

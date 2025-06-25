@@ -7,21 +7,11 @@ from starlette.concurrency import run_in_threadpool
 from backend.app.task.celery import celery_app
 from backend.app.task.schema.task import RunParam, TaskResult
 from backend.common.exception import errors
-from backend.common.exception.errors import NotFoundError
 
 
 class TaskService:
     @staticmethod
-    async def get_list() -> list[str]:
-        """获取所有已注册的 Celery 任务列表"""
-        registered_tasks = await run_in_threadpool(celery_app.control.inspect().registered)
-        if not registered_tasks:
-            raise errors.ForbiddenError(msg='Celery 服务未启动')
-        tasks = list(registered_tasks.values())[0]
-        return tasks
-
-    @staticmethod
-    def get_detail(*, tid: str) -> TaskResult:
+    def get(*, tid: str) -> TaskResult:
         """
         获取指定任务的详细信息
 
@@ -31,7 +21,7 @@ class TaskService:
         try:
             result = AsyncResult(id=tid, app=celery_app)
         except NotRegistered:
-            raise NotFoundError(msg='任务不存在')
+            raise errors.NotFoundError(msg='任务不存在')
         return TaskResult(
             result=result.result,
             traceback=result.traceback,
@@ -45,6 +35,15 @@ class TaskService:
         )
 
     @staticmethod
+    async def get_all() -> list[str]:
+        """获取所有已注册的 Celery 任务列表"""
+        registered_tasks = await run_in_threadpool(celery_app.control.inspect().registered)
+        if not registered_tasks:
+            raise errors.ServerError(msg='Celery 服务未启动')
+        tasks = list(registered_tasks.values())[0]
+        return tasks
+
+    @staticmethod
     def revoke(*, tid: str) -> None:
         """
         撤销指定的任务
@@ -55,7 +54,7 @@ class TaskService:
         try:
             result = AsyncResult(id=tid, app=celery_app)
         except NotRegistered:
-            raise NotFoundError(msg='任务不存在')
+            raise errors.NotFoundError(msg='任务不存在')
         result.revoke(terminate=True)
 
     @staticmethod

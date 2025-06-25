@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Path, Query
 
 from backend.app.admin.schema.data_scope import (
     CreateDataScopeParam,
+    DeleteDataScopeParam,
     GetDataScopeDetail,
     GetDataScopeWithRelationDetail,
     UpdateDataScopeParam,
@@ -20,6 +21,12 @@ from backend.common.security.rbac import DependsRBAC
 from backend.database.db import CurrentSession
 
 router = APIRouter()
+
+
+@router.get('/all', summary='获取所有数据范围', dependencies=[DependsJwtAuth])
+async def get_all_data_scope() -> ResponseSchemaModel[list[GetDataScopeDetail]]:
+    data = await data_scope_service.get_all()
+    return response_base.success(data=data)
 
 
 @router.get('/{pk}', summary='获取数据范围详情', dependencies=[DependsJwtAuth])
@@ -46,7 +53,7 @@ async def get_data_scope_rules(
         DependsPagination,
     ],
 )
-async def get_pagination_data_scopes(
+async def get_data_scopes_paged(
     db: CurrentSession,
     name: Annotated[str | None, Query(description='范围名称')] = None,
     status: Annotated[int | None, Query(description='状态')] = None,
@@ -111,8 +118,8 @@ async def update_data_scope_rules(
         DependsRBAC,
     ],
 )
-async def delete_data_scope(pk: Annotated[list[int], Query(description='数据范围 ID 列表')]) -> ResponseModel:
-    count = await data_scope_service.delete(pk=pk)
+async def delete_data_scopes(obj: DeleteDataScopeParam) -> ResponseModel:
+    count = await data_scope_service.delete(obj=obj)
     if count > 0:
         return response_base.success()
     return response_base.fail()

@@ -55,7 +55,7 @@ class GenService:
 
             business_info = await gen_business_dao.get_by_name(db, obj.table_name)
             if business_info:
-                raise errors.ForbiddenError(msg='已存在相同数据库表业务')
+                raise errors.ConflictError(msg='已存在相同数据库表业务')
 
             table_name = table_info[0]
             new_business = GenBusiness(
@@ -99,7 +99,7 @@ class GenService:
         :param business: 业务对象
         :return:
         """
-        gen_models = await gen_model_service.get_by_business(business_id=business.id)
+        gen_models = await gen_model_service.get_models(business_id=business.id)
         if not gen_models:
             raise errors.NotFoundError(msg='代码生成模型表为空')
 
@@ -175,8 +175,9 @@ class GenService:
                 code_folder.mkdir(parents=True, exist_ok=True)
 
                 init_filepath = code_folder.joinpath('__init__.py')
-                async with aiofiles.open(init_filepath, 'w', encoding='utf-8') as f:
-                    await f.write(gen_template.init_content)
+                if not os.path.exists(init_filepath):
+                    async with aiofiles.open(init_filepath, 'w', encoding='utf-8') as f:
+                        await f.write(gen_template.init_content)
 
                 # api __init__.py
                 if 'api' in str_code_filepath:

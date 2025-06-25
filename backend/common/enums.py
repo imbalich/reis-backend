@@ -44,6 +44,8 @@ class MenuType(IntEnum):
     directory = 0
     menu = 1
     button = 2
+    embedded = 3
+    link = 4
 
 
 class RoleDataRuleOperatorType(IntEnum):
@@ -119,3 +121,19 @@ class FileType(StrEnum):
 
     image = 'image'
     video = 'video'
+
+
+class PluginType(StrEnum):
+    """插件类型"""
+
+    zip = 'zip'
+    git = 'git'
+
+
+class UserPermissionType(StrEnum):
+    """用户权限类型"""
+
+    superuser = 'superuser'
+    staff = 'staff'
+    status = 'status'
+    multi_login = 'multi_login'

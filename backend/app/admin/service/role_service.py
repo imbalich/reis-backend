@@ -10,6 +10,7 @@ from backend.app.admin.crud.crud_role import role_dao
 from backend.app.admin.model import Role
 from backend.app.admin.schema.role import (
     CreateRoleParam,
+    DeleteRoleParam,
     UpdateRoleMenuParam,
     UpdateRoleParam,
     UpdateRoleScopeParam,
@@ -46,18 +47,6 @@ class RoleService:
             return roles
 
     @staticmethod
-    async def get_users(*, pk: int) -> Sequence[Role]:
-        """
-        获取用户的角色列表
-
-        :param pk: 用户 ID
-        :return:
-        """
-        async with async_db_session() as db:
-            roles = await role_dao.get_users(db, user_id=pk)
-            return roles
-
-    @staticmethod
     async def get_select(*, name: str | None, status: int | None) -> Select:
         """
         获取角色列表查询条件
@@ -69,7 +58,7 @@ class RoleService:
         return await role_dao.get_list(name=name, status=status)
 
     @staticmethod
-    async def get_menu_tree(*, pk: int) -> list[dict[str, Any]]:
+    async def get_menu_tree(*, pk: int) -> list[dict[str, Any] | None]:
         """
         获取角色的菜单树形结构
 
@@ -80,9 +69,7 @@ class RoleService:
             role = await role_dao.get_with_relation(db, pk)
             if not role:
                 raise errors.NotFoundError(msg='角色不存在')
-            menu_ids = [menu.id for menu in role.menus]
-            menu_select = await menu_dao.get_role_menus(db, False, menu_ids)
-            menu_tree = get_tree_data(menu_select)
+            menu_tree = get_tree_data(role.menus) if role.menus else []
             return menu_tree
 
     @staticmethod
@@ -111,7 +98,7 @@ class RoleService:
         async with async_db_session.begin() as db:
             role = await role_dao.get_by_name(db, obj.name)
             if role:
-                raise errors.ForbiddenError(msg='角色已存在')
+                raise errors.ConflictError(msg='角色已存在')
             await role_dao.create(db, obj)
 
     @staticmethod
@@ -128,9 +115,8 @@ class RoleService:
             if not role:
                 raise errors.NotFoundError(msg='角色不存在')
             if role.name != obj.name:
-                role = await role_dao.get_by_name(db, obj.name)
-                if role:
-                    raise errors.ForbiddenError(msg='角色已存在')
+                if await role_dao.get_by_name(db, obj.name):
+                    raise errors.ConflictError(msg='角色已存在')
             count = await role_dao.update(db, pk, obj)
             for user in await role.awaitable_attrs.users:
                 await redis_client.delete_prefix(f'{settings.JWT_USER_REDIS_PREFIX}:{user.id}')
@@ -146,7 +132,7 @@ class RoleService:
         :return:
         """
         async with async_db_session.begin() as db:
-            role = await role_dao.get_with_relation(db, pk)
+            role = await role_dao.get(db, pk)
             if not role:
                 raise errors.NotFoundError(msg='角色不存在')
             for menu_id in menu_ids.menus:
@@ -181,17 +167,17 @@ class RoleService:
             return count
 
     @staticmethod
-    async def delete(*, pk: list[int]) -> int:
+    async def delete(*, obj: DeleteRoleParam) -> int:
         """
-        删除角色
+        批量删除角色
 
-        :param pk: 角色 ID 列表
+        :param obj: 角色 ID 列表
         :return:
         """
         async with async_db_session.begin() as db:
-            count = await role_dao.delete(db, pk)
-            for _pk in pk:
-                role = await role_dao.get(db, _pk)
+            count = await role_dao.delete(db, obj.pks)
+            for pk in obj.pks:
+                role = await role_dao.get(db, pk)
                 if role:
                     for user in await role.awaitable_attrs.users:
                         await redis_client.delete(f'{settings.JWT_USER_REDIS_PREFIX}:{user.id}')

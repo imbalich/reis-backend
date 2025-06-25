@@ -6,7 +6,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Request
 
-from backend.app.admin.schema.token import GetTokenDetail, KickOutToken
+from backend.app.admin.schema.token import GetTokenDetail
 from backend.common.enums import StatusType
 from backend.common.response.response_schema import ResponseModel, ResponseSchemaModel, response_base
 from backend.common.security.jwt import DependsJwtAuth, jwt_decode, revoke_token, superuser_verify
@@ -18,8 +18,8 @@ from backend.database.redis import redis_client
 router = APIRouter()
 
 
-@router.get('', summary='获取令牌列表', dependencies=[DependsJwtAuth])
-async def get_tokens(
+@router.get('', summary='获取在线用户', dependencies=[DependsJwtAuth])
+async def get_sessions(
     username: Annotated[str | None, Query(description='用户名')] = None,
 ) -> ResponseSchemaModel[list[GetTokenDetail]]:
     token_keys = await redis_client.keys(f'{settings.TOKEN_REDIS_PREFIX}:*')
@@ -44,9 +44,10 @@ async def get_tokens(
     for key in token_keys:
         token = await redis_client.get(key)
         token_payload = jwt_decode(token)
+        user_id = token_payload.id
         session_uuid = token_payload.session_uuid
         token_detail = GetTokenDetail(
-            id=token_payload.id,
+            id=user_id,
             session_uuid=session_uuid,
             username='未知',
             nickname='未知',
@@ -58,7 +59,7 @@ async def get_tokens(
             last_login_time='未知',
             expire_time=token_payload.expire_time,
         )
-        extra_info = await redis_client.get(f'{settings.TOKEN_EXTRA_INFO_REDIS_PREFIX}:{session_uuid}')
+        extra_info = await redis_client.get(f'{settings.TOKEN_EXTRA_INFO_REDIS_PREFIX}:{user_id}:{session_uuid}')
         if extra_info:
             extra_info = json.loads(extra_info)
             # 排除 swagger 登录生成的 token
@@ -75,15 +76,17 @@ async def get_tokens(
 
 @router.delete(
     '/{pk}',
-    summary='踢下线',
+    summary='强制下线',
     dependencies=[
-        Depends(RequestPermission('sys:token:kick')),
+        Depends(RequestPermission('sys:session:delete')),
         DependsRBAC,
     ],
 )
-async def kick_out(
-    request: Request, pk: Annotated[int, Path(description='用户 ID')], obj: KickOutToken
+async def delete_session(
+    request: Request,
+    pk: Annotated[int, Path(description='用户 ID')],
+    session_uuid: Annotated[str, Query(description='会话 UUID')],
 ) -> ResponseModel:
     superuser_verify(request)
-    await revoke_token(str(pk), obj.session_uuid)
+    await revoke_token(pk, session_uuid)
     return response_base.success()
