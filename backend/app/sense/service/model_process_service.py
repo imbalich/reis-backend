@@ -9,6 +9,7 @@
 """
 
 from typing import Any, List, Dict
+import gc
 import shap
 import numpy as np
 import pandas as pd
@@ -35,9 +36,11 @@ class ModelProcessService:
         try:
             # 1、获取处理好的数据集
             data_pre = await ModelProcessService.get_data_pro(tags)
+            gc.collect()
 
             # 2、建立模型
             model_result = await ModelProcessService.model_create(data_pre)
+            gc.collect()
 
             # 3、模型预测
             results=[]
@@ -60,11 +63,17 @@ class ModelProcessService:
                 # 计算特征重要度
                 feature_importance = []
                 all_cols = categorical_cols + numerical_cols
+                shap_list = []
                 for col in all_cols:
                     mean_abs_shap = np.mean(np.abs(shap_values.values[:, x_train.columns.get_loc(col)]))
+                    shap_list.append((col, mean_abs_shap))
+                
+                shap_list_sorted = sorted(shap_list, key=lambda x: x[1], reverse=True)
+
+                for rank, (col, _) in enumerate(shap_list_sorted, start=1):
                     feature_importance.append({
                         'feature': col,
-                        'shap_value': mean_abs_shap,
+                        'shap_value': rank,
                     })
 
                 # 计算每个特征下各类别特征重要度
@@ -148,80 +157,101 @@ class ModelProcessService:
         :param data:编码完成并划分好的数据集
         :return: 模型排序与结果
         """
-        # 准备数据
-        x_train = data["x_train"]
-        y_train = data["y_train"]
-        x_test = data["x_test"]
-        y_test = data["y_test"]
+        try:
+            # 准备数据
+            x_train = data["x_train"]
+            y_train = data["y_train"]
+            x_test = data["x_test"]
+            y_test = data["y_test"]
 
-        # 定义模型和参数网格
-        models = {
-            "LogisticRegression": {
-                "model": LogisticRegression(penalty='elasticnet',solver='saga',max_iter=5000, random_state=42),
-                "params": {
-                    'C': [0.1, 1, 10],
-                    'l1_ratio': [0.1, 0.5, 0.9],
-                    'class_weight': ['balanced', None]
-                }
-            },
-            "DecisionTree": {
-                "model": DecisionTreeClassifier(criterion='gini', random_state=66),
-                "params": {
-                    'max_depth': [None, 5, 10, 20],
-                    'min_samples_split': [2,5, 10],
-                    'min_samples_leaf': [1, 2, 4],
-                    'class_weight': ['balanced', None]
-                }
-            },
-            "RandomForest": {
-                "model": RandomForestClassifier(random_state=66),
-                "params": {
-                    'n_estimators': [50, 100, 200],
-                    'max_depth': [None, 10, 20],
-                    'min_samples_split': [5, 10],
-                    'min_samples_leaf': [2, 4],
-                    'class_weight': ['balanced', None]
+            # 定义模型和参数网格 - 优化参数范围
+            models = {
+                "LogisticRegression": {
+                    "model": LogisticRegression(penalty='elasticnet',solver='saga',max_iter=5000, random_state=42),
+                    "params": {
+                        'C': [1, 10],
+                        'l1_ratio': [0.1, 0.9],
+                        'class_weight': ['balanced']
+                    }
+                },
+                # "DecisionTree": {
+                #     "model": DecisionTreeClassifier(criterion='gini', random_state=66),
+                #     "params": {
+                #         'max_depth': [5, 10],
+                #        'min_samples_split': [2, 5],
+                #        'class_weight': ['balanced']
+                #     }
+                # },
+                "RandomForest": {
+                    "model": RandomForestClassifier(random_state=66),
+                    "params": {
+                        'n_estimators': [50, 100],
+                        'max_depth': [10, 20],
+                        'min_samples_split': [5],
+                        'class_weight': ['balanced']
+                    }
                 }
             }
-        }
 
-        # 存储结果
-        model_results = []
+            # 存储结果
+            model_results = []
 
-        # 对每个模型进行网格搜索
-        for name, config in models.items():
-            # 使用两种评分标准
-            gs = GridSearchCV(
-                estimator=config["model"],
-                param_grid=config["params"],
-                scoring={'f1': 'f1', 'roc_auc': 'roc_auc'},
-                refit='f1',
-                cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
-                n_jobs=-1,
-                verbose=0
+            # 对每个模型进行网格搜索
+            for name, config in models.items():
+                try:
+                    # 使用更少的CV折数和更高效的评分方法
+                    gs = GridSearchCV(
+                        estimator=config["model"],
+                        param_grid=config["params"],
+                        scoring={'f1': 'f1', 'roc_auc': 'roc_auc'},
+                        refit='f1',
+                        cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
+                        n_jobs=1,
+                        verbose=1
+                    )
+                    
+                    # 训练模型
+                    gs.fit(x_train, y_train)
+                    
+                    # 在测试集上评估
+                    y_pre = gs.predict(x_test)
+                    y_proba = gs.predict_proba(x_test)[:, 1]
+                    f1 = f1_score(y_test, y_pre)
+                    roc_auc = roc_auc_score(y_test, y_proba)
+
+                    # 只保存最佳模型
+                    model_results.append({
+                        "model_type": name,
+                        "best_model": gs.best_estimator_,
+                        "f1_score": f1,
+                        "roc_auc_score": roc_auc,
+                    })
+
+                    # 清理内存
+                    del gs.cv_results_
+                    del y_pre
+                    del y_proba
+                    gc.collect()
+
+                except Exception as e:
+                    print(f"Error training {name}: {str(e)}")
+                    continue
+
+                # 每个模型训练后强制清理
+                gc.collect()
+
+            ranked_models = sorted(
+                model_results,
+                key=lambda x: (-x["f1_score"], -x["roc_auc_score"])
             )
-            gs.fit(x_train, y_train)
-            # 在测试集上评估
-            y_pre = gs.predict(x_test)
-            y_proba = gs.predict_proba(x_test)[:, 1]
-            f1 = f1_score(y_test, y_pre)
-            roc_auc = roc_auc_score(y_test, y_proba)
 
-            model_results.append({
-                "model_type": name,
-                "best_model": gs.best_estimator_,
-                "f1_score": f1,
-                "roc_auc_score": roc_auc,
-            })
+            return {
+                "ranked_models": ranked_models,
+            }
 
-        ranked_models = sorted(
-            model_results,
-            key=lambda x: (-x["f1_score"], -x["roc_auc_score"])
-        )
-
-        return {
-            "ranked_models": ranked_models,
-        }
+        finally:
+            # 最终清理
+            gc.collect()
 
     @staticmethod
     async def _calculate_shap_values(model, model_type: str, x_test: pd.DataFrame, x_train: pd.DataFrame):
@@ -249,7 +279,7 @@ class ModelProcessService:
             return shap_values[1] if isinstance(shap_values.values, list) else shap_values
 
         except Exception as e:
-            print(f"{model_type} SHAP计算失败: {str(e)}")
+            return {'error': f'{model_type} SHAP计算失败: {str(e)}'}
 
     @staticmethod
     def _analyze_categorical_feature(feature_series: pd.Series, shap_values: np.ndarray) -> List[Dict]:

@@ -35,6 +35,17 @@ class ProcessService:
                 figure_data = await failure_dao.get_number_by_model(db, model, part, stage, time_range)
                 config_data = await configuration_dao.get_by_model_and_part(db, model, part, stage, process_names,
                                                                             extra_material_names)
+
+                # config_data中的product_no去重
+                seen = set()
+                filtered_config_data = []
+                for row in config_data:
+                    key = (row.product_no, row.extra_source_code)
+                    if key not in seen:
+                        seen.add(key)
+                        filtered_config_data.append(row)
+                config_data = filtered_config_data
+
                 figure_product_numbers = set(figure_data) if figure_data else set()
 
                 # 2. 提前获取所有PC数据并建立内存索引

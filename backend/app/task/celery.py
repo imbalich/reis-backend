@@ -59,7 +59,7 @@ def init_celery() -> celery.Celery:
         broker_connection_retry_on_startup=True,
         result_backend=get_result_backend(),
         result_backend_transport_options=get_result_backend_transport_options(),
-        task_cls='app.task.celery_task.base:TaskBase',
+        task_cls='backend.app.task.celery_task.base:TaskBase',
         task_track_started=True,
     )
 

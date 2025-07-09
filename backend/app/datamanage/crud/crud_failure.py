@@ -69,7 +69,7 @@ class CRUDFailure(CRUDPlus[Failure]):
         获取指定两列的所有唯一值，根据产品型号
         :param db: 数据库会话
         :param product_model: 产品型号
-        :param column_name: '故障部位‘
+        :param column_names: '故障部位‘
         :return: 产品型号下故障部位的唯一列表
         """
         for col in column_names:

@@ -47,9 +47,9 @@ class CRUDReplace(CRUDPlus[Replace]):
         """
         stmt = select(self.model).order_by(desc(self.model.id))
         where_list = []
-        if model:
+        if model is not None:
             where_list.append(self.model.model == model)
-        if state_now:
+        if state_now is not None:
             where_list.append(self.model.state_now == state_now)
         if where_list:
             stmt = stmt.where(*where_list)

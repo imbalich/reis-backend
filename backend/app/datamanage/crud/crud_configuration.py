@@ -7,10 +7,11 @@
 @Author  ：imbalich
 @Date    ：2025/3/24 14:13
 """
-
-from typing import Any, Sequence
+import re
+from typing import Any, Sequence, List
 
 from sqlalchemy import distinct, select
+from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -37,6 +38,55 @@ class CRUDConfiguration(CRUDPlus[Configuration]):
 
         # 返回结果
         return result.scalars().all()
+
+    async def get_distinct_column_values_by_product_model(
+        self, db: AsyncSession, product_model: str, column_name: str
+    ) -> Sequence[Any]:
+        """
+        获取指定列的所有唯一值，根据产品型号
+        :param db: 数据库会话
+        :param product_model: 产品型号
+        :param column_name: '检验工序‘
+        :return: 产品型号下检验工序的唯一列表
+        """
+        # 确保列名存在于模型中
+        if not hasattr(self.model, column_name):
+            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
+
+        # 构建查询
+        column = getattr(self.model, column_name)
+        # 先查产品型号==column下的所有product_model，然后针对product_model去重
+        stmt = select(distinct(column)).where(self.model.prod_model == product_model).order_by(column)
+        # 执行查询
+        result = await db.execute(stmt)
+        values = result.scalars().all()
+
+        # 对process_name进行特殊处理
+        if column_name == 'process_name':
+            process_values = [re.split(r'[（(]', v, maxsplit=1)[0].strip() for v in values if v]
+            values = sorted(list(set(process_values)))
+
+        # 返回结果
+        return values
+
+    async def get_distinct_columns_values_by_process_name(
+        self, db: AsyncSession, process_name: str, column_names: List[str]
+    ) -> Sequence[Row[tuple[Any, ...]]]:
+        """
+        获取指定两列的所有唯一值，根据检修工序
+        :param db: 数据库会话
+        :param process_name: 检验工序
+        :param column_names: '物料名称‘
+        :return: 检修工序下物料名称的唯一列表
+        """
+        for col in column_names:
+            if not hasattr(self.model, col):
+                raise ValueError(f'Column {col} does not exist in model {self.model.__name__}')
+        columns = [getattr(self.model, col) for col in column_names]
+        # 构建查询，按列排序
+        stmt = select(*columns).distinct().where(self.model.process_name == process_name).order_by(*columns)
+        result = await db.execute(stmt)
+        return result.all()
 
     async def get_by_model_and_part_check(self, db: AsyncSession, model: str, part: str) -> Sequence[Configuration]:
         """
