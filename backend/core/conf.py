@@ -3,7 +3,6 @@
 from functools import lru_cache
 from typing import Any, Literal
 
-from celery.schedules import crontab
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -53,8 +52,8 @@ class Settings(BaseSettings):
     FASTAPI_STATIC_FILES: bool = True
 
     # 数据库
-    DATABASE_ECHO: bool = False
-    DATABASE_POOL_ECHO: bool = False
+    DATABASE_ECHO: bool | Literal['debug'] = False
+    DATABASE_POOL_ECHO: bool | Literal['debug'] = False
     DATABASE_SCHEMA: str = 'fba'
     DATABASE_CHARSET: str = 'utf8mb4'
 
@@ -115,7 +114,6 @@ class Settings(BaseSettings):
 
     # 中间件配置
     MIDDLEWARE_CORS: bool = True
-    MIDDLEWARE_ACCESS: bool = True
 
     # 请求限制配置
     REQUEST_LIMITER_REDIS_PREFIX: str = 'fba:limiter'
@@ -144,25 +142,22 @@ class Settings(BaseSettings):
     IP_LOCATION_REDIS_PREFIX: str = 'fba:ip:location'
     IP_LOCATION_EXPIRE_SECONDS: int = 60 * 60 * 24  # 1 天
 
-    # 追踪 ID
+    # 日志（Trace ID)
     TRACE_ID_REQUEST_HEADER_KEY: str = 'X-Request-ID'
+    TRACE_ID_LOG_DEFAULT_VALUE: str = '-'
+    TRACE_ID_LOG_UUID_LENGTH: int = 32  # UUID 长度，必须小于等于 32
 
-    # 日志
-    LOG_CID_DEFAULT_VALUE: str = '-'
-    LOG_CID_UUID_LENGTH: int = 32  # 日志 correlation_id 长度，必须小于等于 32
+    # 日志（控制台）
     LOG_STD_LEVEL: str = 'INFO'
+    LOG_STD_FORMAT: str = (
+        '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</> | <lvl>{level: <8}</> | <cyan>{correlation_id}</> | <lvl>{message}</>'
+    )
+    # 日志（文件）
     LOG_ACCESS_FILE_LEVEL: str = 'INFO'
     LOG_ERROR_FILE_LEVEL: str = 'ERROR'
-    LOG_STD_FORMAT: str = (
-        '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</> | <lvl>{level: <8}</> | '
-        '<cyan> {correlation_id} </> | <lvl>{message}</>'
-    )
-    LOG_FILE_FORMAT: str = (
-        '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</> | <lvl>{level: <8}</> | '
-        '<cyan> {correlation_id} </> | <lvl>{message}</>'
-    )
     LOG_ACCESS_FILENAME: str = 'fba_access.log'
     LOG_ERROR_FILENAME: str = 'fba_error.log'
+    LOG_FILE_FORMAT: str = '{time:YYYY-MM-DD HH:mm:ss.SSS} | <lvl>{level: <8}</> | {correlation_id} | <lvl>{message}</>'
 
     # 操作日志
     OPERA_LOG_PATH_EXCLUDE: list[str] = [
@@ -204,7 +199,6 @@ class Settings(BaseSettings):
     # App Task
     # .env Redis
     CELERY_BROKER_REDIS_DATABASE: int
-    CELERY_BACKEND_REDIS_DATABASE: int
 
     # .env RabbitMQ 配置
     # docker run -d --hostname fba-mq --name fba-mq  -p 5672:5672 -p 15672:15672 rabbitmq:latest
@@ -215,27 +209,8 @@ class Settings(BaseSettings):
 
     # 基础配置
     CELERY_BROKER: Literal['rabbitmq', 'redis'] = 'redis'
-    CELERY_BACKEND_REDIS_PREFIX: str = 'fba:celery:'
-    CELERY_BACKEND_REDIS_TIMEOUT: int = 5
-    CELERY_TASK_PACKAGES: list[str] = [
-        'app.task.celery_task',
-        'app.task.celery_task.db_log',
-        'app.task.celery_task.fit_task',  # 产品拟合
-        'app.task.celery_task.sense_task',  # 敏感度分析
-    ]
+    CELERY_REDIS_PREFIX: str = 'fba:celery'
     CELERY_TASK_MAX_RETRIES: int = 5
-
-    # 定时任务配置
-    CELERY_SCHEDULE: dict[str, dict[str, Any]] = {
-        'exec-every-sunday': {
-            'task': 'delete_db_opera_log',
-            'schedule': crontab('0', '0', day_of_week='6'),
-        },
-        'exec-every-15-of-month': {
-            'task': 'delete_db_login_log',
-            'schedule': crontab('0', '0', day_of_month='15'),
-        },
-    }
 
     # Plugin Code Generator
     CODE_GENERATOR_DOWNLOAD_ZIP_FILENAME: str = 'fba_generator'

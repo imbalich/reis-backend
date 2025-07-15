@@ -20,7 +20,7 @@ from backend.app.fit.schema.fit_param import (
 )
 from backend.app.fit.service.product_fit_service import product_fit_service
 from backend.app.fit.service.product_strategy_service import product_strategy_service
-from backend.app.task.celery_task.fit_task.tasks import product_fit_all_task, product_fit_task
+from backend.app.task.tasks.fit_task.tasks import product_fit_all_task, product_fit_task
 from backend.common.response.response_schema import response_base
 
 router = APIRouter()

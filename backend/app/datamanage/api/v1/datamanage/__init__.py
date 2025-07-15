@@ -16,6 +16,8 @@ from backend.app.datamanage.api.v1.datamanage.failure import router as failure_r
 from backend.app.datamanage.api.v1.datamanage.product import router as product_router
 from backend.app.datamanage.api.v1.datamanage.repair import router as repair_router
 from backend.app.datamanage.api.v1.datamanage.replace import router as replace_router
+from backend.app.datamanage.api.v1.datamanage.configuration import router as configuration_router
+from backend.app.datamanage.api.v1.datamanage.pc import router as pc_router
 
 router = APIRouter(prefix='/datamanage')
 
@@ -25,3 +27,5 @@ router.include_router(ebom_router, prefix='/ebom', tags=['ebom数据'])
 router.include_router(product_router, prefix='/product', tags=['产品信息数据'])
 router.include_router(repair_router, prefix='/repair', tags=['造修阶段数据'])
 router.include_router(replace_router, prefix='/replace', tags=['必换件数据'])
+router.include_router(configuration_router, prefix='/configuration', tags=['配置数据'])
+router.include_router(pc_router, prefix='/pc', tags=['pc数据'])
