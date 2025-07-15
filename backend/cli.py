@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import asyncio
+import os
 
 from dataclasses import dataclass
 from typing import Annotated
@@ -17,6 +18,7 @@ from backend import console, get_version
 from backend.common.enums import DataBaseType, PrimaryKeyType
 from backend.common.exception.errors import BaseExceptionMixin
 from backend.core.conf import settings
+from backend.core.path_conf import BASE_PATH
 from backend.database.db import async_db_session
 from backend.plugin.tools import get_plugin_sql
 from backend.utils.file_ops import install_git_plugin, install_zip_plugin, parse_sql_script
@@ -44,13 +46,15 @@ def run(host: str, port: int, reload: bool, workers: int | None) -> None:
         address=host,
         port=port,
         reload=not reload,
+        reload_ignore_dirs=[os.path.join(str(BASE_PATH), 'log')],
+        reload_ignore_patterns=['\.log'],
         reload_filter=PythonFilter(),
         workers=workers or 1,
     ).serve()
 
 
 async def install_plugin(
-    path: str, repo_url: str, no_sql: bool, db_type: DataBaseType, pk_type: PrimaryKeyType
+        path: str, repo_url: str, no_sql: bool, db_type: DataBaseType, pk_type: PrimaryKeyType
 ) -> None:
     if not path and not repo_url:
         raise cappa.Exit('path 或 repo_url 必须指定其中一项', code=1)
@@ -98,7 +102,7 @@ class Run:
             long=True,
             default='127.0.0.1',
             help='提供服务的主机 IP 地址，对于本地开发，请使用 `127.0.0.1`。'
-            '要启用公共访问，例如在局域网中，请使用 `0.0.0.0`',
+                 '要启用公共访问，例如在局域网中，请使用 `0.0.0.0`',
         ),
     ]
     port: Annotated[
