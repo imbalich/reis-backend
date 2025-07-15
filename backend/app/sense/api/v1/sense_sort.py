@@ -15,7 +15,7 @@ from fastapi import APIRouter, Query
 from backend.app.sense.schema.sense_param import CreateSenseSortInParam
 from backend.common.response.response_schema import response_base
 from backend.app.sense.service.sense_predict_service import sense_predict_service
-from backend.app.task.celery_task.sense_task.tasks import sense_sort_task
+from backend.app.task.tasks.sense_task.tasks import sense_sort_task
 
 router = APIRouter()
 

@@ -15,7 +15,7 @@ from fastapi import APIRouter, Query
 from backend.app.fit.schema.fit_param import CreateFitAllPartInParam, CreateFitPartInParam, FitCheckType, FitMethodType
 from backend.app.fit.service.part_fit_service import part_fit_service
 from backend.app.fit.service.part_strategy_service import part_strategy_service
-from backend.app.task.celery_task.fit_task.tasks import part_fit_all_task, part_fit_task
+from backend.app.task.tasks.fit_task.tasks import part_fit_all_task, part_fit_task
 from backend.common.response.response_schema import response_base
 
 router = APIRouter()
