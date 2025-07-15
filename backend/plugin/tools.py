@@ -8,14 +8,16 @@ import sys
 import warnings
 
 from functools import lru_cache
+from importlib.metadata import PackageNotFoundError, distribution
 from typing import Any
 
 import rtoml
 
 from fastapi import APIRouter, Depends, Request
+from packaging.requirements import Requirement
 from starlette.concurrency import run_in_threadpool
 
-from backend.common.enums import StatusType
+from backend.common.enums import DataBaseType, PrimaryKeyType, StatusType
 from backend.common.exception import errors
 from backend.common.log import log
 from backend.core.conf import settings
@@ -33,6 +35,10 @@ class PluginInjectError(Exception):
     """插件注入错误"""
 
 
+class PluginInstallError(Exception):
+    """插件安装错误"""
+
+
 @lru_cache
 def get_plugins() -> list[str]:
     """获取插件列表"""
@@ -40,7 +46,7 @@ def get_plugins() -> list[str]:
 
     # 遍历插件目录
     for item in os.listdir(PLUGIN_DIR):
-        if item.endswith('.py') or item.endswith('backup') or item == '__pycache__':
+        if not os.path.isdir(os.path.join(PLUGIN_DIR, item)) and item == '__pycache__':
             continue
 
         item_path = os.path.join(PLUGIN_DIR, item)
@@ -69,6 +75,34 @@ def get_plugin_models() -> list[type]:
     return classes
 
 
+async def get_plugin_sql(plugin: str, db_type: DataBaseType, pk_type: PrimaryKeyType) -> str | None:
+    """
+    获取插件 SQL 脚本
+
+    :param plugin: 插件名称
+    :param db_type: 数据库类型
+    :param pk_type: 主键类型
+    :return:
+    """
+    if db_type == DataBaseType.mysql.value:
+        mysql_dir = os.path.join(PLUGIN_DIR, plugin, 'sql', 'mysql')
+        if pk_type == PrimaryKeyType.autoincrement:
+            sql_file = os.path.join(mysql_dir, 'init.sql')
+        else:
+            sql_file = os.path.join(mysql_dir, 'init_snowflake.sql')
+    else:
+        postgresql_dir = os.path.join(PLUGIN_DIR, plugin, 'sql', 'postgresql')
+        if pk_type == PrimaryKeyType.autoincrement.value:
+            sql_file = os.path.join(postgresql_dir, 'init.sql')
+        else:
+            sql_file = os.path.join(postgresql_dir, 'init_snowflake.sql')
+
+    if not os.path.exists(sql_file):
+        return None
+
+    return sql_file
+
+
 def load_plugin_config(plugin: str) -> dict[str, Any]:
     """
     加载插件配置
@@ -87,7 +121,7 @@ def load_plugin_config(plugin: str) -> dict[str, Any]:
 def parse_plugin_config() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """解析插件配置"""
 
-    extra_plugins = []
+    extend_plugins = []
     app_plugins = []
 
     plugins = get_plugins()
@@ -114,9 +148,16 @@ def parse_plugin_config() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             raise PluginConfigError(f'插件 {plugin} 配置文件缺少必要字段: {", ".join(missing_fields)}')
 
         if data.get('api'):
-            if not data.get('app', {}).get('include'):
-                raise PluginConfigError(f'扩展级插件 {plugin} 配置文件缺少 app.include 配置')
-            extra_plugins.append(data)
+            # TODO: 删除过时的 include 配置
+            include = data.get('app', {}).get('include')
+            if include:
+                warnings.warn(
+                    f'插件 {plugin} 配置 app.include 即将在未来版本中弃用，请尽快更新配置为 app.extend, 详情：https://fastapi-practices.github.io/fastapi_best_architecture_docs/plugin/dev.html#%E6%8F%92%E4%BB%B6%E9%85%8D%E7%BD%AE',
+                    FutureWarning,
+                )
+            if not include and not data.get('app', {}).get('extend'):
+                raise PluginConfigError(f'扩展级插件 {plugin} 配置文件缺少 app.extend 配置')
+            extend_plugins.append(data)
         else:
             if not data.get('app', {}).get('router'):
                 raise PluginConfigError(f'应用级插件 {plugin} 配置文件缺少 app.router 配置')
@@ -135,10 +176,10 @@ def parse_plugin_config() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     run_await(current_redis_client.hset)(f'{settings.PLUGIN_REDIS_PREFIX}:status', mapping=plugin_status)
     run_await(current_redis_client.delete)(f'{settings.PLUGIN_REDIS_PREFIX}:changed')
 
-    return extra_plugins, app_plugins
+    return extend_plugins, app_plugins
 
 
-def inject_extra_router(plugin: dict[str, Any]) -> None:
+def inject_extend_router(plugin: dict[str, Any]) -> None:
     """
     扩展级插件路由注入
 
@@ -177,9 +218,9 @@ def inject_extra_router(plugin: dict[str, Any]) -> None:
 
                 # 获取目标 app 路由
                 relative_path = os.path.relpath(root, plugin_api_path)
-                target_module_path = (
-                    f'backend.app.{plugin.get("app", {}).get("include")}.api.{relative_path.replace(os.sep, ".")}'
-                )
+                # TODO: 删除过时的 include 配置
+                app_name = plugin.get('app', {}).get('include') or plugin.get('app', {}).get('extend')
+                target_module_path = f'backend.app.{app_name}.api.{relative_path.replace(os.sep, ".")}'
                 target_module = import_module_cached(target_module_path)
                 target_router = getattr(target_module, 'router', None)
 
@@ -230,12 +271,12 @@ def inject_app_router(plugin: dict[str, Any], target_router: APIRouter) -> None:
 
 def build_final_router() -> APIRouter:
     """构建最终路由"""
-    extra_plugins, app_plugins = parse_plugin_config()
+    extend_plugins, app_plugins = parse_plugin_config()
 
-    for plugin in extra_plugins:
-        inject_extra_router(plugin)
+    for plugin in extend_plugins:
+        inject_extend_router(plugin)
 
-    # 主路由，必须在插件路由注入后导入
+    # 主路由，必须在扩展级插件路由注入后，应用级插件路由注入前导入
     from backend.app.router import router as main_router
 
     for plugin in app_plugins:
@@ -244,7 +285,7 @@ def build_final_router() -> APIRouter:
     return main_router
 
 
-def install_requirements(plugin: str) -> None:
+def install_requirements(plugin: str | None) -> None:
     """
     安装插件依赖
 
@@ -255,16 +296,33 @@ def install_requirements(plugin: str) -> None:
 
     for plugin in plugins:
         requirements_file = os.path.join(PLUGIN_DIR, plugin, 'requirements.txt')
+        missing_dependencies = False
         if os.path.exists(requirements_file):
+            with open(requirements_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    try:
+                        req = Requirement(line)
+                        dependency = req.name.lower()
+                    except Exception as e:
+                        raise PluginInstallError(f'插件 {plugin} 依赖 {line} 格式错误: {str(e)}') from e
+                    try:
+                        distribution(dependency)
+                    except PackageNotFoundError:
+                        missing_dependencies = True
+
+        if missing_dependencies:
             try:
                 ensurepip_install = [sys.executable, '-m', 'ensurepip', '--upgrade']
                 pip_install = [sys.executable, '-m', 'pip', 'install', '-r', requirements_file]
                 if settings.PLUGIN_PIP_CHINA:
                     pip_install.extend(['-i', settings.PLUGIN_PIP_INDEX_URL])
-                subprocess.check_call(ensurepip_install)
-                subprocess.check_call(pip_install)
+                subprocess.check_call(ensurepip_install, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.check_call(pip_install, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except subprocess.CalledProcessError as e:
-                raise PluginInjectError(f'插件 {plugin} 依赖安装失败：{e.stderr}') from e
+                raise PluginInstallError(f'插件 {plugin} 依赖安装失败：{e}') from e
 
 
 def uninstall_requirements(plugin: str) -> None:
@@ -278,9 +336,9 @@ def uninstall_requirements(plugin: str) -> None:
     if os.path.exists(requirements_file):
         try:
             pip_uninstall = [sys.executable, '-m', 'pip', 'uninstall', '-r', requirements_file, '-y']
-            subprocess.check_call(pip_uninstall)
+            subprocess.check_call(pip_uninstall, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError as e:
-            raise PluginInjectError(f'插件 {plugin} 依赖卸载失败：{e.stderr}') from e
+            raise PluginInstallError(f'插件 {plugin} 依赖卸载失败：{e}') from e
 
 
 async def install_requirements_async(plugin: str | None = None) -> None:
