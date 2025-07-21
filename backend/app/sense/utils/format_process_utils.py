@@ -10,7 +10,9 @@
 import json
 import re
 
-from typing import List
+from typing import List, Set
+
+import pandas as pd
 
 
 def standard_data(s: str) -> str:
@@ -102,3 +104,32 @@ def self_create_by(name_str):
             break
 
     return name_str.strip()
+
+def split_multiple_names(cell, name_dict: Set[str]) -> List[str]:
+    if pd.isna(cell):
+        return []
+    cell = str(cell).strip()
+    separators = ['、', '，', ',', ';', '；', '/', ' ', '和', '与', '及', '兼', '&']
+    for sep in separators:
+        cell = cell.replace(sep, '|')
+    cell = re.sub(r'\([^)]*\)', '', cell)
+    cell = re.sub(r'（[^）]*）', '', cell)
+    parts = cell.split('|')
+    parts = [p.strip() for p in parts if p.strip()]
+    result_names = []
+    for part in parts:
+        if part in name_dict:
+            result_names.append(part)
+        else:
+            i = 0
+            part_length = len(part)
+            while i < part_length:
+                if i + 3 <= part_length and part[i:i + 3] in name_dict:
+                    result_names.append(part[i:i + 3])
+                    i += 3
+                elif i + 2 <= part_length and part[i:i + 2] in name_dict:
+                    result_names.append(part[i:i + 2])
+                    i += 2
+                else:
+                    i += 1
+    return result_names

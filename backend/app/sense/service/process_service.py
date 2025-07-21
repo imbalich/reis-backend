@@ -28,7 +28,8 @@ from backend.database.db import async_db_session
 
 class ProcessService:
     @staticmethod
-    async def process(model: str, part: str,stage:str,process_names:str,check_project: str,check_bezier: str,time_range:list[str],extra_material_names:str) -> dict[str, Any]:
+    async def process(model: str, part: str,stage:str,process_names:str,check_project: str,check_bezier: str,
+                      time_range:list[str],extra_material_names:str) -> dict[str, Any]:
         async with async_db_session() as db:
             try:
                 # 1. 并行获取基础数据
@@ -59,6 +60,7 @@ class ProcessService:
 
                     for pc in pcs:
                         pc_item = {
+                            "product_no": config.product_no,
                             "extra_material_name": config.extra_material_name,
                             "extra_source_code": config.extra_source_code,
                             "extra_supplier": config.extra_supplier,
@@ -69,6 +71,7 @@ class ProcessService:
                             "check_project": pc.check_project,
                             "check_bezier": pc.check_bezier,
                             "manufaucture_date": pc.manufaucture_date,
+                            "version": pc.version,
                             'is_figure': 1 if config.product_no in figure_product_numbers else 0,
                         }
                         processed_pc_item = ProcessService.process_pc_item(pc_item)
@@ -117,6 +120,7 @@ class ProcessService:
     @staticmethod
     def process_pc_item(pc_item: Dict) -> List[Dict]:
         base_data = {
+            "product_no": pc_item['product_no'],
             'extra_material_name': standard_data(pc_item['extra_material_name']),
             'extra_source_code': standard_data(pc_item['extra_source_code']),
             'extra_supplier': pc_item['extra_supplier'].replace(' ', ''),
@@ -126,6 +130,7 @@ class ProcessService:
             'check_project': pc_item['check_project'],
             'check_bezier': pc_item['check_bezier'],
             'manufaucture_date': pc_item['manufaucture_date'],
+            'version': pc_item['version'],
         }
         tools = standard_data(pc_item['check_tools_sign']).split('\n')
         parts = split_rela_self_value(pc_item['rela_self_value'])

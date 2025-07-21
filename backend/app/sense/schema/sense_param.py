@@ -40,10 +40,12 @@ class CreateSenseSortParam(SchemaBase):
     extra_material_names: str | None  = None
 
     model_type: str
+    f1_score: float
 
     rela_self_value: float
     check_tools_sign: float
     self_create_by: float
     extra_source_code: float
     extra_supplier: float
+    version:float
     categorical_analysis:str

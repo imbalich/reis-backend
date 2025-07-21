@@ -7,6 +7,7 @@
 @Author  ：imbalich
 @Date    ：2025/4/25 10:20 
 '''
+import json
 from datetime import date
 from typing import Sequence, Optional
 
@@ -103,20 +104,33 @@ class CRUDSensePart(CRUDPlus[SenseSort]):
             self.model.model == model,
             self.model.part == part,
             self.model.stage == stage,
+            self.model.f1_score >= 0.6,
         ]
 
         if process_name:
             base_conditions.append(self.model.process_name == process_name)
+        else:
+            base_conditions.append(self.model.process_name.is_(None))
         if check_project:
             base_conditions.append(self.model.check_project == check_project)
+        else:
+            base_conditions.append(self.model.check_project.is_(None))
         if check_bezier:
             base_conditions.append(self.model.check_bezier == check_bezier)
+        else:
+            base_conditions.append(self.model.check_bezier.is_(None))
         if start_time:
             base_conditions.append(self.model.start_time == start_time)
+        else:
+            base_conditions.append(self.model.start_time.is_(None))
         if end_time:
             base_conditions.append(self.model.end_time == end_time)
+        else:
+            base_conditions.append(self.model.end_time.is_(None))
         if extra_material_names:
             base_conditions.append(self.model.extra_material_names == extra_material_names)
+        else:
+            base_conditions.append(self.model.extra_material_names.is_(None))
         # 子查询：获取最新的group_id
         latest_group_subquery = (
             select(self.model.group_id)

@@ -29,9 +29,13 @@ async def get_config_process_name_by_product_model(
     models = await configuration_service.get_process_name_by_product_model(product_model=product_model)
     return response_base.success(data=models)
 
-@router.get('/material_name', summary='根据选定的工序名称获取对应的物料名称（物料编码）')
-async def get_config_material_name_by_process_name(
+
+@router.get('/material_name', summary='根据产品型号和工序名称获取物料名称(物料编码)')
+async def get_material_names(
+    product_model: Annotated[str | None, Query()] = None,
     process_name: Annotated[str | None, Query()] = None,
 ) -> ResponseModel:
-    models = await configuration_service.get_material_name_by_process_name(process_name=process_name)
+    models = await configuration_service.get_material_name_by_filter(
+        product_model=product_model, process_name=process_name
+    )
     return response_base.success(data=models)
