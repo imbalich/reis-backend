@@ -65,14 +65,7 @@ class TaskSchedulerService:
             if task_scheduler:
                 raise errors.ConflictError(msg='任务调度已存在')
             if obj.type == TaskSchedulerType.CRONTAB:
-                crontab_split = obj.crontab.split(' ')
-                if len(crontab_split) != 5:
-                    raise errors.RequestError(msg='Crontab 表达式非法')
-                crontab_verify('m', crontab_split[0])
-                crontab_verify('h', crontab_split[1])
-                crontab_verify('dow', crontab_split[2])
-                crontab_verify('dom', crontab_split[3])
-                crontab_verify('moy', crontab_split[4])
+                crontab_verify(obj.crontab)
             await task_scheduler_dao.create(db, obj)
 
     @staticmethod
@@ -92,14 +85,7 @@ class TaskSchedulerService:
                 if await task_scheduler_dao.get_by_name(db, obj.name):
                     raise errors.ConflictError(msg='任务调度已存在')
             if task_scheduler.type == TaskSchedulerType.CRONTAB:
-                crontab_split = obj.crontab.split(' ')
-                if len(crontab_split) != 5:
-                    raise errors.RequestError(msg='Crontab 表达式非法')
-                crontab_verify('m', crontab_split[0])
-                crontab_verify('h', crontab_split[1])
-                crontab_verify('dow', crontab_split[2])
-                crontab_verify('dom', crontab_split[3])
-                crontab_verify('moy', crontab_split[4])
+                crontab_verify(obj.crontab)
             count = await task_scheduler_dao.update(db, pk, obj)
             return count
 
@@ -148,11 +134,13 @@ class TaskSchedulerService:
             task_scheduler = await task_scheduler_dao.get(db, pk)
             if not task_scheduler:
                 raise errors.NotFoundError(msg='任务调度不存在')
-            celery_app.send_task(
-                name=task_scheduler.task,
-                args=json.loads(task_scheduler.args),
-                kwargs=json.loads(task_scheduler.kwargs),
-            )
+            try:
+                args = json.loads(task_scheduler.args) if task_scheduler.args else None
+                kwargs = json.loads(task_scheduler.kwargs) if task_scheduler.kwargs else None
+            except (TypeError, json.JSONDecodeError):
+                raise errors.RequestError(msg='执行失败，任务参数非法')
+            else:
+                celery_app.send_task(name=task_scheduler.task, args=args, kwargs=kwargs)
 
     @staticmethod
     async def revoke(*, task_id: str) -> None:
