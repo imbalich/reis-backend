@@ -18,5 +18,5 @@ router = APIRouter()
 
 @router.post('', summary='部件最佳维护周期')
 async def opt_part(obj: OptPartParam):
-    result = await opt_service.get_opt_part(obj=obj)
+    result = await opt_service.get_opt_part_with_plots(obj=obj)
     return response_base.success(data=result)
