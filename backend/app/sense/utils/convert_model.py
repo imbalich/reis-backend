@@ -39,7 +39,7 @@ def convert_to_sense_sort_params(
     for model_result in model_results:
         # 将 feature_importance 转换为字典方便提取
         feature_importance = {
-            item["feature"]: item["shap_value"].item()
+            item["feature"]: item["shap_value"]
             for item in model_result["feature_importance"]
         }
         processed_ca = copy.deepcopy(model_result.get("categorical_analysis", {}))

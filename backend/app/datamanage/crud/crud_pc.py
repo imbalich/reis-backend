@@ -8,16 +8,49 @@
 @Date    ：2025/3/24 14:13
 """
 
-from typing import Sequence
+from typing import Sequence, Any
 
-from sqlalchemy import select,or_
+from sqlalchemy import select,or_,func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.expression import distinct
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model import PC
 
 
 class CRUDPC(CRUDPlus[PC]):
+
+    async def get_distinct_column_values(
+        self, db: AsyncSession, filter_column: str, filter_value: str, target_column: str
+    ) -> Sequence[Any]:
+        """
+        获取指定列的所有唯一值，根据过滤条件
+         :param db: 数据库会话
+        :param filter_column: 过滤条件的列名
+        :param filter_value: 过滤条件的值
+        :param target_column: 需要获取唯一值的列名
+        :return: 指定列的唯一值列表
+        """
+        # 确保列名存在于模型中
+        if not hasattr(self.model, filter_column):
+            raise ValueError(f'Column {filter_column} does not exist in model {self.model.__name__}')
+        if not hasattr(self.model, target_column):
+            raise ValueError(f'Column {target_column} does not exist in model {self.model.__name__}')
+
+        # 构建查询
+        filter_col = getattr(self.model, filter_column)
+        target_col = getattr(self.model, target_column)
+
+        # 使用 REPLACE 函数删除斜杠
+        replaced_col = func.replace(target_col, '/', '').label(target_column)
+
+        stmt = select(distinct(replaced_col)).where(filter_col == filter_value).order_by(replaced_col)
+        # 执行查询
+        result = await db.execute(stmt)
+
+        # 返回结果
+        return result.scalars().all()
+
     async def get_by_model(self, db: AsyncSession, model: str) -> Sequence[PC]:
         """
         根据产品型号查询PC列表,仅检测使用
