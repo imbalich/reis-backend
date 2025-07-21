@@ -53,6 +53,7 @@ class ModelProcessService:
             for model_info in model_result["ranked_models"]:
                 best_model = model_info["best_model"]
                 model_type = model_info["model_type"]
+                f1_score = model_info["f1_score"]
                 sample_idx = np.random.choice(x_test.index, size=min(100, len(x_test)), replace=False)
                 x_test = x_test.loc[sample_idx]
                 x_test_raw = x_test_old.loc[sample_idx, categorical_cols].copy()
@@ -73,7 +74,7 @@ class ModelProcessService:
                 for rank, (col, _) in enumerate(shap_list_sorted, start=1):
                     feature_importance.append({
                         'feature': col,
-                        'shap_value': rank,
+                        'sort_result': rank,
                     })
 
                 # 计算每个特征下各类别特征重要度
@@ -84,6 +85,7 @@ class ModelProcessService:
                 # 组装结果
                 results.append({
                     "model_type": model_type,
+                    "f1_score": f1_score,
                     "feature_importance": feature_importance,
                     "categorical_analysis": categorical_analysis
                 })
@@ -105,13 +107,13 @@ class ModelProcessService:
         """
         data = tags['data']
         df = pd.DataFrame(data)
-        x = df[['extra_source_code', 'extra_supplier', 'self_create_by', 'check_tools_sign', 'rela_self_value']]
+        x = df[['extra_source_code', 'extra_supplier', 'self_create_by', 'check_tools_sign', 'rela_self_value','version']]
         y = df['is_figure']
         x_train, x_test, y_train, y_test = train_test_split(
             x, y, test_size=0.2, random_state=42
         )
         # 定义需要进行频次编码的分类列
-        categorical_cols = ['extra_source_code','extra_supplier', 'self_create_by', 'check_tools_sign']
+        categorical_cols = ['extra_source_code','extra_supplier', 'self_create_by', 'check_tools_sign','version']
         numerical_cols = ['rela_self_value']
         x_train_code = x_train.copy()
         x_test_code = x_test.copy()

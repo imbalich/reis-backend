@@ -7,6 +7,8 @@
 @Author  ：imbalich
 @Date    ：2025/4/25 10:29 
 '''
+from typing import List
+
 from backend.app.sense.schema.sense_param import CreateSenseSortInParam
 from backend.app.sense.service.sense_predict_service import sense_predict_service
 from backend.app.task.celery import celery_app
@@ -17,7 +19,7 @@ from backend.common.exception.errors import DataValidationError
                  reject_on_worker_lost=True )
 async def sense_sort_task(model: str, part: str, stage: str,process_name: str,
                                    check_project: str, check_bezier: str,  start_time: str,
-                                   end_time: str,extra_material_names: str) -> str:
+                                   end_time: str,extra_material_names: List[str]) -> str:
     """
     后台任务:手动触发
     单零部件级别敏感度分析任务

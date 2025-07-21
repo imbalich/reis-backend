@@ -29,17 +29,19 @@ def convert_to_sense_sort_params(
         check_bezier:str,
         time_range:list[str],
         extra_material_names:str,
+        group_id: str
 ) -> List[CreateSenseSortParam]:
     sort_params = []
     # 计算group_id
-    group_id = uuid4_str()
+    if group_id is None:
+        group_id = uuid4_str()
     # 提取 results 列表
     model_results = sense_results['results']
 
     for model_result in model_results:
         # 将 feature_importance 转换为字典方便提取
         feature_importance = {
-            item["feature"]: item["shap_value"]
+            item["feature"]: item["sort_result"]
             for item in model_result["feature_importance"]
         }
         processed_ca = copy.deepcopy(model_result.get("categorical_analysis", {}))
@@ -62,11 +64,13 @@ def convert_to_sense_sort_params(
             end_time=time_range[1] if time_range else None,
             extra_material_names=extra_material_names,
             model_type=model_result["model_type"],
+            f1_score = model_result["f1_score"],
             rela_self_value=feature_importance.get("rela_self_value", 0.0),
             check_tools_sign=feature_importance.get("check_tools_sign", 0.0),
             self_create_by=feature_importance.get("self_create_by", 0.0),
             extra_source_code=feature_importance.get("extra_source_code", 0.0),
             extra_supplier=feature_importance.get("extra_supplier", 0.0),
+            version = feature_importance.get("version", 0.0),
             categorical_analysis=json.dumps(processed_ca, ensure_ascii=False),
         )
         sort_params.append(param)

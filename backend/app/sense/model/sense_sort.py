@@ -7,6 +7,7 @@
 @Author  ：imbalich
 @Date    ：2025/4/25 10:18 
 '''
+import json
 from datetime import date
 
 from sqlalchemy import String, Date
@@ -33,14 +34,16 @@ class SenseSort(DataClassBase):
     check_bezier: Mapped[str] = mapped_column(String(30),nullable=True, comment='检验项点')
     start_time: Mapped[date] = mapped_column(Date, nullable=True, comment='计算开始时间')
     end_time: Mapped[date] = mapped_column(Date, nullable=True, comment='计算结束时间')
-    extra_material_names: Mapped[str] = mapped_column(String(30),nullable=True, comment='配件/原材料名称')
+    extra_material_names: Mapped[str] = mapped_column(String(225),nullable=True, comment='配件/原材料名称')
 
     model_type: Mapped[str] = mapped_column(String(30), comment='算法类型')
+    f1_score: Mapped[float | None] = mapped_column(comment='F1分数')
     rela_self_value: Mapped[float | None] = mapped_column(comment='自检结果特征SHAP值')
     check_tools_sign: Mapped[float | None] = mapped_column(comment='检验工具编号特征SHAP值')
     self_create_by: Mapped[float | None] = mapped_column(comment='自检人特征SHAP值')
     extra_source_code: Mapped[float | None] = mapped_column(comment='配件/原材料追溯编号特征SHAP值')
     extra_supplier: Mapped[float | None] = mapped_column(comment='供应商特征SHAP值')
+    version: Mapped[float | None] = mapped_column(comment='版本号特征SHAP值')
     categorical_analysis: Mapped[str] = mapped_column(LONGTEXT,comment='类别分析结果(json)')
     created_time: Mapped[date] = mapped_column(
         Date, init=False, default_factory=timezone.now_date, sort_order=999, comment='创建时间'

@@ -16,20 +16,10 @@ from backend.database.db import async_db_session
 class PCService:
 
     @staticmethod
-    async def get_check_project_by_process_name(process_name:str=None)-> Sequence[str]:
+    async def get_distinct_column_by_filter(target_column: str, filters: dict) -> Sequence[str]:
         async with async_db_session() as db:
-            results = await pc_dao.get_distinct_column_values(
-                db, 'process_name', process_name, 'check_project'
-            )
-            return results
-
-    @staticmethod
-    async def get_check_bezier_by_check_project(check_project:str=None)-> Sequence[str]:
-        async with async_db_session() as db:
-            results = await pc_dao.get_distinct_column_values(
-                db, 'check_project', check_project, 'check_bezier'
-            )
-            return results
+            results = await pc_dao.get_distinct_column_values_multi(db, filters, target_column)
+            return [item for item in results if item and item.strip()]
 
 
 pc_service: PCService=PCService()

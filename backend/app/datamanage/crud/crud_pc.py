@@ -20,35 +20,23 @@ from backend.app.datamanage.model import PC
 
 class CRUDPC(CRUDPlus[PC]):
 
-    async def get_distinct_column_values(
-        self, db: AsyncSession, filter_column: str, filter_value: str, target_column: str
+    async def get_distinct_column_values_multi(
+            self, db: AsyncSession, filters: dict, target_column: str
     ) -> Sequence[Any]:
-        """
-        获取指定列的所有唯一值，根据过滤条件
-         :param db: 数据库会话
-        :param filter_column: 过滤条件的列名
-        :param filter_value: 过滤条件的值
-        :param target_column: 需要获取唯一值的列名
-        :return: 指定列的唯一值列表
-        """
-        # 确保列名存在于模型中
-        if not hasattr(self.model, filter_column):
-            raise ValueError(f'Column {filter_column} does not exist in model {self.model.__name__}')
+        for col in filters:
+            if not hasattr(self.model, col):
+                raise ValueError(f'Column {col} does not exist in model {self.model.__name__}')
         if not hasattr(self.model, target_column):
             raise ValueError(f'Column {target_column} does not exist in model {self.model.__name__}')
 
-        # 构建查询
-        filter_col = getattr(self.model, filter_column)
         target_col = getattr(self.model, target_column)
-
-        # 使用 REPLACE 函数删除斜杠
         replaced_col = func.replace(target_col, '/', '').label(target_column)
-
-        stmt = select(distinct(replaced_col)).where(filter_col == filter_value).order_by(replaced_col)
-        # 执行查询
+        stmt = select(distinct(replaced_col))
+        for col, val in filters.items():
+            if val is not None:
+                stmt = stmt.where(getattr(self.model, col) == val)
+        stmt = stmt.order_by(replaced_col)
         result = await db.execute(stmt)
-
-        # 返回结果
         return result.scalars().all()
 
     async def get_by_model(self, db: AsyncSession, model: str) -> Sequence[PC]:

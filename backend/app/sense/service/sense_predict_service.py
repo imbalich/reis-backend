@@ -7,13 +7,14 @@
 @Author  ：imbalich
 @Date    ：2025/4/1 16:39
 """
-
+import uuid
 from datetime import date, datetime
-from typing import Union
+from typing import Union, List
 import json
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.sense.service.woe_analysis_service import WOEAnalysisService
 from backend.app.sense.utils.time_utils import dateutils
 from backend.app.sense.crud.crud_sense import sense_dao
 from backend.app.sense.schema.sense_param import CreateSenseSortInParam
@@ -90,10 +91,20 @@ class SensePredictService:
                                                     time_range, extra_material_names)
                 if tags['data'] is None:
                     raise errors.DataValidationError(msg=f"型号{model}+零部件{part}的故障数据量不足")
+
+                group_id = uuid.uuid4().hex
+                # 1、机器学习方法
                 fit = await ModelProcessService.model_process(tags)
                 sort_params = convert_to_sense_sort_params(fit, model, part, stage, process_name, check_project,
-                                                           check_bezier, time_range, extra_material_names)
+                                                           check_bezier, time_range, extra_material_names,group_id)
                 await sense_dao.creates(db, sort_params)
+
+                # 2. WOE敏感度分析
+                woe_result = WOEAnalysisService.analyze_all_features(tags['data'])
+                woe_sort_params = convert_to_sense_sort_params(
+                    woe_result, model, part, stage, process_name, check_project,
+                    check_bezier, time_range, extra_material_names,group_id)
+                await sense_dao.creates(db, woe_sort_params)
 
     @staticmethod
     async def get_sense_sort_result(
@@ -108,6 +119,7 @@ class SensePredictService:
             end_time: Union[str, date] = None,
     ):
         async with async_db_session() as db:
+
 
             sense_sort = await sense_dao.get_by_model_and_part(db, model, part, stage, process_name, check_project,
                                                                check_bezier, extra_material_names, start_time, end_time)
