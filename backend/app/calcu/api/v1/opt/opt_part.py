@@ -20,3 +20,13 @@ router = APIRouter()
 async def opt_part(obj: OptPartParam):
     result = await opt_service.get_opt_part_with_plots(obj=obj)
     return response_base.success(data=result)
+
+@router.get('/models', summary='获取所有型号')
+async def get_all_models():
+    result = await opt_service.get_all_models()
+    return response_base.success(data=result)
+
+@router.get('/parts', summary='获取所有零部件')
+async def get_all_parts(model: str):
+    result = await opt_service.get_all_parts(model)
+    return response_base.success(data=result)

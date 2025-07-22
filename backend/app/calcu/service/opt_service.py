@@ -126,6 +126,31 @@ class OptService:
             raise
         except Exception as e:
             raise DataValidationError(msg=f"计算最佳更换周期时发生错误: {str(e)}")
+        
+        
+    @staticmethod
+    async def get_all_models():
+        """
+        获取所有型号:获取所有能够计算opt的型号,级联筛选获取所有能满足opt计算的型号
+        """
+        try:
+            async with async_db_session() as db:
+                models = await fit_part_dao.get_all_models_for_opt(db)
+                return models
+        except Exception as e:
+            raise DataValidationError(msg=f"获取所有型号时发生错误: {str(e)}")
+        
+    @staticmethod
+    async def get_all_parts(model: str):
+        """
+        获取所有零部件:获取所有能够计算opt的零部件,级联筛选获取所有能满足opt计算的零部件
+        """
+        try:
+            async with async_db_session() as db:
+                parts = await fit_part_dao.get_all_parts_for_opt(db, model)
+                return parts
+        except Exception as e:
+            raise DataValidationError(msg=f"获取所有零部件时发生错误: {str(e)}")
 
 
 opt_service: OptService = OptService()
