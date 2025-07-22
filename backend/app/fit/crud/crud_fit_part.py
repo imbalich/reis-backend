@@ -237,6 +237,20 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         )
         result = await db.execute(stmt)
         return result.scalars().all()
+    
+    async def get_parts_for_opt_by_model(self, db: AsyncSession, model: str) -> Sequence[str]:
+        """
+        获取指定型号下所有能够计算opt的零部件物料编码
+        """
+        stmt = (
+            select(distinct(self.model.part))
+            .where(
+                self.model.model == model,
+                self.model.distribution == 'Weibull_2P'
+            )
+        )
+        result = await db.execute(stmt)
+        return result.scalars().all()
 
 
 fit_part_dao: CRUDFitPart = CRUDFitPart(FitPart)

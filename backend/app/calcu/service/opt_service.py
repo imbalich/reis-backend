@@ -19,6 +19,7 @@ from typing import List, Dict, Any
 from reliability.Repairable_systems import optimal_replacement_time
 from backend.app.calcu.schema.opt_param import OptPartParam
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
+from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.common.exception.errors import DataValidationError
 from backend.database.db import async_db_session
 
@@ -144,11 +145,27 @@ class OptService:
     async def get_all_parts(model: str):
         """
         获取所有零部件:获取所有能够计算opt的零部件,级联筛选获取所有能满足opt计算的零部件
+        返回格式: [("零部件名称", "零部件物料编码"), ...]
         """
         try:
             async with async_db_session() as db:
-                parts = await fit_part_dao.get_all_parts_for_opt(db, model)
-                return parts
+                # 1. 获取该型号下所有有Weibull_2P分布的零部件编码
+                opt_parts = await fit_part_dao.get_parts_for_opt_by_model(db, model)
+                
+                # 2. 获取故障表中该型号的所有零部件名称和编码映射
+                failure_parts = await failure_dao.get_parts_with_names_by_model(db, model)
+                
+                # 3. 创建编码到名称的映射字典
+                code_to_name = {code: name for name, code in failure_parts}
+                
+                # 4. 筛选出既有分布数据又有名称的零部件，返回二元组
+                result = []
+                for part_code in opt_parts:
+                    if part_code in code_to_name:
+                        result.append((code_to_name[part_code], part_code))
+                
+                return result
+                
         except Exception as e:
             raise DataValidationError(msg=f"获取所有零部件时发生错误: {str(e)}")
 
