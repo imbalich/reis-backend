@@ -26,7 +26,7 @@ class ConfigurationService:
 
 
     @staticmethod
-    async def get_material_name_by_filter(product_model: str = None, process_name: str = None) -> Sequence[str]:
+    async def get_material_name_by_filter(product_model: str = None, process_name: str = None) -> Sequence[list]:
         async with async_db_session() as db:
             results = await configuration_dao.get_material_name_and_code(
                 db, product_model=product_model, process_name=process_name
@@ -34,7 +34,7 @@ class ConfigurationService:
             def is_valid(val):
                 return val and val.strip() and val.strip() != "/"
             return [
-                f"{row.extra_material_name}({row.extra_material_code})"
+                [row.extra_material_name, row.extra_material_code]
                 for row in results
                 if is_valid(row.extra_material_name) and is_valid(row.extra_material_code)
             ]
