@@ -107,6 +107,8 @@ class Settings(BaseSettings):
     CORS_ALLOWED_ORIGINS: list[str] = [  # 末尾不带斜杠
         'http://127.0.0.1:8000',
         'http://localhost:5173',
+        "http://172.30.1.148",    # 添加您的服务器IP
+        "http://172.30.1.148:80", # 具体端口
     ]
     CORS_EXPOSE_HEADERS: list[str] = [
         'X-Request-ID',
