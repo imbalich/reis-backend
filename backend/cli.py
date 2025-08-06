@@ -48,8 +48,8 @@ def run(host: str, port: int, reload: bool, workers: int | None) -> None:
         port=port,
         reload=not reload,
         reload_filter=PythonFilter,
-        reload_ignore_dirs=[os.path.join(str(BASE_PATH), 'log')],
-        reload_ignore_patterns=['\.log'],
+        # reload_ignore_dirs=[os.path.join(str(BASE_PATH), 'log')],
+        # reload_ignore_patterns=['\.log'],
         workers=workers or 1,
     ).serve()
 

@@ -18,7 +18,9 @@ from backend.app.datamanage.model import Failure
 
 
 class CRUDFailure(CRUDPlus[Failure]):
-    async def get_distinct_column_values(self, db: AsyncSession, column_name: str) -> Sequence[Any]:
+    async def get_distinct_column_values(
+        self, db: AsyncSession, column_name: str
+    ) -> Sequence[Any]:
         """
         获取指定列的所有唯一值
         :param db: 数据库会话
@@ -27,7 +29,9 @@ class CRUDFailure(CRUDPlus[Failure]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
+            raise ValueError(
+                f"Column {column_name} does not exist in model {self.model.__name__}"
+            )
 
         # 构建查询
         column = getattr(self.model, column_name)
@@ -50,12 +54,18 @@ class CRUDFailure(CRUDPlus[Failure]):
         """
         # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
-            raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
+            raise ValueError(
+                f"Column {column_name} does not exist in model {self.model.__name__}"
+            )
 
         # 构建查询
         column = getattr(self.model, column_name)
         # 先查产品型号==column下的所有product_model，然后针对product_model去重
-        stmt = select(distinct(column)).where(self.model.product_model == product_model).order_by(column)
+        stmt = (
+            select(distinct(column))
+            .where(self.model.product_model == product_model)
+            .order_by(column)
+        )
         # 执行查询
         result = await db.execute(stmt)
 
@@ -74,10 +84,17 @@ class CRUDFailure(CRUDPlus[Failure]):
         """
         for col in column_names:
             if not hasattr(self.model, col):
-                raise ValueError(f'Column {col} does not exist in model {self.model.__name__}')
+                raise ValueError(
+                    f"Column {col} does not exist in model {self.model.__name__}"
+                )
         columns = [getattr(self.model, col) for col in column_names]
         # 构建查询，按列排序
-        stmt = select(*columns).distinct().where(self.model.product_model == product_model).order_by(*columns)
+        stmt = (
+            select(*columns)
+            .distinct()
+            .where(self.model.product_model == product_model)
+            .order_by(*columns)
+        )
         result = await db.execute(stmt)
         return result.all()
 
@@ -111,13 +128,17 @@ class CRUDFailure(CRUDPlus[Failure]):
         if fault_location is not None:
             where_list.append(self.model.fault_location == fault_location)
         if product_lifetime_stage is not None:
-            where_list.append(self.model.product_lifetime_stage == product_lifetime_stage)
+            where_list.append(
+                self.model.product_lifetime_stage == product_lifetime_stage
+            )
         if product_number is not None:
             where_list.append(self.model.product_number == product_number)
         if fault_mode is not None:
             where_list.append(self.model.fault_mode == fault_mode)
         if time_range:
-            where_list.append(self.model.discovery_date.between(time_range[0], time_range[1]))
+            where_list.append(
+                self.model.discovery_date.between(time_range[0], time_range[1])
+            )
         if is_zero_distance is not None:
             where_list.append(self.model.is_zero_distance == is_zero_distance)
         if fault_material_code is not None:
@@ -137,7 +158,7 @@ class CRUDFailure(CRUDPlus[Failure]):
         where_list = []
         where_list.append(self.model.product_model == model)
         where_list.append(self.model.is_zero_distance == 0)
-        where_list.append(self.model.final_fault_responsibility != '用户')
+        where_list.append(self.model.final_fault_responsibility != "用户")
         where_list.append(self.model.manufacturing_date.isnot(None))  # 添加这个条件
         if where_list:
             stmt = stmt.where(*where_list)
@@ -154,12 +175,14 @@ class CRUDFailure(CRUDPlus[Failure]):
         where_list = []
         where_list.append(self.model.fault_material_code == part)
         where_list.append(self.model.is_zero_distance == 0)
-        where_list.append(self.model.final_fault_responsibility != '用户')
+        where_list.append(self.model.final_fault_responsibility != "用户")
         if where_list:
             stmt = stmt.where(*where_list)
         return stmt
 
-    async def get_by_model_and_part(self, db: AsyncSession, model: str, part: str) -> Sequence[Failure]:
+    async def get_by_model_and_part(
+        self, db: AsyncSession, model: str, part: str
+    ) -> Sequence[Failure]:
         """
         查询单型号单零部件故障信息:做检测用，不用考虑是否新造
         :param db: 数据库会话
@@ -172,15 +195,16 @@ class CRUDFailure(CRUDPlus[Failure]):
         where_list.append(self.model.product_model == model)
         where_list.append(self.model.fault_material_code == part)
         where_list.append(self.model.is_zero_distance == 0)
-        where_list.append(self.model.final_fault_responsibility != '用户')
+        where_list.append(self.model.final_fault_responsibility != "用户")
         where_list.append(self.model.manufacturing_date.isnot(None))  # 添加这个条件
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()
 
-    async def get_number_by_model(self, db: AsyncSession, model: str, part: str, stage: str,
-                                  time_range: list[str]) -> Sequence[str]:
+    async def get_number_by_model(
+        self, db: AsyncSession, model: str, part: str, stage: str, time_range: list[str]
+    ) -> Sequence[str]:
         """
         查询单型号零部件下的故障件编号
         :param db: 数据库会话
@@ -196,11 +220,40 @@ class CRUDFailure(CRUDPlus[Failure]):
         where_list.append(self.model.fault_material_code == part)
         where_list.append(self.model.product_lifetime_stage == stage)
         if time_range:
-            where_list.append(self.model.manufacturing_date.between(time_range[0], time_range[1]))
+            where_list.append(
+                self.model.manufacturing_date.between(time_range[0], time_range[1])
+            )
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()
+
+    async def get_parts_with_names_by_model(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[tuple[str, str]]:
+        """
+        根据型号获取零部件物料编码和名称的二元组列表
+        :param db: 数据库会话
+        :param model: 产品型号
+        :return: (零部件名称, 零部件物料编码) 的二元组列表
+        """
+        stmt = (
+            select(
+                distinct(self.model.fault_location),  # 零部件名称
+                self.model.fault_material_code,  # 零部件物料编码
+            )
+            .where(
+                self.model.product_model == model,
+                self.model.fault_material_code.isnot(None),  # 物料编码不为空
+                self.model.fault_location.isnot(None),  # 部位名称不为空
+                self.model.is_zero_distance == 0,  # 非零公里故障
+                self.model.final_fault_responsibility != "用户",  # 非用户责任
+            )
+            .order_by(self.model.fault_location, self.model.fault_material_code)
+        )
+
+        result = await db.execute(stmt)
+        return [(row[0], row[1]) for row in result.all()]
 
 
 failure_dao: CRUDFailure = CRUDFailure(Failure)
