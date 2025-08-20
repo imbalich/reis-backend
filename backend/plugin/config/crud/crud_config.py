@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from typing import Sequence
 
-from sqlalchemy import Select
+from sqlalchemy import Select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -21,6 +22,16 @@ class CRUDConfig(CRUDPlus[Config]):
         :return:
         """
         return await self.select_model_by_column(db, id=pk)
+
+    async def get_all(self, db: AsyncSession, type: str) -> Sequence[Config | None]:
+        """
+        通过键名获取参数配置
+
+        :param db: 数据库会话
+        :param type: 参数配置类型
+        :return:
+        """
+        return await self.select_models(db, type=type)
 
     async def get_by_key(self, db: AsyncSession, key: str) -> Config | None:
         """
@@ -69,6 +80,18 @@ class CRUDConfig(CRUDPlus[Config]):
         :return:
         """
         return await self.update_model(db, pk, obj)
+
+    async def bulk_update(self, db: AsyncSession, objs: list[UpdateConfigParam]) -> int:
+        """
+        批量更新参数配置
+
+        :param db: 数据库会话
+        :param objs: 批量更新参数配置参数
+        :return:
+        """
+        params = [obj.model_dump(exclude_unset=True) for obj in objs]
+        await db.execute(update(self.model), params)
+        return len(params)
 
     async def delete(self, db: AsyncSession, pks: list[int]) -> int:
         """

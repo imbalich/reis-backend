@@ -25,6 +25,13 @@ from backend.plugin.tools import get_plugin_sql
 from backend.utils.file_ops import install_git_plugin, install_zip_plugin, parse_sql_script
 
 
+class CustomReloadFilter(PythonFilter):
+    """自定义重载过滤器"""
+
+    def __init__(self):
+        super().__init__(extra_extensions=['.json', '.yaml', '.yml'])
+
+
 def run(host: str, port: int, reload: bool, workers: int | None) -> None:
     url = f'http://{host}:{port}'
     docs_url = url + settings.FASTAPI_DOCS_URL
@@ -47,7 +54,7 @@ def run(host: str, port: int, reload: bool, workers: int | None) -> None:
         address=host,
         port=port,
         reload=not reload,
-        reload_filter=PythonFilter,
+        reload_filter=CustomReloadFilter,
         # reload_ignore_dirs=[os.path.join(str(BASE_PATH), 'log')],
         # reload_ignore_patterns=['\.log'],
         workers=workers or 1,
