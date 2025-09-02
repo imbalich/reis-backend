@@ -119,6 +119,10 @@ class ProcessService:
 
     @staticmethod
     def process_pc_item(pc_item: Dict) -> List[Dict]:
+        '''
+        处理PC数据
+        :param pc_item: PC数据
+        '''
         base_data = {
             "product_no": pc_item['product_no'],
             'extra_material_name': standard_data(pc_item['extra_material_name']),

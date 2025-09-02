@@ -16,3 +16,4 @@ from backend.app.datamanage.model.pc import PC
 from backend.app.datamanage.model.product import Product
 from backend.app.datamanage.model.repair import Repair
 from backend.app.datamanage.model.replace import Replace
+from backend.app.datamanage.model.overhaul import Overhaul

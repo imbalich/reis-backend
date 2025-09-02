@@ -21,13 +21,13 @@ class EbomSchemaBase(SchemaBase):
     level1: Optional[str] = Field(None, description='层级序号')
     sync_time: Optional[str] = Field(None, description='数据解析入库时间')
     prd_no: Optional[str] = Field(None, description='产品型号')
+    prd_code:Optional[str] = Field(None, description='产品配置码Header')
     prd_name: Optional[str] = Field(None, description='产品名称')
     prd_level: Optional[str] = Field(None, description='修造级别')
-    y8_knowledgeno: Optional[str] = Field(None, description='结构树编码')
-    y8_configurationcode: Optional[str] = Field(None, description='构型编码')
-    y8_isbh: Optional[str] = Field(None, description='比偶换件')
-    y8_matdescs: Optional[str] = Field(None, description='物料简称')
-    item_id: Optional[str] = Field(None, description='产品id')
+    prd_vision: Optional[str] = Field(None, description='产品总成版本号')
+    y8_matbnum1: Optional[str] = Field(None, description='零部件物料编码')
+    y8_matname: Optional[str] = Field(None, description='零部件名称')
+    bl_quantity: Optional[str] = Field(None, description='物料总数量')
     state_now: Optional[str] = Field(None, description='当前是否启用，1启用；0未启用,默认为1')
 
 
@@ -48,16 +48,14 @@ class GetEbomDetails(GetEbomParam):
     model_config = ConfigDict(from_attributes=True)
 
     sync_time: Optional[str] = Field(None, description='数据解析入库时间')
-    prd_no: Optional[str] = Field(None, description='产品型号')
+    prd_code:Optional[str] = Field(None, description='产品配置码Header')
     prd_name: Optional[str] = Field(None, description='产品名称')
     prd_level: Optional[str] = Field(None, description='修造级别')
-    item_id: Optional[str] = Field(None, description='产品id')
-    y8_knowledgeno: Optional[str] = Field(None, description='结构树编码')
-    y8_configurationcode: Optional[str] = Field(None, description='构型编码')
-    y8_isbh: Optional[str] = Field(None, description='比偶换件')
-    y8_matdescs: Optional[str] = Field(None, description='物料简称')
-    state_now: Optional[str] = Field(None, description='当前是否启用，1启用；0未启用,默认为1')
+    prd_vision: Optional[str] = Field(None, description='产品总成版本号')
+    y8_matbnum1: Optional[str] = Field(None, description='零部件物料编码')
+    y8_matname: Optional[str] = Field(None, description='零部件名称')
     bl_quantity: Optional[str] = Field(None, description='物料总数量')
+    state_now: Optional[str] = Field(None, description='当前是否启用，1启用；0未启用,默认为1')
 
 
 class GetEbomListResponse(SchemaBase):

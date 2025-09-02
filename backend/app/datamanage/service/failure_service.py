@@ -53,11 +53,9 @@ class FailureService:
                 raise errors.NotFoundError(msg='请输入产品型号')
             models = []
             for fl, mc in results:
-                if mc:
+                if mc and mc[0] in ['C', 'M','Z']:
                     combined = f'{fl}（{mc}）'
-                else:
-                    combined = fl
-                models.append(combined)
+                    models.append(combined)
             return list(dict.fromkeys(models))
 
     @staticmethod
