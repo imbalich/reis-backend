@@ -17,11 +17,11 @@ class ProjectStatusType(StrEnum):
     archived = 'archived'     # 已归档
 
 
-class TaskType(StrEnum):
-    """任务类型"""
+# class TaskType(StrEnum):
+#     """任务类型"""
     
-    jp = 'jp'     # 机破
-    lx = 'lx'     # 临修
+#     jp = 'jp'     # 机破
+#     lx = 'lx'     # 临修
 
 
 class Projects(Base):
@@ -56,8 +56,8 @@ class Projects(Base):
     task_type: Mapped[str] = mapped_column(
         String(50), 
         nullable=False, 
-        default=TaskType.jp.value,
-        comment='任务类型（jp:击破 lx:临修）'
+        default='临修',
+        comment='任务类型'
     )
     version: Mapped[int] = mapped_column(
         Integer, 
