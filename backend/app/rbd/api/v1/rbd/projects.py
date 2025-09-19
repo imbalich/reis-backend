@@ -5,7 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Request
 
-from backend.app.rbd.model.projects import ProjectStatusType, TaskType
+from backend.app.rbd.model.projects import ProjectStatusType
 from backend.app.rbd.schema.projects import (
     CreateProjectsParam,
     DeleteProjectsParam,
@@ -52,7 +52,7 @@ async def get_project(
 async def get_projects_paged(
     db: CurrentSession,
     model: Annotated[str | None, Query(description='产品型号')] = None,
-    task_type: Annotated[TaskType | None, Query(description='任务类型')] = None,  # 改为枚举类型
+    task_type: Annotated[str | None, Query(description='任务类型')] = None,  # 改为枚举类型
     version: Annotated[int | None, Query(description='版本号')] = None,
     status: Annotated[ProjectStatusType | None, Query(description='项目状态')] = None,  # 改为枚举类型
     created_by: Annotated[str | None, Query(description='创建人')] = None,
