@@ -255,5 +255,26 @@ class CRUDFailure(CRUDPlus[Failure]):
         result = await db.execute(stmt)
         return [(row[0], row[1]) for row in result.all()]
 
+    async def get_by_product_number(
+        self, db: AsyncSession, product_number: str
+    ) -> Sequence[Failure]:
+        """
+        根据产品编号获取故障数据
+        :param db: 数据库会话
+        :param product_number: 产品编号
+        :return: 故障数据列表
+        """
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.product_number == product_number,
+                self.model.is_zero_distance == 0,
+                self.model.final_fault_responsibility != "用户",
+            )
+            .order_by(self.model.discovery_date)
+        )
+        result = await db.execute(stmt)
+        return result.scalars().all()
+
 
 failure_dao: CRUDFailure = CRUDFailure(Failure)

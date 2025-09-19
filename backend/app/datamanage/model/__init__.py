@@ -16,3 +16,7 @@ from backend.app.datamanage.model.pc import PC
 from backend.app.datamanage.model.product import Product
 from backend.app.datamanage.model.repair import Repair
 from backend.app.datamanage.model.replace import Replace
+from backend.app.datamanage.model.warehouse import Warehouse
+from backend.app.datamanage.model.allotment import Allotment
+from backend.app.datamanage.model.warehouse_inventory import WarehouseInventory
+from backend.app.datamanage.model.part_spare_mapping import PartSpareMapping
