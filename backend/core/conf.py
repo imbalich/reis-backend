@@ -25,7 +25,6 @@ class Settings(BaseSettings):
     # FastAPI
     FASTAPI_API_V1_PATH: str = '/api/v1'
     FASTAPI_TITLE: str = 'REIS'
-    FASTAPI_VERSION: str = '0.0.1'
     FASTAPI_DESCRIPTION: str = 'Reliability And Economical Integration System'
     FASTAPI_DOCS_URL: str = '/docs'
     FASTAPI_REDOC_URL: str = '/redoc'
