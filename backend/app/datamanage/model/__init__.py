@@ -17,3 +17,8 @@ from backend.app.datamanage.model.product import Product
 from backend.app.datamanage.model.repair import Repair
 from backend.app.datamanage.model.replace import Replace
 from backend.app.datamanage.model.overhaul import Overhaul
+from backend.app.datamanage.model.warehouse import Warehouse
+from backend.app.datamanage.model.allotment import Allotment
+from backend.app.datamanage.model.warehouse_inventory import WarehouseInventory
+from backend.app.datamanage.model.part_spare_mapping import PartSpareMapping
+from backend.app.datamanage.model.lcc import LCC

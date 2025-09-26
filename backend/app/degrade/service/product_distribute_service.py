@@ -45,7 +45,7 @@ class ProductDistributeService:
             if product_model == '测试':
                 year_worktimes = 13140
             else:
-                year_worktimes = await ProductDistributeService.year_worktimes(product_model)
+                year_worktimes = await ProductDistributeService.repair_interval_times(product_model)
 
             if '新造' in stage_columns:
                 x_peaks = [0] + [year_worktimes * i for i in range(1, len(stage_columns))]
@@ -114,11 +114,11 @@ class ProductDistributeService:
                 return {'error': f'数据处理失败: {str(e)}'}
 
     @staticmethod
-    async def year_worktimes(model:str):
+    async def repair_interval_times(model:str):
         '''
-        获取年运行小时
+        获取维修间隔小时
         :param model: 产品型号
-        :return: 年运行小时
+        :return: 维修间隔小时
         '''
         async with async_db_session() as db:
             try:

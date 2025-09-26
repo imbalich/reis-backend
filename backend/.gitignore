@@ -4,3 +4,4 @@ alembic/versions/
 static/media/
 *.log
 celerybeat-schedule.*
+test/

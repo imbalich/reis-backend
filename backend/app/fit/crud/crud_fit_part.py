@@ -9,7 +9,7 @@
 """
 
 from datetime import date
-from typing import Sequence
+from typing import Sequence, Any
 
 from sqlalchemy import and_, asc, case, desc, distinct, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -250,6 +250,43 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             )
         )
         result = await db.execute(stmt)
+        return result.scalars().all()
+    
+    async def get_parts_for_lifetime_by_model(self, db: AsyncSession, model: str) -> Sequence[str]:
+        """
+        获取指定型号下所有能够计算等寿命设计的零部件物料编码
+        """
+        stmt = (
+            select(distinct(self.model.part))
+            .where(
+                self.model.model == model
+            )
+        )
+        result = await db.execute(stmt)
+        return result.scalars().all()
+    
+    async def get_distinct_column_values(
+        self, db: AsyncSession, column_name: str
+    ) -> Sequence[Any]:
+        """
+        获取指定列的所有唯一值
+        :param db: 数据库会话
+        :param column_name: 列名
+        :return: 唯一值列表
+        """
+        # 确保列名存在于模型中
+        if not hasattr(self.model, column_name):
+            raise ValueError(
+                f"Column {column_name} does not exist in model {self.model.__name__}"
+            )
+
+        # 构建查询
+        column = getattr(self.model, column_name)
+        stmt = select(distinct(column)).order_by(column)
+        # 执行查询
+        result = await db.execute(stmt)
+
+        # 返回结果
         return result.scalars().all()
 
 

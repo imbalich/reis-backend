@@ -7,7 +7,7 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
-from backend.app.rbd.model.projects import ProjectStatusType, Projects, TaskType
+from backend.app.rbd.model.projects import ProjectStatusType, Projects
 
 
 class CRUDProjects(CRUDPlus[Projects]):
@@ -20,7 +20,7 @@ class CRUDProjects(CRUDPlus[Projects]):
     async def get_list(
         self,
         model: str | None,
-        task_type: TaskType | None,
+        task_type: str | None,
         version: int | None,
         status: ProjectStatusType | None,
         created_by: str | None,
@@ -44,17 +44,6 @@ class CRUDProjects(CRUDPlus[Projects]):
     async def get_all(self, db: AsyncSession) -> Sequence[Projects]:
         """获取所有项目"""
         return await self.select_models(db)
-
-    # async def get_next_version(self, db: AsyncSession, model: str, task_type: TaskType) -> int:
-    #     """获取下一个版本号"""
-    #     # 查询当前最大版本号
-    #     stmt = select(func.max(Projects.version)).where(
-    #         Projects.model == model,
-    #         Projects.task_type == task_type  # 直接使用枚举对象
-    #     )
-    #     result = await db.execute(stmt)
-    #     max_version = result.scalar()
-    #     return max_version + 1 if max_version else 1
 
     async def create(self, db: AsyncSession, obj: dict) -> int:
         """创建项目"""

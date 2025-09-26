@@ -35,5 +35,8 @@ LOCAL_BEAT_SCHEDULE = {
     '部件级全量拟合': {
         'task': 'app.task.tasks.fit_task.tasks.part_fit_all_task',
         'schedule': TzAwareCrontab('0', '0', day_of_month='1'),
+    },'等寿命设计全量拟合': {
+        'task': 'app.task.tasks.lifetime_task.tasks.equal_lifetime_all_task',
+        'schedule': TzAwareCrontab('0', '0', day_of_month='3'),
     },
 }

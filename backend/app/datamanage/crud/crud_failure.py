@@ -254,6 +254,52 @@ class CRUDFailure(CRUDPlus[Failure]):
 
         result = await db.execute(stmt)
         return [(row[0], row[1]) for row in result.all()]
+    
+    async def get_parts_with_names_only_by_model(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[tuple[str, str]]:
+        """
+        根据型号获取零部件物料编码和名称的二元组列表
+        :param db: 数据库会话
+        :param model: 产品型号
+        :return: (零部件名称, 零部件物料编码) 的二元组列表
+        """
+        stmt = (
+            select(
+                distinct(self.model.fault_location),  # 零部件名称
+                self.model.fault_material_code,  # 零部件物料编码
+            )
+            .where(
+                self.model.product_model == model,
+                self.model.fault_material_code.isnot(None),  # 物料编码不为空
+                self.model.fault_location.isnot(None),  # 部位名称不为空
+            )
+            .order_by(self.model.fault_location, self.model.fault_material_code)
+        )
+
+        result = await db.execute(stmt)
+        return [(row[0], row[1]) for row in result.all()]
+
+    async def get_by_product_number(
+        self, db: AsyncSession, product_number: str
+    ) -> Sequence[Failure]:
+        """
+        根据产品编号获取故障数据
+        :param db: 数据库会话
+        :param product_number: 产品编号
+        :return: 故障数据列表
+        """
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.product_number == product_number,
+                self.model.is_zero_distance == 0,
+                self.model.final_fault_responsibility != "用户",
+            )
+            .order_by(self.model.discovery_date)
+        )
+        result = await db.execute(stmt)
+        return result.scalars().all()
 
 
 failure_dao: CRUDFailure = CRUDFailure(Failure)

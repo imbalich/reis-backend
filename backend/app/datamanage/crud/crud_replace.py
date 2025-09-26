@@ -10,7 +10,7 @@
 
 from typing import Any
 
-from sqlalchemy import Select, Sequence, desc, distinct, select
+from sqlalchemy import Select, Sequence, desc, distinct, select, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -97,6 +97,39 @@ class CRUDReplace(CRUDPlus[Replace]):
 
         result = await db.execute(stmt)
         return result.scalars().first()
+    
+    async def get_all_by_model_and_part(self, db: AsyncSession, model: str, part: str) -> Sequence[Replace]:
+        """
+        获取指定型号和零部件下的必换件列表，每个replace_level只返回finalized_date最新的一条数据
+        :param db: 数据库会话
+        :param model: 产品型号
+        :param part: 零部件
+        :return: Replace对象列表
+        """
+        # 先获取所有符合条件的数据
+        stmt = select(self.model).order_by(asc(self.model.replace_cycle), desc(self.model.finalized_date))
+        where_list = []
+        where_list.append(self.model.model == model)
+        where_list.append(self.model.part_code == part)
+        where_list.append(self.model.state_now == 1)
+        if where_list:
+            stmt = stmt.where(*where_list)
+        result = await db.execute(stmt)
+        all_items = result.scalars().all()
+        
+        # 如果没有数据，直接返回空列表
+        if not all_items:
+            return []
+        
+        # 按replace_level分组，只保留每组中日期最新的数据
+        grouped_items = {}
+        for item in all_items:
+            level = item.replace_level
+            if level not in grouped_items or item.finalized_date > grouped_items[level].finalized_date:
+                grouped_items[level] = item
+        
+        # 按replace_level升序返回结果
+        return [grouped_items[level] for level in sorted(grouped_items.keys())]
 
 
 replace_dao: CRUDReplace = CRUDReplace(Replace)

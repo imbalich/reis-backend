@@ -40,7 +40,6 @@ class ProductFitService:
         # 时间数据标准化 - 将小时转换为千小时单位
         scale_factor = 10000.0
         x_peaks = [x / scale_factor for x in peaks_time['x_peaks']]
-        print('x_peaks',x_peaks)
         y_peaks = peaks_time['y_peaks']
         fits = fit_functions(x_peaks, y_peaks)
         best_fit_model = await ProductFitService.get_best_fit_model(fits)
@@ -76,7 +75,7 @@ class ProductFitService:
                 x_smooth, y_smooth, y_upper_smooth, y_lower_smooth, y_curret
             )
         else:
-            x_current = None,
+            x_current = None
             current_interval = None
 
         # 5、返回结果
@@ -94,6 +93,7 @@ class ProductFitService:
             'failure_interval': failure_interval,
             'current_threshold': curret_value,
             'x_current': x_current,
+            'current_interval': current_interval,
             'difference': int((x_failure - x_current)) if x_current is not None and x_failure is not None else None
         })
         return results
@@ -103,7 +103,6 @@ class ProductFitService:
         async with async_db_session() as db:
             if product_no is not None:
                 current_value = await overhaul_dao.get_by_model_and_no(db, product_model, product_no)
-                print('current_value',current_value)
             else:
                 current_value = None
             return current_value

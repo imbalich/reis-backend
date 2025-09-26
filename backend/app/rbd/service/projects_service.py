@@ -8,7 +8,7 @@ from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.rbd.crud.crud_projects import projects_dao
-from backend.app.rbd.model.projects import Projects, ProjectStatusType, TaskType
+from backend.app.rbd.model.projects import Projects, ProjectStatusType
 from backend.app.rbd.schema.projects import CreateProjectsParam, DeleteProjectsParam, UpdateProjectsParam
 from backend.common.exception import errors
 from backend.database.db import async_db_session
@@ -35,7 +35,7 @@ class ProjectsService:
     async def get_select(
         *, 
         model: str | None, 
-        task_type: TaskType | None,
+        task_type: str | None,
         version: int | None,
         status: ProjectStatusType | None,
         created_by: str | None

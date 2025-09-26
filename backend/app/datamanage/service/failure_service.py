@@ -43,7 +43,7 @@ class FailureService:
             return models
 
     @staticmethod
-    async def get_fault_location_by_product_model(product_model: str = None) -> Sequence[str]:
+    async def get_fault_location_by_product_model(product_model: str = None) -> Sequence[list[str]]:
         async with async_db_session() as db:
             if product_model:
                 results = await failure_dao.get_distinct_columns_values_by_product_model(
@@ -54,9 +54,8 @@ class FailureService:
             models = []
             for fl, mc in results:
                 if mc and mc[0] in ['C', 'M','Z']:
-                    combined = f'{fl}（{mc}）'
-                    models.append(combined)
-            return list(dict.fromkeys(models))
+                    models.append([fl, mc])
+            return models
 
     @staticmethod
     async def get_select(

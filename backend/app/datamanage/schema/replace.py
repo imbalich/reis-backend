@@ -7,7 +7,7 @@
 @Author  ：imbalich
 @Date    ：2025/1/20 09:39
 """
-
+from datetime import date
 from typing import Optional
 
 from pydantic import ConfigDict, Field
@@ -26,6 +26,7 @@ class ReplaceSchemaBase(SchemaBase):
     material_code: Optional[str] = Field(None, description='材料编码')
     state_now: bool = Field(default=True, description='当前是否启用，1启用；0未启用,默认为1')
     mark: Optional[str] = Field(None, description='备注')
+    finalized_date: Optional[date] = Field(None, description='定版日期')
 
 
 class CreateReplaceParam(ReplaceSchemaBase):
@@ -51,3 +52,4 @@ class GetReplaceDetails(GetReplaceParam):
     material_code: Optional[str] = Field(None, description='材料编码')
     state_now: bool = Field(default=True, description='当前是否启用，1启用；0未启用,默认为1')
     mark: Optional[str] = Field(None, description='备注')
+    finalized_date: Optional[date] = Field(None, description='定版日期')
