@@ -27,10 +27,12 @@ class FindPointService:
         """
         通过滑动窗口法寻找等寿点
         """
-
+        # 1、获取所有零部件
         if parts is None or len(parts) == 0:
             parts = await FindPointService.get_part_by_model(model)
         sf_list = []
+
+        # 2、获取所有零部件的分布
         year_worktimes = await cycle_life_service.year_worktimes(model)
         time_point = year_worktimes * 15
         for part in parts:
@@ -38,7 +40,8 @@ class FindPointService:
             x = np.linspace(0, time_point, 50000)
             sf = best_distribution.SF(x)
             sf_list.append(sf)
-        # 滑动窗口参数
+        
+        # 3、执行滑动窗口
         window_length = year_worktimes
         step = int(window_length/10)
         x_min, x_max = 1000, time_point

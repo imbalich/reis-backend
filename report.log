@@ -14339,3 +14339,131 @@ KeyError: 'CNR0000017379'
 2025-09-26 10:58:05,156 - _granian.asgi.serve - INFO - Started worker-1 runtime-1
 2025-09-26 10:59:34,714 - _granian.asgi.serve - INFO - Started worker-1
 2025-09-26 10:59:34,714 - _granian.asgi.serve - INFO - Started worker-1 runtime-1
+2025-09-26 11:17:41,935 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:17:41,935 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:19:15,307 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:19:15,308 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:19:52,067 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:19:52,067 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:20:05,211 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:20:05,211 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:20:14,285 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:20:14,286 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:20:30,027 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:20:30,027 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:20:56,877 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:20:56,878 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:21:23,552 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:21:23,552 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:21:32,374 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:21:32,375 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:21:47,518 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:21:47,518 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:22:30,109 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:22:30,109 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:22:37,043 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:22:37,043 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:22:52,297 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:22:52,297 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:22:59,817 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:22:59,819 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:23:14,749 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:23:14,750 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:23:37,202 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:23:37,202 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:23:44,156 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:23:44,156 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:23:55,371 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:23:55,371 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:24:31,283 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:24:31,284 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:24:47,349 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:24:47,349 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:25:03,560 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:25:03,560 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:25:33,216 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:25:33,217 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:26:17,808 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:26:17,808 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:27:04,349 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:27:04,349 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:27:20,572 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:27:20,572 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:27:25,684 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:27:25,684 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:27:38,603 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:27:38,604 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:27:47,775 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:27:47,775 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:27:58,863 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:27:58,863 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:28:18,606 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:28:18,606 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:28:34,574 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:28:34,574 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:28:50,412 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:28:50,413 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:29:00,174 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:29:00,174 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:29:10,311 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:29:10,311 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:29:15,762 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:29:15,762 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:29:27,849 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:29:27,850 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:29:46,385 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:29:46,385 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:29:53,381 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:29:53,382 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:30:03,938 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:30:03,938 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:30:19,248 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:30:19,249 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:30:26,011 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:30:26,011 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:30:31,441 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:30:31,442 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:38:04,947 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:38:04,947 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:41:34,746 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:41:34,746 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:49:13,536 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:49:13,536 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 11:53:36,965 - _granian.workers - INFO - Started worker-1
+2025-09-26 11:53:36,965 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 13:46:51,690 - _granian.workers - INFO - Started worker-1
+2025-09-26 13:46:51,690 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:00:38,785 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:00:38,785 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:01:09,424 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:01:09,424 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:01:17,338 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:01:17,338 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:02:19,634 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:02:19,635 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:02:49,335 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:02:49,336 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:02:57,531 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:02:57,531 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:03:04,874 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:03:04,874 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:03:22,829 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:03:22,830 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:03:35,732 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:03:35,732 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:09:21,832 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:09:21,832 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:09:47,426 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:09:47,426 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:09:51,886 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:09:51,886 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:10:43,073 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:10:43,073 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 14:10:49,282 - _granian.workers - INFO - Started worker-1
+2025-09-26 14:10:49,282 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 16:29:23,251 - _granian.workers - INFO - Started worker-1
+2025-09-26 16:29:23,251 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 16:29:34,768 - _granian.workers - INFO - Started worker-1
+2025-09-26 16:29:34,768 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-09-26 16:48:20,954 - _granian.workers - INFO - Started worker-1
+2025-09-26 16:48:20,955 - _granian.workers - INFO - Started worker-1 runtime-1

@@ -10,9 +10,6 @@
 
 import numpy as np
 from typing import Any
-from backend.app.calcu.service.distribute_service import distribute_service
-from backend.app.datamanage.crud.crud_product import product_dao
-from backend.app.datamanage.crud.crud_replace import replace_dao
 from backend.app.datamanage.crud.crud_ebom import ebom_dao
 from backend.common.exception import errors
 from backend.database.db import async_db_session
@@ -137,27 +134,6 @@ class AssignService:
                 'cm': cm_list,
                 'gz': gz_list
             }
-    
-    # @staticmethod
-    # async def assign_fpmh(fpmh, fpmh_user,fpmh_pre) -> list[float]:
-    #     """
-    #     对每一个part的fpmh进行分配，满足两个限制条件：
-    #     1. 计算得到的每个fpmh之和要小于fpmh_user
-    #     2. 每一个fpmh要大于（y = best_distribution.PDF(x)）*100000的平均值
-        
-    #     :param fpmh: 初始的各部件fpmh列表
-    #     :param fpmh_user: 用户要求的FPMH值
-    #     :param fpmh_pre: 原始的fpmh总值
-    #     :return: 分配后的每个部件的fpmh列表
-    #     """
-        
-    #     # 计算原始的fpmh值
-    #     original_fpmh = fpmh
-    #     # 计算缩放因子
-    #     scale_factor = fpmh_user / fpmh_pre
-    #     # 计算缩放后的fpmh值
-    #     final_fpmh = [fpmh * scale_factor for fpmh in original_fpmh]     
-    #     return final_fpmh
             
     @staticmethod
     async def assign_fpmh(items: list[dict], fpmh_user: float) -> list[float]:
@@ -182,9 +158,6 @@ class AssignService:
             # 计算PDF平均值 * 1000000
             pdf_avg = np.mean(y) * 1000000
             pdf_avg_list.append(pdf_avg)
-        
-        # 计算原始的fpmh值
-        # original_fpmh = await AssignService.get_fpmh_by_part(items)
         
         # 需要重新分配fpmh
         adjusted_fpmh = pdf_avg_list.copy()

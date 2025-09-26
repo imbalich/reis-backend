@@ -10,6 +10,7 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_,desc
+from sqlalchemy import delete as sa_delete
 
 from backend.app.lifetime.model.equal_lifetime import EqualLifetime
 from sqlalchemy_crud_plus import CRUDPlus
@@ -27,7 +28,8 @@ class CRUDEqualLifetime(CRUDPlus[EqualLifetime]):
         :return:
         """
         await self.create_models(db, objs)
-        
+    
+
     async def get_by_model(
             self, db: AsyncSession,
             model: str,
@@ -52,6 +54,17 @@ class CRUDEqualLifetime(CRUDPlus[EqualLifetime]):
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()
+    
+
+    @staticmethod
+    async def delete_all(db: AsyncSession) -> None:
+        """
+        删除所有等寿命结果
+
+        :param db: 数据库会话
+        :return:
+        """
+        await db.execute(sa_delete(EqualLifetime))
 
 
 

@@ -8,19 +8,14 @@
 @Date    ：2025/9/10 09:48
 """
 
-import numpy as np
 from typing import Any
-from backend.app.calcu.service.distribute_service import distribute_service
 from backend.app.datamanage.crud.crud_ebom import ebom_dao
 from backend.app.datamanage.crud.crud_replace import replace_dao
 from backend.app.datamanage.crud.crud_product import product_dao
 from backend.common.exception.errors import DataValidationError
 from backend.common.exception import errors
 from backend.database.db import async_db_session
-from backend.app.lcc.service.assign_service import assign_service
 from backend.app.calcu.service.reliability_index_service import reliability_index_service
-from backend.app.degrade.service.product_distribute_service import product_distribute_service
-from backend.app.datamanage.crud.crud_lcc import lcc_dao
 from backend.app.lcc.schema.cycle_life_service import CycleLifeSchemaBase, CycleLifeTotalSchemaBase
 
 class CycleLifeService:

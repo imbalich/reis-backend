@@ -15,7 +15,7 @@ from backend.app.calcu.service.distribute_service import distribute_service
 from backend.app.lifetime.service.pso_service import pso_service
 from backend.app.lifetime.service.find_point_service import find_point_service
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
-from backend.app.lifetime.crud.crud_lifetime_new import equal_lifetimenew_dao
+from backend.app.lifetime.crud.crud_lifetime import equal_lifetime_dao
 from backend.app.lifetime.service.plot_lifetime_service import plot_lifetime_service
 from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.common.exception.errors import DataValidationError
@@ -23,7 +23,7 @@ from backend.database.db import async_db_session
 from backend.app.calcu.schema.distribute_param import DistributeType
 from backend.app.calcu.conf import predict_settings
 from backend.app.lifetime.utils.convert_model import (
-    convert_to_euqal_lifetime_params1,
+    convert_to_euqal_lifetime_params,
 )
 from backend.app.lifetime.schema.lifetime_param import CreateEuqalLifetimeInParam
 class EqualLifetimeService:
@@ -41,6 +41,7 @@ class EqualLifetimeService:
         tasks = []
         part_params_list = []
         
+        # 1、获取所有部件分布信息
         for part in parts:  
             distribution_params = await distribute_service.get_part_distribution_params(
                 model, part
@@ -82,7 +83,7 @@ class EqualLifetimeService:
                 if value is not None:
                     original_params[dist_param] = value
             
-            # 需要优化的部件，收集参数用于并发
+            # 2、需要优化的部件，收集参数用于并发
             part_params_list.append({
                 "param_names": param_names,
                 "original_params": original_params,
@@ -95,7 +96,7 @@ class EqualLifetimeService:
                 "best_distribution": best_distribution,
             })
 
-        # 并发执行PSO优化
+        # 3、 并发执行PSO优化
         async def optimize_one(params):
             optimized_result = await pso_service.pso_optimize_params(
                 params["param_names"],
@@ -111,6 +112,7 @@ class EqualLifetimeService:
             optimized_result["original_distribution"] = params["best_distribution"]
             return optimized_result
 
+        # 4、 并发执行
         if part_params_list:
             tasks = [optimize_one(params) for params in part_params_list]
             optimized_results = await asyncio.gather(*tasks)
@@ -127,19 +129,16 @@ class EqualLifetimeService:
         async with async_db_session() as db:
             async with db.begin():
                 result = await find_point_service.find_equal_lifetime_point(model, parts, step_start,step_end)
-                distribution_params = convert_to_euqal_lifetime_params1(
+                distribution_params = convert_to_euqal_lifetime_params(
                     result, model, parts,target_sf,step_start,step_end
                 )
-                await equal_lifetimenew_dao.creates(db, distribution_params)
+                await equal_lifetime_dao.creates(db, distribution_params)
     
     @staticmethod
     async def create(*, obj: CreateEuqalLifetimeInParam) -> None:
         """
-        单个产品拟合：
-        如果输入日期是当前日期且拟合方法为MLE，检查是否存在最近7天内的记录，如果存在，不再进行拟合
-        如果用户独立输入日期或不同拟合方法，进行拟合
+        单个产品寿命优化
         """
-        # 处理 input_date 参数
         await EqualLifetimeService._perform_and_save_fit(
             obj.model, obj.parts, obj.target_sf,obj.step_start,obj.step_end
         )
@@ -152,9 +151,12 @@ class EqualLifetimeService:
         step_start: float,
         step_end: float
     ):
+        """
+        获取指定模型和部件的等寿命点结果
+        """
         async with async_db_session() as db:
         
-            models = await equal_lifetimenew_dao.get_by_model(db, model,target_sf,step_start,step_end)
+            models = await equal_lifetime_dao.get_by_model(db, model,target_sf,step_start,step_end)
             if not models:
                 return None
             
@@ -186,10 +188,14 @@ class EqualLifetimeService:
         step_start: float,
         step_end: float
     ):
+        '''获取优化结果'''
         async with async_db_session() as db:
+
+            # 1. 如果传入部件为空，获取fit_parts表中型号下所有部件
             if parts is None or len(parts) == 0:
                 parts = await find_point_service.get_part_by_model(model)
 
+            # 2、获取等寿命点结果
             optimize_result = await EqualLifetimeService.get_best_by_model_and_parts(model, parts,target_sf,step_start,step_end)
             if not optimize_result: 
                 return None
@@ -197,16 +203,18 @@ class EqualLifetimeService:
             equal_lifetime_sf = optimize_result[0].equal_lifetime_sf
             t = int(optimize_result[0].time_point)
 
+            # 3. 获取PSO优化结果
             pso_results = await EqualLifetimeService.get_result(model, parts,target_sf,equal_lifetime_t,equal_lifetime_sf,t)
+            
+            # 4、创建编码到名称的映射字典
             failure_parts = await failure_dao.get_parts_with_names_only_by_model(db, model)
-                
-            # 2. 创建编码到名称的映射字典
             code_to_name = {code: name for name, code in failure_parts}
 
-            if not optimize_result: 
-                return None
+            # 5. 绘制优化前后SF图
             plot_original_result = await plot_lifetime_service.plot_original_result(model,parts,t,target_sf,pso_results)
             plot_optimize_result = await plot_lifetime_service.plot_optimize_result(model,pso_results,t,target_sf,code_to_name,equal_lifetime_t,equal_lifetime_sf)
+            
+            # 6. 创建结果
             parts_results = []
             result = []
             for part,pso_result in pso_results.items():
@@ -223,6 +231,7 @@ class EqualLifetimeService:
             result = sorted(result, key=lambda x: x['need_optimization'], reverse=True)
             return {
                 "result": result,
+                "equal_lifetime_t" : equal_lifetime_t,
                 "img_original_result": plot_original_result,
                 "img_optimize_result": plot_optimize_result,
             }
@@ -265,6 +274,13 @@ class EqualLifetimeService:
                 
         except Exception as e:
             raise DataValidationError(msg=f"获取所有零部件时发生错误: {str(e)}")
+        
+
+    @staticmethod
+    async def delete_all_equal_lifetime() -> None:
+        """清空所有等寿命数据"""
+        async with async_db_session.begin() as db:
+            await equal_lifetime_dao.delete_all(db)
 
 
 

@@ -8,6 +8,7 @@
 @Date    ：2025/9/23 11:35
 """
 import time
+from celery import shared_task
 
 from backend.app.lifetime.service.find_point_service import find_point_service
 from backend.common.exception.errors import DataValidationError
@@ -123,3 +124,10 @@ async def equal_lifetime_all_task(
         result_summary += f' Final results: {", ".join(final_results)}'
 
     return result_summary
+
+
+@celery_app.task()
+async def delete_equal_lifetime() -> str:
+    """自动删除数据库登录日志"""
+    await equal_lifetime_service.delete_all_equal_lifetime()
+    return 'Success'

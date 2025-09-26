@@ -24,7 +24,7 @@ class PS0Service:
         # 1. 构造优化参数列表和原始参数
         fixed_params = {k: v for k, v in original_params.items() if k.lower() == 'gamma'}
 
-        # 参数边界
+        # 2、参数边界
         bounds_lower = []
         bounds_upper = []
         for param in param_names:
@@ -37,7 +37,7 @@ class PS0Service:
                 bounds_upper.append(v * 10.0)
         bounds = (np.array(bounds_lower), np.array(bounds_upper))
 
-        # 适应度函数
+        # 3、适应度函数
         def fitness_func(x):
             fitness = []
             for params in x:
@@ -66,7 +66,7 @@ class PS0Service:
         optimizer = GlobalBestPSO(n_particles=8, dimensions=len(param_names), options=options, bounds=bounds)
         best_cost, best_pos = optimizer.optimize(fitness_func, iters=30, verbose=False)
 
-        # 构造结果
+        #5、构造结果
         optimized_params = {k: v for k, v in zip(param_names, best_pos)}
         optimized_params.update(fixed_params)
         optimized_dist = distribution_class(**optimized_params)

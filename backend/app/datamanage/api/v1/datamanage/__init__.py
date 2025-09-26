@@ -45,14 +45,6 @@ router.include_router(replace_router, prefix='/replace', tags=['必换件数据'
 router.include_router(configuration_router, prefix='/configuration', tags=['配置数据'])
 router.include_router(pc_router, prefix='/pc', tags=['pc数据'])
 router.include_router(overhaul_router, prefix='/overhaul', tags=['维修数据'])
-router.include_router(despatch_router, prefix="/despatch", tags=["发运数据"])
-router.include_router(failure_router, prefix="/failure", tags=["故障数据"])
-router.include_router(ebom_router, prefix="/ebom", tags=["ebom数据"])
-router.include_router(product_router, prefix="/product", tags=["产品信息数据"])
-router.include_router(repair_router, prefix="/repair", tags=["造修阶段数据"])
-router.include_router(replace_router, prefix="/replace", tags=["必换件数据"])
-router.include_router(configuration_router, prefix="/configuration", tags=["配置数据"])
-router.include_router(pc_router, prefix="/pc", tags=["pc数据"])
 router.include_router(warehouse_router, prefix="/warehouse", tags=["仓库数据"])
 router.include_router(
     warehouse_inventory_router, prefix="/warehouse-inventory", tags=["库房备品清单数据"]

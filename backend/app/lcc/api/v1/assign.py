@@ -10,7 +10,7 @@
 
 from typing import Annotated
 import json
-from fastapi import APIRouter, Query,Body
+from fastapi import APIRouter, Query
 
 from backend.common.response.response_schema import response_base
 from backend.app.lcc.service.assign_service import assign_service

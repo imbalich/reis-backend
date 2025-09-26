@@ -15,7 +15,7 @@ from backend.common.schema import SchemaBase
 
 
 class CreateEuqalLifetimeInParam(SchemaBase):
-    # 创建产品级别拟合信息入参
+    # 创建等寿命优化信息入参
     model: str
     parts: list[str] | None = None
     target_sf: float  = 0.90
@@ -23,7 +23,7 @@ class CreateEuqalLifetimeInParam(SchemaBase):
     step_end: float = 0.99
 
 class CreateEuqalLifetimeAllPartInParam(SchemaBase):
-    # 创建多型号零部件级别拟合信息入参
+    # 创建多型号等寿命优化信息入参
     target_sf: float  = 0.90
     step_start: float = 0.90
     step_end: float = 0.99
@@ -64,7 +64,7 @@ class CreateEqualLifetimeParam(SchemaBase):
     lambda_: float | None = None
 
     
-class CreateEqualLifetimeParam1(SchemaBase):
+class CreateEqualLifetimeParam(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
     group_id: str

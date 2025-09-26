@@ -8,4 +8,3 @@
 @Date    ：2025/9/15 14:01
 """
 from backend.app.lifetime.model.equal_lifetime import EqualLifetime
-from backend.app.lifetime.model.equal_lifetime_new import EqualLifetimeNew

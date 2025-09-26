@@ -19,6 +19,7 @@ plt.rcParams['axes.unicode_minus'] = False
 class PlotLifetimeService:
     @staticmethod
     async def plot_optimize_result(model,pso_results,t,target_sf,code_to_name,equal_lifetime_t,equal_lifetime_sf):
+        '''绘制优化结果'''
         fig, ax = plt.subplots(figsize=(8, 6))
         x = np.linspace(0, t, 1000)
         for part,pso_result in pso_results.items():
@@ -33,8 +34,6 @@ class PlotLifetimeService:
                     ax.plot(x, y, label=code_to_name[part])
         if equal_lifetime_t is not None:
             ax.plot(equal_lifetime_t, equal_lifetime_sf, 'ro', markersize=4, label=f'等寿命点: (t={equal_lifetime_t}, sf={equal_lifetime_sf:.4f})')
-        else:
-            ax.plot([], [], ' ', label='没有找到等寿命点')
         ax.set_title(f"优化寿命曲线-{model}(时间截止点t0 = {t})")
         ax.set_xlabel("时间")
         ax.set_ylabel("SF")
@@ -47,6 +46,7 @@ class PlotLifetimeService:
 
     @staticmethod
     async def plot_original_result(model,parts,t,target_sf,pso_results):
+        '''绘制原始结果'''
         fig, ax = plt.subplots(figsize=(8, 6))
         x = np.linspace(0, t, 1000)
         for part,pso_result in pso_results.items():
@@ -64,6 +64,7 @@ class PlotLifetimeService:
     
     @staticmethod
     def _fig_to_base64(fig):
+        '''将 matplotlib 图片转换为 base64'''
         buf = io.BytesIO()
         fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
         img_base64 = base64.b64encode(buf.getvalue()).decode()
