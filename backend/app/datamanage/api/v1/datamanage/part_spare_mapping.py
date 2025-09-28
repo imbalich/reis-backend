@@ -65,7 +65,7 @@ async def import_part_spare_mapping_excel(
     Excel格式要求：
     - Sheet名称：配置表
     - 列名：产品型号、派生码、零部件名称（原装）、零部件物料编码（原装）、零部件名称（备品）、零部件物料编码（备品）、创建人、更新时间
-    - 产品型号、派生码、零部件名称和编码为必填项
+    - 产品型号、零部件名称和编码为必填项，派生码为可选项
     """
     if not file.filename.endswith((".xlsx", ".xls")):
         return response_base.fail(

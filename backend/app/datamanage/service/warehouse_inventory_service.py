@@ -39,7 +39,7 @@ class WarehouseInventoryService:
             required_columns = [
                 "库房编号",
                 "库房名称",
-                "零部件物料编码",
+                "零部件物料编码（备品）",
                 "零部件名称",
                 "默认数量",
                 "创建人",
@@ -62,7 +62,9 @@ class WarehouseInventoryService:
 
             for index, row in df.iterrows():
                 try:
-                    if pd.isna(row["库房编号"]) or pd.isna(row["零部件物料编码"]):
+                    if pd.isna(row["库房编号"]) or pd.isna(
+                        row["零部件物料编码（备品）"]
+                    ):
                         failed_count += 1
                         errors.append(
                             f"第{index+2}行: 库房编号和零部件物料编码为必填项"
@@ -76,7 +78,7 @@ class WarehouseInventoryService:
                         if not pd.isna(row["库房名称"])
                         else ""
                     )
-                    part_code = str(row["零部件物料编码"]).strip()
+                    part_code = str(row["零部件物料编码（备品）"]).strip()
                     part_name = (
                         str(row["零部件名称"]).strip()
                         if not pd.isna(row["零部件名称"])

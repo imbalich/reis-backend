@@ -99,6 +99,26 @@ class CRUDAllotment(CRUDPlus[Allotment]):
         result = await db.execute(stmt)
         return result.scalars().all()
 
+    async def get_by_allotment_two_and_models(
+        self, db: AsyncSession, allotment_two: str, target_models: List[str]
+    ) -> Sequence[Allotment]:
+        """
+        根据二级配属和产品型号列表获取配属信息（优化版本）
+        :param db: 数据库会话
+        :param allotment_two: 二级配属
+        :param target_models: 目标产品型号列表
+        :return: 配属信息列表
+        """
+        if not target_models:
+            return []
+
+        stmt = select(self.model).where(
+            self.model.allotment_two == allotment_two,
+            self.model.product_model.in_(target_models),
+        )
+        result = await db.execute(stmt)
+        return result.scalars().all()
+
     async def get_by_product_number(
         self, db: AsyncSession, product_number: str
     ) -> Allotment:

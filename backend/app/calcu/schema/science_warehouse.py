@@ -27,6 +27,7 @@ class ScienceWarehouseResultItem(SchemaBase):
 
 class ScienceWarehouseCalculationResponse(SchemaBase):
     """科学库存计算响应"""
+
     model_config = ConfigDict(from_attributes=True)
 
     calculation_id: str = Field(..., description="计算批次ID")
@@ -115,3 +116,21 @@ class ScienceWarehouseBatchResponse(SchemaBase):
     failed_requests: int = Field(..., description="失败请求数")
     calculation_ids: List[str] = Field(..., description="计算批次ID列表")
     errors: List[str] = Field(default_factory=list, description="错误信息")
+
+
+class ScienceWarehouseListDetails(SchemaBase):
+    """科学库存列表详情"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="记录ID")
+    calculation_id: str = Field(..., description="计算批次ID")
+    warehouse_code: str = Field(..., description="库房编码")
+    warehouse_name: str = Field(..., description="库房名称")
+    spare_part_code: str = Field(..., description="备品编码")
+    spare_part_name: str = Field(..., description="备品名称")
+    required_quantity: int = Field(..., description="需求数量")
+    calculation_method: str = Field(..., description="计算方法")
+    time_interval_days: int = Field(..., description="时间间隔（天）")
+    input_date: date = Field(..., description="计算截止日期")
+    created_time: date = Field(..., description="创建时间")

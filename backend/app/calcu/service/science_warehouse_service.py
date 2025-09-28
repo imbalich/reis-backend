@@ -4,6 +4,7 @@
 # 科学库存服务,支援国铁售后需求
 import math
 import json
+import time
 from collections import defaultdict
 from datetime import date, timedelta, datetime
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
@@ -20,6 +21,7 @@ from backend.app.datamanage.crud.crud_part_spare_mapping import part_spare_mappi
 from backend.app.datamanage.crud.crud_allotment import allotment_dao
 from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.datamanage.crud.crud_product import product_dao
+from backend.app.datamanage.crud.crud_despatch import despatch_dao
 from backend.app.calcu.crud.crud_science_warehouse_result import (
     science_warehouse_result_dao,
 )
@@ -28,6 +30,7 @@ from backend.app.calcu.crud.crud_science_warehouse_statistics import (
 )
 from backend.app.fit.service.part_strategy_service import part_strategy_service
 from backend.app.fit.service.part_fit_service import part_fit_service
+from backend.app.fit.utils.time_utils import dateutils
 from backend.database.db import async_db_session
 from backend.utils.snowflake import snowflake
 
@@ -105,6 +108,7 @@ class ScienceWarehouseService:
         :param input_date: 计算截止日期（用于拟合）
         :return: 计算结果和统计信息
         """
+        start_time = time.time()
 
         if not input_date:
             input_date = date.today()
@@ -112,19 +116,30 @@ class ScienceWarehouseService:
         # 1. 获取所有库房备品清单
         warehouse_spares = await ScienceWarehouseService.get_all_warehouse_spare_list()
 
+        # 统计总备品数量
+        total_spares = sum(len(spares) for spares in warehouse_spares.values())
+
         # 2. 初始化结果和统计
         results = {}
         statistics = {
             "total_warehouse_spares": 0,
             "calculated_spares": 0,
             "default_spares": 0,
+            "insufficient_failure_data_spares": 0,  # 新增：故障数据不足的备品数量
+            "exponential_fit_success_spares": 0,  # 新增：指数分布拟合成功的备品数量
+            "exponential_fit_fail_spares": 0,  # 新增：指数分布拟合失败的备品数量
             "skipped_failures": [],
             "mapping_errors": [],
             "maintenance_responsibility_analysis": {},
         }
 
         # 3. 按库房-备品维度计算
+        calculation_start = time.time()
+        processed_warehouses = 0
+        processed_spares = 0
+
         for warehouse_code, spare_parts in warehouse_spares.items():
+            processed_warehouses += 1
             results[warehouse_code] = {}
             statistics["maintenance_responsibility_analysis"][warehouse_code] = {
                 "total_spares": len(spare_parts),
@@ -135,30 +150,81 @@ class ScienceWarehouseService:
             }
 
             for spare_part in spare_parts:
+                processed_spares += 1
                 statistics["total_warehouse_spares"] += 1
 
                 # 计算该库房该备品的需求
+                spare_start = time.time()
                 requirement_result = await ScienceWarehouseService.calculate_spare_requirement_with_coverage(
                     warehouse_code, spare_part, time_interval_days, input_date
                 )
+                spare_duration = time.time() - spare_start
 
                 if requirement_result["calculated"]:
+                    # 检查是否使用了指数分布拟合
+                    maintenance_analysis = requirement_result.get(
+                        "maintenance_analysis", {}
+                    )
+                    exponential_success = maintenance_analysis.get(
+                        "exponential_fit_success_count", 0
+                    )
+                    exponential_fail = maintenance_analysis.get(
+                        "exponential_fit_fail_count", 0
+                    )
+
+                    if exponential_success > 0:
+                        # 使用了指数分布拟合
+                        calculation_method = "exponential_fit"
+                        confidence = 0.5  # 指数分布拟合的置信度较低
+                        statistics["exponential_fit_success_spares"] += 1
+                    else:
+                        # 使用正常拟合
+                        calculation_method = "fitted"
+                        confidence = requirement_result.get("confidence", 0.8)
+                        statistics["calculated_spares"] += 1
+
                     results[warehouse_code][spare_part["part_code"]] = {
                         "part_name": spare_part["part_name"],
                         "required_quantity": requirement_result["quantity"],
-                        "calculation_method": "fitted",
-                        "confidence": requirement_result.get("confidence", 0.8),
+                        "calculation_method": calculation_method,
+                        "confidence": confidence,
                         "coverage_info": requirement_result.get("coverage_info", {}),
-                        "maintenance_analysis": requirement_result.get(
-                            "maintenance_analysis", {}
-                        ),
+                        "maintenance_analysis": maintenance_analysis,
                     }
-                    statistics["calculated_spares"] += 1
                     statistics["maintenance_responsibility_analysis"][warehouse_code][
                         "calculated"
                     ] += 1
+                elif requirement_result.get("insufficient_failure_data", False):
+                    # 检查是否尝试了指数分布拟合但失败
+                    maintenance_analysis = requirement_result.get(
+                        "maintenance_analysis", {}
+                    )
+                    exponential_fail = maintenance_analysis.get(
+                        "exponential_fit_fail_count", 0
+                    )
+
+                    if exponential_fail > 0:
+                        # 指数分布拟合失败，使用默认数量
+                        calculation_method = "exponential_fit_failed"
+                        statistics["exponential_fit_fail_spares"] += 1
+                    else:
+                        # 直接使用默认数量（没有尝试指数分布拟合）
+                        calculation_method = "insufficient_data"
+                        statistics["insufficient_failure_data_spares"] += 1
+
+                    results[warehouse_code][spare_part["part_code"]] = {
+                        "part_name": spare_part["part_name"],
+                        "required_quantity": spare_part["default_quantity"],
+                        "calculation_method": calculation_method,
+                        "confidence": 0.3,
+                        "coverage_info": requirement_result.get("coverage_info", {}),
+                        "maintenance_analysis": maintenance_analysis,
+                    }
+                    statistics["maintenance_responsibility_analysis"][warehouse_code][
+                        "default"
+                    ] += 1
                 else:
-                    # 使用默认数量
+                    # 其他原因使用默认数量
                     results[warehouse_code][spare_part["part_code"]] = {
                         "part_name": spare_part["part_name"],
                         "required_quantity": spare_part["default_quantity"],
@@ -174,7 +240,7 @@ class ScienceWarehouseService:
                         "default"
                     ] += 1
 
-                # 记录跳过的故障和映射错误
+                # 只记录错误数量，不保存详细错误信息（减少内存使用）
                 statistics["skipped_failures"].extend(
                     requirement_result.get("skipped_failures", [])
                 )
@@ -182,7 +248,7 @@ class ScienceWarehouseService:
                     requirement_result.get("mapping_errors", [])
                 )
 
-                # 记录维护责任分析
+                # 简化维护责任分析统计
                 if requirement_result.get("maintenance_analysis"):
                     maintenance_analysis = requirement_result["maintenance_analysis"]
                     statistics["maintenance_responsibility_analysis"][warehouse_code][
@@ -191,6 +257,8 @@ class ScienceWarehouseService:
                     statistics["maintenance_responsibility_analysis"][warehouse_code][
                         "non_responsible_products"
                     ] += maintenance_analysis.get("non_responsible_products", 0)
+
+        calculation_duration = time.time() - calculation_start
 
         # 4. 生成计算批次ID
         calculation_id = f"SW_{snowflake.generate()}"
@@ -204,6 +272,8 @@ class ScienceWarehouseService:
         from backend.app.calcu.schema.science_warehouse import (
             ScienceWarehouseCalculationResponse,
         )
+
+        total_duration = time.time() - start_time
 
         return ScienceWarehouseCalculationResponse(
             calculation_id=calculation_id,
@@ -290,29 +360,16 @@ class ScienceWarehouseService:
 
             result["coverage_info"]["related_models"] = related_models
 
-            # 3. 获取运行在库房覆盖路局上的产品编号
-            relevant_products = []
+            # 3. 获取运行在库房覆盖路局上且型号匹配的产品编号（优化版本）
+            filtered_products = []
             for allotment_two in warehouse_allotments:
-                products_in_allotment = (
-                    await ScienceWarehouseService.get_products_by_allotment_two(
-                        allotment_two
-                    )
+                products_in_allotment = await ScienceWarehouseService.get_products_by_allotment_two_and_models(
+                    allotment_two, related_models
                 )
-                relevant_products.extend(products_in_allotment)
+                filtered_products.extend(products_in_allotment)
 
             # 去重
-            relevant_products = list(set(relevant_products))
-
-            # 4. 过滤出相关型号的产品编号
-            filtered_products = []
-            for product_number in relevant_products:
-                product_model = (
-                    await ScienceWarehouseService.get_model_by_product_number(
-                        product_number
-                    )
-                )
-                if product_model in related_models:
-                    filtered_products.append(product_number)
+            filtered_products = list(set(filtered_products))
 
             if not filtered_products:
                 result["mapping_errors"].append(
@@ -336,11 +393,6 @@ class ScienceWarehouseService:
                     await ScienceWarehouseService.get_failures_by_product_number(
                         product_number
                     )
-                )
-
-                # 记录原始故障数量
-                result["coverage_info"][f"product_{product_number}_total_failures"] = (
-                    len(product_failures)
                 )
 
                 # 过滤时间范围
@@ -436,12 +488,25 @@ class ScienceWarehouseService:
             )
 
             if calculation_result["success"]:
-                result["calculated"] = True
-                result["quantity"] = calculation_result["quantity"]
-                result["confidence"] = calculation_result.get("confidence", 0.8)
-                result["maintenance_analysis"] = calculation_result.get(
+                # 检查是否有故障数据不足的情况
+                maintenance_analysis = calculation_result.get(
                     "maintenance_analysis", {}
                 )
+                if (
+                    maintenance_analysis.get(
+                        "insufficient_failure_data_combinations", 0
+                    )
+                    > 0
+                ):
+                    result["insufficient_failure_data"] = True
+                    result["calculated"] = False
+                    result["quantity"] = 0
+                    result["confidence"] = 0.3
+                else:
+                    result["calculated"] = True
+                    result["quantity"] = calculation_result["quantity"]
+                    result["confidence"] = calculation_result.get("confidence", 0.8)
+                    result["maintenance_analysis"] = maintenance_analysis
             else:
                 result["mapping_errors"].append(
                     {
@@ -488,10 +553,60 @@ class ScienceWarehouseService:
             calculation_details = []
             responsible_products = 0
             non_responsible_products = 0
+            insufficient_failure_data_combinations = 0
+            exponential_fit_success_count = 0
+            exponential_fit_fail_count = 0
 
             for model_part_key, model_part_failures in failures_by_model_part.items():
                 # 解析型号和零部件编码
                 product_model, part_code = model_part_key.split("_", 1)
+
+                # 检查故障数量是否足够（需要 > 4 个）
+                if len(model_part_failures) <= 4:
+
+                    # 尝试使用指数分布拟合
+                    try:
+                        model_part_spare_quantity = await ScienceWarehouseService.exponential_fit_for_insufficient_data(
+                            model_part_failures,
+                            product_model,
+                            part_code,
+                            time_interval_days,
+                            input_date,
+                        )
+
+                        if model_part_spare_quantity > 0:
+                            # 指数分布拟合成功
+                            total_requirement += model_part_spare_quantity
+                            calculation_details.append(
+                                {
+                                    "model_part": model_part_key,
+                                    "method": "exponential_fit",
+                                    "failure_count": len(model_part_failures),
+                                    "quantity": model_part_spare_quantity,
+                                    "confidence": 0.5,  # 指数分布拟合的置信度较低
+                                }
+                            )
+                            responsible_products += len(
+                                set([f.product_number for f in model_part_failures])
+                            )
+                            exponential_fit_success_count += 1
+                        else:
+                            # 指数分布拟合失败，使用默认值
+                            insufficient_failure_data_combinations += 1
+                            non_responsible_products += len(
+                                set([f.product_number for f in model_part_failures])
+                            )
+                            exponential_fit_fail_count += 1
+
+                    except Exception as e:
+                        # 指数分布拟合异常，使用默认值
+                        insufficient_failure_data_combinations += 1
+                        non_responsible_products += len(
+                            set([f.product_number for f in model_part_failures])
+                        )
+                        exponential_fit_fail_count += 1
+
+                    continue
 
                 # 获取该型号+零部件的所有产品编号
                 product_numbers = list(
@@ -539,7 +654,7 @@ class ScienceWarehouseService:
                                 "part_code": part_code,
                                 "failures_count": len(model_part_failures),
                                 "spare_quantity": model_part_spare_quantity,
-                                "distribution": best_distribution.distribution,
+                                "distribution": fit_result.best_distribution_name,
                                 "maintenance_responsible": True,
                                 "responsibility_reason": maintenance_responsibility[
                                     "reason"
@@ -557,7 +672,7 @@ class ScienceWarehouseService:
                                 "part_code": part_code,
                                 "failures_count": len(model_part_failures),
                                 "spare_quantity": model_part_spare_quantity,
-                                "distribution": best_distribution.distribution,
+                                "distribution": fit_result.best_distribution_name,
                                 "maintenance_responsible": False,
                                 "responsibility_reason": maintenance_responsibility[
                                     "reason"
@@ -574,6 +689,9 @@ class ScienceWarehouseService:
                     "total_model_part_combinations": len(failures_by_model_part),
                     "responsible_products": responsible_products,
                     "non_responsible_products": non_responsible_products,
+                    "insufficient_failure_data_combinations": insufficient_failure_data_combinations,
+                    "exponential_fit_success_count": exponential_fit_success_count,
+                    "exponential_fit_fail_count": exponential_fit_fail_count,
                 },
             }
 
@@ -787,11 +905,122 @@ class ScienceWarehouseService:
             return [a.product_number for a in allotments]
 
     @staticmethod
+    async def get_products_by_allotment_two_and_models(
+        allotment_two: str, target_models: List[str]
+    ) -> List[str]:
+        """获取指定二级配属下且型号在目标列表中的产品编号（优化版本）"""
+        async with async_db_session() as db:
+            allotments = await allotment_dao.get_by_allotment_two_and_models(
+                db, allotment_two, target_models
+            )
+            return [a.product_number for a in allotments]
+
+    @staticmethod
     async def get_model_by_product_number(product_number: str) -> str:
         """根据产品编号获取产品型号"""
         async with async_db_session() as db:
             allotment = await allotment_dao.get_by_product_number(db, product_number)
             return allotment.product_model if allotment else None
+
+    @staticmethod
+    async def calculate_total_run_time_for_products(
+        product_numbers: List[str], product_model: str
+    ) -> float:
+        """计算特定产品编号列表的总运行时间"""
+        async with async_db_session() as db:
+            # 获取产品运行参数
+            product = await product_dao.get_by_model(db, product_model)
+            if not product:
+                return 0.0
+
+            # 获取这些产品编号的发运数据
+            despatchs = await despatch_dao.select_models(
+                db, identifier__in=product_numbers, repair_level__eq="新造"
+            )
+
+            if not despatchs:
+                return 0.0
+
+            # 计算总运行时间
+            now = date.today()
+            total_hours = 0
+            for despatch in despatchs:
+                dispatch_date = despatch.life_cycle_time
+                if isinstance(dispatch_date, str):
+                    dispatch_date = dateutils.validate_and_parse_date(dispatch_date)
+                # 计算日期差
+                date_diff = (now - dispatch_date).days
+                hours = dateutils.run_time(
+                    date_diff, product.year_days, product.avg_worktime
+                )
+                total_hours += hours
+
+            return total_hours
+
+    @staticmethod
+    async def exponential_fit_for_insufficient_data(
+        model_part_failures: List,
+        product_model: str,
+        part_code: str,
+        time_interval_days: int,
+        input_date: date,
+    ) -> float:
+        """
+        当故障数据不足4个时，使用指数分布拟合计算备件量
+        参考 part_fit_service.py 中的 none_tag_fit 方法
+        """
+        try:
+            # 获取该型号+零部件的所有产品编号
+            product_numbers = list(set([f.product_number for f in model_part_failures]))
+
+            # 计算这些产品的总运行时间
+            total_run_time = (
+                await ScienceWarehouseService.calculate_total_run_time_for_products(
+                    product_numbers, product_model
+                )
+            )
+
+            if total_run_time == 0:
+                return 0.0
+
+            # 计算故障数量
+            failure_count = len(model_part_failures)
+
+            # 计算指数分布的lambda参数
+            if failure_count > 0:
+                # 存在故障，计算指数分布公式: λ = n / T
+                lambda_param = failure_count / total_run_time
+            else:
+                # 不存在故障，计算指数分布公式: λ = t/-ln(1/e)
+                lambda_param = -(math.log(1 / math.e)) / total_run_time
+
+            # 计算备件量（使用指数分布的CDF）
+            # 获取产品运行参数用于时间转换
+            async with async_db_session() as db:
+                product = await product_dao.get_by_model(db, product_model)
+                if not product:
+                    return 0.0
+
+                # 计算时间间隔的运行时间
+                start_date = input_date
+                end_date = input_date + timedelta(days=time_interval_days)
+
+                # 转换为运行时间
+                start_run_time = 0  # 从当前时间开始
+                end_run_time = (
+                    time_interval_days * product.year_days * product.avg_worktime / 365
+                )
+
+                # 计算指数分布的CDF差值
+                # P(X <= end) - P(X <= start)
+                cdf_end = 1 - math.exp(-lambda_param * end_run_time)
+                cdf_start = 1 - math.exp(-lambda_param * start_run_time)
+                spare_quantity = cdf_end - cdf_start
+
+                return max(0.0, spare_quantity)
+
+        except Exception as e:
+            return 0.0
 
     @staticmethod
     async def get_failures_by_product_number(product_number: str) -> List:
@@ -886,6 +1115,28 @@ class ScienceWarehouseService:
                 ScienceWarehouseStatistics,
             )
 
+            # 简化的统计信息，只保留核心数据
+            simplified_statistics = {
+                "total_warehouse_spares": statistics["total_warehouse_spares"],
+                "calculated_spares": statistics["calculated_spares"],
+                "default_spares": statistics["default_spares"],
+                "insufficient_failure_data_spares": statistics.get(
+                    "insufficient_failure_data_spares", 0
+                ),
+                "skipped_failures_count": len(statistics.get("skipped_failures", [])),
+                "mapping_errors_count": len(statistics.get("mapping_errors", [])),
+                "calculation_period": {
+                    "time_interval_days": time_interval_days,
+                    "input_date": input_date.isoformat() if input_date else None,
+                },
+                "performance_metrics": {
+                    "total_warehouses": len(
+                        statistics.get("maintenance_responsibility_analysis", {})
+                    ),
+                    "calculation_timestamp": date.today().isoformat(),
+                },
+            }
+
             statistics_data = {
                 "calculation_id": calculation_id,
                 "total_warehouse_spares": statistics["total_warehouse_spares"],
@@ -895,7 +1146,9 @@ class ScienceWarehouseService:
                 "mapping_errors_count": len(statistics.get("mapping_errors", [])),
                 "time_interval_days": time_interval_days,
                 "input_date": input_date,
-                "calculation_summary": json.dumps(statistics, ensure_ascii=False),
+                "calculation_summary": json.dumps(
+                    simplified_statistics, ensure_ascii=False
+                ),
                 "created_time": date.today(),
             }
 
@@ -934,8 +1187,8 @@ class ScienceWarehouseService:
             for spare_part_code, spare_info in spare_parts.items():
                 # 根据你的API格式要求
                 api_item = {
-                    "factor": warehouse_code,  # 库房编码作为factor
-                    "code": spare_part_code,  # 备品编码作为code
+                    "factor": "G002",  # 工厂编码固定为G002
+                    "code": warehouse_code,  # 库房编码作为code
                     "warehouse": warehouse_name
                     or warehouse_code,  # 库房名称，如果没有则使用编码
                     "part": spare_part_code,  # 备品编码作为part
@@ -1039,6 +1292,201 @@ class ScienceWarehouseService:
             # 转换为API格式
             api_data = await ScienceWarehouseService.convert_to_api_format(results_dict)
             return api_data
+
+    @staticmethod
+    async def get_latest_calculation_results() -> List[Dict[str, Any]]:
+        """
+        获取最新一批次的计算结果，用于前端展示
+
+        :return: 最新批次的计算结果列表
+        """
+        async with async_db_session() as db:
+            # 1. 获取最新的统计记录（按自增ID倒序，确保唯一性）
+            latest_statistics = await science_warehouse_statistics_dao.select_model(
+                db, order_by="id", desc=True
+            )
+
+            if not latest_statistics:
+                return []
+
+            # 2. 根据最新统计记录的calculation_id获取结果数据
+            return await ScienceWarehouseService.get_calculation_results_for_api(
+                latest_statistics.calculation_id
+            )
+
+    @staticmethod
+    async def get_latest_calculation_results_detailed() -> List[Dict[str, Any]]:
+        """
+        获取最新一批次的详细计算结果，包含更多字段信息
+
+        :return: 最新批次的详细计算结果列表
+        """
+        async with async_db_session() as db:
+            # 1. 获取最新的统计记录（按自增ID倒序，确保唯一性）
+            latest_statistics = await science_warehouse_statistics_dao.select_model(
+                db, order_by="id", desc=True
+            )
+
+            if not latest_statistics:
+                return []
+
+            # 2. 获取详细的结果数据
+            results = await science_warehouse_result_dao.select_models(
+                db, calculation_id__eq=latest_statistics.calculation_id
+            )
+
+            if not results:
+                return []
+
+            # 3. 转换为详细格式
+            detailed_results = []
+            for result in results:
+                detailed_item = {
+                    "calculation_id": result.calculation_id,
+                    "warehouse_code": result.warehouse_code,
+                    "warehouse_name": result.warehouse_name,
+                    "spare_part_code": result.spare_part_code,
+                    "spare_part_name": result.spare_part_name,
+                    "required_quantity": result.required_quantity,
+                    "calculation_method": result.calculation_method,
+                    "confidence": result.confidence,
+                    "time_interval_days": result.time_interval_days,
+                    "input_date": (
+                        result.input_date.isoformat() if result.input_date else None
+                    ),
+                    "created_time": (
+                        result.created_time.isoformat() if result.created_time else None
+                    ),
+                    "coverage_info": (
+                        json.loads(result.coverage_info) if result.coverage_info else {}
+                    ),
+                    "maintenance_analysis": (
+                        json.loads(result.maintenance_analysis)
+                        if result.maintenance_analysis
+                        else {}
+                    ),
+                    "calculation_details": (
+                        json.loads(result.calculation_details)
+                        if result.calculation_details
+                        else {}
+                    ),
+                }
+                detailed_results.append(detailed_item)
+
+            return detailed_results
+
+    @staticmethod
+    async def get_select(
+        calculation_id: Optional[str] = None,
+        warehouse_code: Optional[str] = None,
+        warehouse_name: Optional[str] = None,
+        spare_part_code: Optional[str] = None,
+        spare_part_name: Optional[str] = None,
+        calculation_method: Optional[str] = None,
+    ):
+        """
+        获取科学库存计算结果的查询条件
+
+        :param calculation_id: 计算批次ID
+        :param warehouse_code: 库房编码
+        :param warehouse_name: 库房名称
+        :param spare_part_code: 备品编码
+        :param spare_part_name: 备品名称
+        :param calculation_method: 计算方法
+        :return: 查询条件
+        """
+        from sqlalchemy import and_, or_, select
+        from backend.app.calcu.model.science_warehouse_result import (
+            ScienceWarehouseResult,
+        )
+
+        conditions = []
+
+        if calculation_id:
+            conditions.append(
+                ScienceWarehouseResult.calculation_id.like(f"%{calculation_id}%")
+            )
+
+        if warehouse_code:
+            conditions.append(
+                ScienceWarehouseResult.warehouse_code.like(f"%{warehouse_code}%")
+            )
+
+        if warehouse_name:
+            conditions.append(
+                ScienceWarehouseResult.warehouse_name.like(f"%{warehouse_name}%")
+            )
+
+        if spare_part_code:
+            conditions.append(
+                ScienceWarehouseResult.spare_part_code.like(f"%{spare_part_code}%")
+            )
+
+        if spare_part_name:
+            conditions.append(
+                ScienceWarehouseResult.spare_part_name.like(f"%{spare_part_name}%")
+            )
+
+        if calculation_method:
+            conditions.append(
+                ScienceWarehouseResult.calculation_method.like(
+                    f"%{calculation_method}%"
+                )
+            )
+
+        # 如果没有条件，返回所有记录
+        if not conditions:
+            return select(ScienceWarehouseResult).order_by(
+                ScienceWarehouseResult.id.desc()
+            )
+
+        return (
+            select(ScienceWarehouseResult)
+            .where(and_(*conditions))
+            .order_by(ScienceWarehouseResult.id.desc())
+        )
+
+    @staticmethod
+    async def get_latest_calculation_statistics() -> Dict[str, Any]:
+        """
+        获取最新一批次的统计信息
+
+        :return: 最新批次的统计信息
+        """
+        async with async_db_session() as db:
+            # 获取最新的统计记录（按自增ID倒序，确保唯一性）
+            latest_statistics = await science_warehouse_statistics_dao.select_model(
+                db, order_by="id", desc=True
+            )
+
+            if not latest_statistics:
+                return {}
+
+            # 返回统计信息
+            return {
+                "calculation_id": latest_statistics.calculation_id,
+                "total_warehouse_spares": latest_statistics.total_warehouse_spares,
+                "calculated_spares": latest_statistics.calculated_spares,
+                "default_spares": latest_statistics.default_spares,
+                "skipped_failures_count": latest_statistics.skipped_failures_count,
+                "mapping_errors_count": latest_statistics.mapping_errors_count,
+                "time_interval_days": latest_statistics.time_interval_days,
+                "input_date": (
+                    latest_statistics.input_date.isoformat()
+                    if latest_statistics.input_date
+                    else None
+                ),
+                "created_time": (
+                    latest_statistics.created_time.isoformat()
+                    if latest_statistics.created_time
+                    else None
+                ),
+                "calculation_summary": (
+                    json.loads(latest_statistics.calculation_summary)
+                    if latest_statistics.calculation_summary
+                    else {}
+                ),
+            }
 
 
 science_warehouse_service: ScienceWarehouseService = ScienceWarehouseService()
