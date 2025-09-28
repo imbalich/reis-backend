@@ -9,6 +9,7 @@ from backend.app.fit.api.router import v1 as fit_v1
 from backend.app.sense.api.router import v1 as sense_v1
 from backend.app.task.api.router import v1 as task_v1
 from backend.app.rbd.api.router import v1 as rbd_v1
+from backend.app.rcm.api.router import v1 as rcm_v1
 
 router = APIRouter()
 
@@ -19,3 +20,4 @@ router.include_router(fit_v1)
 router.include_router(calcu_v1)
 router.include_router(sense_v1)
 router.include_router(rbd_v1)
+router.include_router(rcm_v1)

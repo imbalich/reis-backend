@@ -4,16 +4,23 @@
 科学库存计算API接口
 """
 
-from fastapi import APIRouter, HTTPException
+from typing import List, Dict, Any, Annotated
+from fastapi import APIRouter, HTTPException, Query
 
 from backend.app.calcu.schema.science_warehouse import (
     ScienceWarehouseRequest,
     ScienceWarehouseCalculationResponse,
     ScienceWarehouseApiResponse,
     ScienceWarehouseDetailsResponse,
+    ScienceWarehouseResultItem,
+    ScienceWarehouseListDetails,
 )
 from backend.app.calcu.service.science_warehouse_service import (
     science_warehouse_service,
+)
+from backend.app.task.tasks.science_warehouse_task.tasks import (
+    science_warehouse_calculation_task,
+    science_warehouse_calculation_and_api_task,
 )
 from backend.common.response.response_schema import (
     ResponseModel,
@@ -21,53 +28,57 @@ from backend.common.response.response_schema import (
     response_base,
     CustomResponse,
 )
+from backend.common.pagination import DependsPagination, PageData, paging_data
+from backend.database.db import CurrentSession
 
 router = APIRouter()
 
 
-@router.post("/calculate", summary="科学库存需求计算")
+@router.post("/calculate", summary="科学库存需求计算-->后台任务执行")
 async def calculate_science_warehouse_requirements(
     request: ScienceWarehouseRequest,
-) -> ResponseSchemaModel[ScienceWarehouseCalculationResponse]:
+) -> ResponseModel:
     """
-    执行科学库存需求计算
+    提交科学库存需求计算任务到后台执行
 
     :param request: 计算请求参数
-    :return: 计算结果（包含计算批次ID）
+    :return: 任务提交结果（包含任务ID）
     """
     try:
-        # 执行计算并保存到数据库
-        result = (
-            await science_warehouse_service.calculate_science_warehouse_requirements(
-                time_interval_days=request.time_interval_days,
-                input_date=request.input_date,
-            )
+        # 提交后台任务
+        task = science_warehouse_calculation_task.delay(
+            time_interval_days=request.time_interval_days,
+            input_date=request.input_date.isoformat() if request.input_date else None,
         )
 
-        return response_base.success(data=result)
+        return response_base.success(
+            data={
+                "task_id": task.id,
+                "task_name": science_warehouse_calculation_task.name,
+                "message": "科学库存计算任务已提交到后台执行",
+            }
+        )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"计算失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"任务提交失败: {str(e)}")
 
 
 @router.get("/results/{calculation_id}/api", summary="获取API格式计算结果")
 async def get_calculation_results_for_api(
     calculation_id: str,
-) -> ResponseSchemaModel[ScienceWarehouseApiResponse]:
+) -> ResponseSchemaModel[List[ScienceWarehouseResultItem]]:
     """
     根据计算批次ID获取API格式的计算结果
 
     :param calculation_id: 计算批次ID
-    :return: API格式的计算结果
+    :return: API格式的计算结果列表
     """
     try:
         api_data = await science_warehouse_service.get_calculation_results_for_api(
             calculation_id
         )
 
-        response_data = ScienceWarehouseApiResponse(data=api_data)
-
-        return response_base.success(data=response_data)
+        return response_base.success(data=api_data)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取结果失败: {str(e)}")
@@ -94,33 +105,90 @@ async def get_calculation_details(
         raise HTTPException(status_code=500, detail=f"获取详细结果失败: {str(e)}")
 
 
-@router.post("/calculate-and-get-api", summary="计算并直接返回API格式结果")
-async def calculate_and_get_api_results(
-    request: ScienceWarehouseRequest,
-) -> ResponseSchemaModel[ScienceWarehouseApiResponse]:
+@router.get("/latest-results", summary="获取最新批次计算结果")
+async def get_latest_calculation_results() -> (
+    ResponseSchemaModel[List[ScienceWarehouseResultItem]]
+):
     """
-    执行计算并直接返回API格式结果（一次性调用）
+    获取最新一批次的计算结果，用于前端展示
 
-    :param request: 计算请求参数
-    :return: API格式的计算结果
+    :return: 最新批次的计算结果列表
     """
     try:
-        # 1. 执行计算
-        result = (
-            await science_warehouse_service.calculate_science_warehouse_requirements(
-                time_interval_days=request.time_interval_days,
-                input_date=request.input_date,
-            )
-        )
-
-        # 2. 获取API格式数据
-        api_data = await science_warehouse_service.get_calculation_results_for_api(
-            result.calculation_id
-        )
-
-        response_data = ScienceWarehouseApiResponse(data=api_data)
-
-        return response_base.success(data=response_data)
-
+        api_data = await science_warehouse_service.get_latest_calculation_results()
+        return response_base.success(data=api_data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"计算失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取最新结果失败: {str(e)}")
+
+
+@router.get("/latest-results-detailed", summary="获取最新批次详细计算结果")
+async def get_latest_calculation_results_detailed() -> (
+    ResponseSchemaModel[List[Dict[str, Any]]]
+):
+    """
+    获取最新一批次的详细计算结果，包含更多字段信息
+
+    :return: 最新批次的详细计算结果列表
+    """
+    try:
+        detailed_data = (
+            await science_warehouse_service.get_latest_calculation_results_detailed()
+        )
+        return response_base.success(data=detailed_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取最新详细结果失败: {str(e)}")
+
+
+@router.get("/latest-statistics", summary="获取最新批次统计信息")
+async def get_latest_calculation_statistics() -> ResponseSchemaModel[Dict[str, Any]]:
+    """
+    获取最新一批次的统计信息
+
+    :return: 最新批次的统计信息
+    """
+    try:
+        statistics = await science_warehouse_service.get_latest_calculation_statistics()
+        return response_base.success(data=statistics)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取最新统计信息失败: {str(e)}")
+
+
+@router.get(
+    "/list", summary="分页获取科学库存计算结果", dependencies=[DependsPagination]
+)
+async def get_pagination_science_warehouse_results(
+    db: CurrentSession,
+    calculation_id: Annotated[str | None, Query()] = None,
+    warehouse_code: Annotated[str | None, Query()] = None,
+    warehouse_name: Annotated[str | None, Query()] = None,
+    spare_part_code: Annotated[str | None, Query()] = None,
+    spare_part_name: Annotated[str | None, Query()] = None,
+    calculation_method: Annotated[str | None, Query()] = None,
+) -> ResponseSchemaModel[PageData[ScienceWarehouseListDetails]]:
+    """
+    分页获取科学库存计算结果列表
+
+    :param db: 数据库会话
+    :param calculation_id: 计算批次ID
+    :param warehouse_code: 库房编码
+    :param warehouse_name: 库房名称
+    :param spare_part_code: 备品编码
+    :param spare_part_name: 备品名称
+    :param calculation_method: 计算方法
+    :return: 分页的科学库存计算结果列表
+    """
+    try:
+        science_warehouse_select = await science_warehouse_service.get_select(
+            calculation_id=calculation_id,
+            warehouse_code=warehouse_code,
+            warehouse_name=warehouse_name,
+            spare_part_code=spare_part_code,
+            spare_part_name=spare_part_name,
+            calculation_method=calculation_method,
+        )
+        page_data = await paging_data(db, science_warehouse_select)
+        return response_base.success(data=page_data)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"获取科学库存结果列表失败: {str(e)}"
+        )

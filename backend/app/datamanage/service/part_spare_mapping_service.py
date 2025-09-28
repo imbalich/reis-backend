@@ -44,13 +44,10 @@ class PartSpareMappingService:
 
             required_columns = [
                 "产品型号",
-                "派生码",
                 "零部件名称（原装）",
                 "零部件物料编码（原装）",
                 "零部件名称（备品）",
                 "零部件物料编码（备品）",
-                "创建人",
-                "更新时间",
             ]
 
             missing_columns = [col for col in required_columns if col not in df.columns]
@@ -72,7 +69,6 @@ class PartSpareMappingService:
                     # 验证必填字段
                     if (
                         pd.isna(row["产品型号"])
-                        or pd.isna(row["派生码"])
                         or pd.isna(row["零部件名称（原装）"])
                         or pd.isna(row["零部件物料编码（原装）"])
                         or pd.isna(row["零部件名称（备品）"])
@@ -80,13 +76,17 @@ class PartSpareMappingService:
                     ):
                         failed_count += 1
                         errors.append(
-                            f"第{index+2}行: 产品型号、派生码、零部件名称和编码为必填项"
+                            f"第{index+2}行: 产品型号、零部件名称和编码为必填项"
                         )
                         continue
 
                     # 数据转换和验证
                     product_model = str(row["产品型号"]).strip()
-                    derived_code = str(row["派生码"]).strip()
+                    derived_code = (
+                        str(row["派生码"]).strip()
+                        if not pd.isna(row["派生码"])
+                        else None
+                    )
                     original_part_name = str(row["零部件名称（原装）"]).strip()
                     original_part_code = str(row["零部件物料编码（原装）"]).strip()
                     spare_part_name = str(row["零部件名称（备品）"]).strip()

@@ -58,8 +58,8 @@ async def import_warehouse_inventory_excel(
 
     Excel格式要求：
     - Sheet名称：配置表
-    - 列名：库房编号、库房名称、零部件物料编码、零部件名称、默认数量、创建人、更新时间
-    - 库房编号、零部件物料编码为必填项
+    - 列名：库房编号、库房名称、零部件物料编码（备品）、零部件名称、默认数量、创建人、更新时间
+    - 库房编号、零部件物料编码（备品）为必填项
     """
     if not file.filename.endswith((".xlsx", ".xls")):
         return response_base.fail(
