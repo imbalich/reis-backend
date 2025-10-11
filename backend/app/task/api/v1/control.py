@@ -29,7 +29,7 @@ async def get_task_registered() -> ResponseSchemaModel[list[TaskRegisteredDetail
             task_ins = celery_app_tasks.get(task)
             if task_ins:
                 task_doc = task_ins.__doc__
-                task_registered.append({'name': task_doc or task_ins, 'task': task_ins})
+                task_registered.append({'name': task_doc or task, 'task': task})
             else:
                 task_registered.append({'name': task, 'task': task})
     return response_base.success(data=task_registered)

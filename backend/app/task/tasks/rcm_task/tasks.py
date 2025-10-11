@@ -16,6 +16,7 @@ from backend.common.log import log
 @celery_app.task(name="rcm_batch_calculation_task", base=TaskBase)
 async def rcm_batch_calculation_task() -> str:
     """
+    RCM
     后台任务:RCM批量计算
 
     计算所有RCM基础数据并保存结果到数据库

@@ -43,7 +43,7 @@ class GetDespatchParam(SchemaBase):
     identifier: str = Field(..., description='产品编号')
     repair_level: str = Field(..., description='修理级别')
     life_cycle_time: date = Field(..., description='出厂日期')
-    repair_level_num: int = Field(..., description='修级序号')
+    repair_level_num: Optional[int] = Field(None, description='修级序号')
 
 
 class GetDespatchDetails(GetDespatchParam):

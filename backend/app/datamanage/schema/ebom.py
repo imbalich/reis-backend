@@ -38,10 +38,10 @@ class CreateEbomParam(EbomSchemaBase):
 class GetEbomParam(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(..., description='主键id')
-    partid: str = Field(..., description='父节点')
-    level1: int = Field(..., description='层级序号')
-    prd_no: str = Field(..., description='产品型号')
+    id: str = Field(..., description='主键id')  # 主键保持必填
+    partid: Optional[str] = Field(None, description='父节点')  # 改为可选（顶层节点没有父节点）
+    level1: Optional[str] = Field(None, description='层级序号')  # 改为可选 + str类型
+    prd_no: Optional[str] = Field(None, description='产品型号')  # 改为可选
 
 
 class GetEbomDetails(GetEbomParam):

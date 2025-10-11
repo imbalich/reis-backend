@@ -29,19 +29,19 @@ LOCAL_BEAT_SCHEDULE = {
         'schedule': TzAwareCrontab('0', '0', day_of_month='15'),
     },
     '产品级全量拟合': {
-        'task': 'app.task.tasks.fit_task.tasks.product_fit_all_task',
+        'task': 'backend.app.task.tasks.fit_task.tasks.product_fit_all_task',
         'schedule': TzAwareCrontab('0', '0', day_of_month='1'),
     },
     '部件级全量拟合': {
-        'task': 'app.task.tasks.fit_task.tasks.part_fit_all_task',
+        'task': 'backend.app.task.tasks.fit_task.tasks.part_fit_all_task',
         'schedule': TzAwareCrontab('0', '0', day_of_month='1'),
     },
     '清理等寿命设计结果': {
-        'task': 'app.task.tasks.lifetime_task.tasks.delete_equal_lifetime',
+        'task': 'backend.app.task.tasks.lifetime_task.tasks.delete_equal_lifetime',
         'schedule': TzAwareCrontab('0', '0', day_of_month='2'),
     },
     '等寿命设计全量拟合': {
-        'task': 'app.task.tasks.lifetime_task.tasks.equal_lifetime_all_task',
+        'task': 'backend.app.task.tasks.lifetime_task.tasks.equal_lifetime_all_task',
         'schedule': TzAwareCrontab('0', '0', day_of_month='3'),
     },
 }

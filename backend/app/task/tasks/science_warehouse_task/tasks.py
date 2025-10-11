@@ -19,6 +19,7 @@ async def science_warehouse_calculation_task(
     time_interval_days: int = 180, input_date: str = None
 ) -> str:
     """
+    Science Warehouse
     后台任务:科学库存需求计算
 
     :param time_interval_days: 需求预测时间间隔（天数）,默认180天

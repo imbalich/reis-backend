@@ -30,6 +30,7 @@ async def product_fit_task(
     model: str, input_date: str, method: FitMethodType = FitMethodType.MLE
 ) -> str:
     """
+    Fitting
     后台任务:手动触发
     单型号产品级别拟合任务
 
@@ -54,6 +55,7 @@ async def part_fit_task(
     model: str, part: str, input_date: str, method: FitMethodType = FitMethodType.MLE
 ) -> str:
     """
+    Fitting
     后台任务:手动触发
     单零部件级别拟合任务
 
@@ -80,7 +82,12 @@ async def product_fit_all_task(
     input_date: str | None = None, method: FitMethodType = FitMethodType.MLE
 ) -> str:
     """
+    Fitting
     后台任务:手动触发/自动执行
+    全型号产品级别拟合任务
+    
+    :param input_date: 输入日期 YYYY-MM-DD
+    :param method: 拟合方法
     :return:
     """
     start_time = time.time()
@@ -132,7 +139,12 @@ async def part_fit_all_task(
     input_date: str | None = None, method: FitMethodType = FitMethodType.MLE
 ) -> str:
     """
+    Fitting
     后台任务:手动触发/自动执行
+    全型号零部件级别拟合任务
+    
+    :param input_date: 输入日期 YYYY-MM-DD
+    :param method: 拟合方法
     :return:
     """
     start_time = time.time()

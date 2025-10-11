@@ -57,7 +57,14 @@ async def equal_lifetime_all_task(
     step_end: float,
 ) -> str:
     """
+    equal_lifetime
     后台任务:手动触发/自动执行
+    
+    全型号等寿命设计任务
+
+    :param target_sf: 目标Failure_rate
+    :param step_start: 步长开始
+    :param step_end: 步长结束
     :return:
     """
     start_time = time.time()
@@ -128,6 +135,11 @@ async def equal_lifetime_all_task(
 
 @celery_app.task()
 async def delete_equal_lifetime() -> str:
-    """自动删除数据库登录日志"""
+    """
+    equal_lifetime
+    后台任务:自动触发/定时触发
+    
+    自动删除等寿命设计数据库
+    """
     await equal_lifetime_service.delete_all_equal_lifetime()
     return 'Success'

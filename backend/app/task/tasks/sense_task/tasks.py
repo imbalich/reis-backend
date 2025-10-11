@@ -21,7 +21,9 @@ async def sense_sort_task(model: str, part: str, stage: str,process_name: str,
                                    check_project: str, check_bezier: str,  start_time: str,
                                    end_time: str,extra_material_names: List[str]) -> str:
     """
+    sense_sort
     后台任务:手动触发
+    
     单零部件级别敏感度分析任务
 
     :param model: 产品型号
