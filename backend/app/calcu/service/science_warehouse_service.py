@@ -682,7 +682,7 @@ class ScienceWarehouseService:
 
             return {
                 "success": True,
-                "quantity": math.ceil(total_requirement),  # 先相加再取整
+                "quantity": max(1, math.ceil(total_requirement)),  # 向上取整且最小为1
                 "confidence": 0.8,
                 "calculation_details": calculation_details,
                 "maintenance_analysis": {
@@ -1383,6 +1383,7 @@ class ScienceWarehouseService:
         spare_part_code: Optional[str] = None,
         spare_part_name: Optional[str] = None,
         calculation_method: Optional[str] = None,
+        time_range: Optional[list[str]] = None,
     ):
         """
         获取科学库存计算结果的查询条件
@@ -1393,6 +1394,7 @@ class ScienceWarehouseService:
         :param spare_part_code: 备品编码
         :param spare_part_name: 备品名称
         :param calculation_method: 计算方法
+        :param time_range: 创建时间范围 [开始日期, 结束日期]
         :return: 查询条件
         """
         from sqlalchemy import and_, or_, select
@@ -1431,6 +1433,13 @@ class ScienceWarehouseService:
             conditions.append(
                 ScienceWarehouseResult.calculation_method.like(
                     f"%{calculation_method}%"
+                )
+            )
+
+        if time_range:
+            conditions.append(
+                ScienceWarehouseResult.created_time.between(
+                    time_range[0], time_range[1]
                 )
             )
 

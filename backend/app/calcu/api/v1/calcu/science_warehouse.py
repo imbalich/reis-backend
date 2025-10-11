@@ -164,6 +164,7 @@ async def get_pagination_science_warehouse_results(
     spare_part_code: Annotated[str | None, Query()] = None,
     spare_part_name: Annotated[str | None, Query()] = None,
     calculation_method: Annotated[str | None, Query()] = None,
+    time_range: Annotated[list[str] | None, Query()] = None,
 ) -> ResponseSchemaModel[PageData[ScienceWarehouseListDetails]]:
     """
     分页获取科学库存计算结果列表
@@ -175,6 +176,7 @@ async def get_pagination_science_warehouse_results(
     :param spare_part_code: 备品编码
     :param spare_part_name: 备品名称
     :param calculation_method: 计算方法
+    :param time_range: 创建时间范围 [开始日期, 结束日期]
     :return: 分页的科学库存计算结果列表
     """
     try:
@@ -185,6 +187,7 @@ async def get_pagination_science_warehouse_results(
             spare_part_code=spare_part_code,
             spare_part_name=spare_part_name,
             calculation_method=calculation_method,
+            time_range=time_range,
         )
         page_data = await paging_data(db, science_warehouse_select)
         return response_base.success(data=page_data)

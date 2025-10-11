@@ -15269,3 +15269,14 @@ UnboundLocalError: cannot access local variable 'task_doc' where it is not assoc
 2025-10-11 10:22:14,468 - _granian.workers - INFO - Started worker-1 runtime-1
 2025-10-11 10:24:24,400 - _granian.workers - INFO - Stopping worker-1
 2025-10-11 10:24:24,442 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2025-10-11 15:15:28,615 - _granian.workers - INFO - Started worker-1
+2025-10-11 15:15:28,636 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-10-11 17:08:11,149 - _granian.workers - INFO - Started worker-1
+2025-10-11 17:08:11,149 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-10-11 17:08:22,585 - kombu.transport.virtual.base - WARNING - Requeuing undeliverable message for queue 'bb2baa81-9446-34d7-b84b-d434a5d9bfd7.reply.celery.pidbox': No consumers.
+2025-10-11 17:24:41,009 - _granian.workers - INFO - Started worker-1
+2025-10-11 17:24:41,010 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-10-11 17:24:55,254 - _granian.workers - INFO - Started worker-1
+2025-10-11 17:24:55,255 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-10-11 17:25:29,412 - _granian.workers - INFO - Started worker-1
+2025-10-11 17:25:29,413 - _granian.workers - INFO - Started worker-1 runtime-1
