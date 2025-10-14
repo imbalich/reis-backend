@@ -10,6 +10,7 @@ from backend.app.rbd.schema.projects import (
     CreateProjectsParam,
     DeleteProjectsParam,
     GetProjectsDetail,
+    UpdateProjectBasicInfoParam,
     UpdateProjectsParam,
 )
 from backend.app.rbd.service.projects_service import projects_service
@@ -94,6 +95,25 @@ async def update_project(
     obj: UpdateProjectsParam
 ) -> ResponseModel:  # 这里不需要指定data类型，因为ResponseModel不包含data字段
     count = await projects_service.update(pk=pk, obj=obj)
+    if count > 0:
+        return response_base.success()
+    return response_base.fail()
+
+
+@router.put(
+    '/{pk}/basic-info',
+    summary='更新项目基本信息',
+    dependencies=[
+        Depends(RequestPermission('rbd:project:edit')),
+        DependsRBAC,
+    ],
+)
+async def update_project_basic_info(
+    pk: Annotated[str, Path(description='项目 ID')], 
+    obj: UpdateProjectBasicInfoParam
+) -> ResponseModel:
+    """更新项目基本信息 - 只修改名称、描述、型号、任务类型，不涉及图形数据"""
+    count = await projects_service.update_basic_info(pk=pk, obj=obj)
     if count > 0:
         return response_base.success()
     return response_base.fail()

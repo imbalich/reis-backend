@@ -35,6 +35,14 @@ class UpdateProjectsParam(ProjectsSchemaBase):
     """更新项目参数"""
 
 
+class UpdateProjectBasicInfoParam(SchemaBase):
+    """更新项目基本信息参数（不包含图形数据）"""
+    
+    name: str | None = Field(None, description='项目名称')
+    description: str | None = Field(None, description='项目描述')
+    model: str | None = Field(None, description='产品型号')
+    task_type: str | None = Field(None, description='任务类型')
+
 class DeleteProjectsParam(SchemaBase):
     """删除项目参数"""
 
