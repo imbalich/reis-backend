@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 设置中文字体支持
-plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
 
 class PlotLifetimeService:
