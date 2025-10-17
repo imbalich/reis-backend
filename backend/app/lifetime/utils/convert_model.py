@@ -16,7 +16,8 @@ def convert_to_euqal_lifetime_params(
     parts: list[str],
     target_sf: float,
     step_start: float, 
-    step_end: float
+    step_end: float,
+    is_all_parts: bool = False
 ) -> List[CreateEqualLifetimeParam]:
     """
     将等寿命点优化结果转换为数据库存储参数，只存储优化后的参数
@@ -31,6 +32,7 @@ def convert_to_euqal_lifetime_params(
             group_id = group_id,
             model=model,
             parts=json.dumps(all_parts),
+            is_all_parts=is_all_parts,
             step_start=float(step_start),
             step_end=float(step_end),
             time_point=float(time_point),

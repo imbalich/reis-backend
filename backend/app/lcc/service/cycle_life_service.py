@@ -57,7 +57,7 @@ class CycleLifeService:
     
     @staticmethod
     async def get_fault_number_by_part(model,part,time) -> float:
-        # 计算FPMH值:pdf函数中t位置的y值
+        # 计算故障次数
         best_distribution = await reliability_index_service._get_best_distribution(model, part)
         if best_distribution is None:
             raise errors.DataValidationError(msg=f'型号{model}+部件{part}的无故障数据，因此分布信息不存在')

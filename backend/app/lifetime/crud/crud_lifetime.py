@@ -35,7 +35,8 @@ class CRUDEqualLifetime(CRUDPlus[EqualLifetime]):
             model: str,
             target_sf: float,
             step_start: float,
-            step_end: float
+            step_end: float,
+            is_all_parts: bool = False
             ):
         """
         根据产品型号获取等寿命点优化结果
@@ -47,6 +48,7 @@ class CRUDEqualLifetime(CRUDPlus[EqualLifetime]):
         stmt = select(self.model).order_by(desc(self.model.created_time))
         where_list = []
         where_list.append(self.model.model == model)
+        where_list.append(self.model.is_all_parts == is_all_parts)
         where_list.append(self.model.target_sf.between(target_sf-1e-6, target_sf+1e-6))
         where_list.append(self.model.step_start.between(step_start-1e-6, step_start+1e-6))
         where_list.append(self.model.step_end.between(step_end-1e-6, step_end+1e-6))

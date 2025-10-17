@@ -22,101 +22,201 @@ class FindPointService:
               parts = await fit_part_dao.get_by_model(db, model)
               return parts
 
-    @staticmethod
-    async def find_equal_lifetime_point(model:str,parts:list[str],step_start:float,step_end:float):
-        """
-        通过滑动窗口法寻找等寿点
-        """
-        # 1、获取所有零部件
-        if parts is None or len(parts) == 0:
-            parts = await FindPointService.get_part_by_model(model)
-        sf_list = []
+    # @staticmethod
+    # async def find_equal_lifetime_point(model:str,parts:list[str],step_start:float,step_end:float):
+    #     """
+    #     通过滑动窗口法寻找等寿点
+    #     """
+    #     # 1、获取所有零部件
+    #     if parts is None or len(parts) == 0:
+    #         parts = await FindPointService.get_part_by_model(model)
+    #     sf_list = []
 
-        # 2、获取所有零部件的分布
+    #     # 2、获取所有零部件的分布
+    #     year_worktimes = await cycle_life_service.year_worktimes(model)
+    #     time_point = year_worktimes * 15
+    #     for part in parts:
+    #         best_distribution = await reliability_index_service._get_best_distribution(model, part)
+    #         x = np.linspace(0, time_point, 50000)
+    #         sf = best_distribution.SF(x)
+    #         sf_list.append(sf)
+        
+    #     # 3、执行滑动窗口
+    #     window_length = year_worktimes
+    #     step = int(window_length/10)
+    #     x_min, x_max = 1000, time_point
+    #     y_min ,y_max = step_start,step_end
+
+    #     # 初始化最佳结果
+    #     best_score = -np.inf # 负无穷大
+    #     best_window = (0, 0)
+    #     best_intersections = []
+
+    #     for x_start in range(x_min, x_max - window_length + 1, step):
+    #         x_end = x_start + window_length
+
+    #         # 提取窗口内的x和曲线数据
+    #         mask = (x >= x_start) & (x <= x_end)
+    #         x_window = x[mask]
+    #         sf_window = [sf[mask] for sf in sf_list]
+
+    #         # 检测交点
+    #         intersections = []
+    #         for i in range(len(sf_list)):
+    #             for j in range(i + 1, len(sf_list)):
+    #                 F_i = sf_window[i]
+    #                 F_j = sf_window[j]
+
+    #                 # 逐点比较，检测交叉
+    #                 for k in range(len(x_window) - 1):
+    #                     if (y_min <= F_i[k] <= y_max) and (y_min <= F_j[k] <= y_max):
+    #                         # 线性插值计算精确交点
+    #                         if (F_i[k] - F_j[k]) * (F_i[k + 1] - F_j[k + 1]) < 0:
+    #                             # 线性插值计算精确交点
+    #                             x0, x1 = x_window[k], x_window[k + 1]
+    #                             y0_i, y1_i = F_i[k], F_i[k + 1]
+    #                             y0_j, y1_j = F_j[k], F_j[k + 1]
+
+    #                             # 解方程 (y_i - y_j) = 0
+    #                             t = (y0_j - y0_i) / ((y1_i - y0_i) - (y1_j - y0_j) + 1e-9)
+    #                             x_intersect = x0 + t * (x1 - x0)
+    #                             y_intersect = y0_i + t * (y1_i - y0_i)
+    #                             intersections.append((x_intersect, y_intersect))
+
+    #         # 统计评分
+    #         num_intersections = len(intersections)
+    #         if num_intersections == 0:
+    #             continue
+
+    #         # 计算密度（单位面积交点数）
+    #         window_area = window_length * (y_max - y_min) 
+    #         density = num_intersections / window_area
+    #         score = num_intersections * density  # 自定义评分公式
+
+    #         # 更新最佳结果
+    #         if score > best_score:
+    #             best_score = score
+    #             best_window = (x_start, x_end)
+    #             best_intersections = intersections
+        
+    #     x_center = (best_window[0] + best_window[1]) / 2
+    #     y_center = (y_max+y_min)/2 
+
+    #     # 计算每个交点到中心的平方距离
+    #     min_sq_distance = np.inf
+    #     closest_point = None
+    #     for point in best_intersections:
+    #         x_p, y_p = point
+    #         sq_dist = (x_p - x_center)**2 + (y_p - y_center)**2
+    #         if sq_dist < min_sq_distance:
+    #             min_sq_distance = sq_dist
+    #             closest_point = point
+    #     return {
+    #         "parts": parts,
+    #         "equal_lifetime_t": int(closest_point[0]) if closest_point else None,
+    #         "equal_lifetime_sf": closest_point[1] if closest_point else None,
+    #         "time_point": time_point
+    #         }
+
+    @staticmethod
+    async def find_equal_lifetime_point(model: str, parts: list[str], step_start: float, step_end: float):
+        """
+        通过滑动窗口法，寻找SF曲线穿过目标SF范围 [SF_min, SF_max] 条数最多的窗口中心作为等寿命点。
+
+        :param model: 设备型号
+        :param parts: 部件列表
+        :param step_start: SF值下限 (y_min)
+        :param step_end: SF值上限 (y_max)
+        :return: 包含等寿命点信息的字典
+        """
+        y_min, y_max = step_start, step_end
+
+        # 1. 获取所有零部件和SF曲线数据
+        sf_list = []
         year_worktimes = await cycle_life_service.year_worktimes(model)
-        time_point = year_worktimes * 15
+        time_point = year_worktimes * 15 # 总时间范围
+
+        # 生成足够密集的时间点 x 轴
+        num_points = 50000
+        x = np.linspace(1000, time_point, num_points)
+        step_size = x[1] - x[0] # 每个时间点的间隔
+    
         for part in parts:
             best_distribution = await reliability_index_service._get_best_distribution(model, part)
-            x = np.linspace(0, time_point, 50000)
             sf = best_distribution.SF(x)
             sf_list.append(sf)
-        
-        # 3、执行滑动窗口
-        window_length = year_worktimes
-        step = int(window_length/10)
-        x_min, x_max = 1000, time_point
-        y_min ,y_max = step_start,step_end
+
+        sf_matrix = np.array(sf_list) 
+    
+        # 2. 定义滑动窗口参数
+        window_length = year_worktimes # 窗口长度
+    
+        # 滑动步长：使用 x 轴的固定步长（或更稀疏的步长）
+        # 为了简化计算，我们以 x 轴的索引步进，步长设为与 year_worktimes 对应的索引数 (例如 1/10)
+        window_size_idx = int(window_length / step_size) 
+        step_idx = max(1, int(window_size_idx / 10)) # 滑动步长，至少为 1
 
         # 初始化最佳结果
-        best_score = -np.inf # 负无穷大
-        best_window = (0, 0)
-        best_intersections = []
+        best_crossing_count = -1 
+        best_window_indices = (0, 0)
 
-        for x_start in range(x_min, x_max - window_length + 1, step):
-            x_end = x_start + window_length
+        # 3. 执行滑动窗口和统计
+    
+        # 预计算：哪些 SF 值在目标范围内 (部件数 x 时间点数)
+        in_range_mask = (sf_matrix >= y_min) & (sf_matrix <= y_max)
 
-            # 提取窗口内的x和曲线数据
-            mask = (x >= x_start) & (x <= x_end)
-            x_window = x[mask]
-            sf_window = [sf[mask] for sf in sf_list]
+        for start_idx in range(0, num_points - window_size_idx + 1, step_idx):
+            end_idx = start_idx + window_size_idx
 
-            # 检测交点
-            intersections = []
-            for i in range(len(sf_list)):
-                for j in range(i + 1, len(sf_list)):
-                    F_i = sf_window[i]
-                    F_j = sf_window[j]
-
-                    # 逐点比较，检测交叉
-                    for k in range(len(x_window) - 1):
-                        if (y_min <= F_i[k] <= y_max) and (y_min <= F_j[k] <= y_max):
-                            # 线性插值计算精确交点
-                            if (F_i[k] - F_j[k]) * (F_i[k + 1] - F_j[k + 1]) < 0:
-                                # 线性插值计算精确交点
-                                x0, x1 = x_window[k], x_window[k + 1]
-                                y0_i, y1_i = F_i[k], F_i[k + 1]
-                                y0_j, y1_j = F_j[k], F_j[k + 1]
-
-                                # 解方程 (y_i - y_j) = 0
-                                t = (y0_j - y0_i) / ((y1_i - y0_i) - (y1_j - y0_j) + 1e-9)
-                                x_intersect = x0 + t * (x1 - x0)
-                                y_intersect = y0_i + t * (y1_i - y0_i)
-                                intersections.append((x_intersect, y_intersect))
-
-            # 统计评分
-            num_intersections = len(intersections)
-            if num_intersections == 0:
-                continue
-
-            # 计算密度（单位面积交点数）
-            window_area = window_length * (y_max - y_min) 
-            density = num_intersections / window_area
-            score = num_intersections * density  # 自定义评分公式
+            # 提取窗口内的布尔掩码 (部件数 x window_size_idx)
+            window_mask = in_range_mask[:, start_idx:end_idx]
+        
+            # 统计每条 SF 曲线是否在窗口内至少有一个点落在 [y_min, y_max] 范围内
+            # axis=1: 检查每一行（每条SF曲线）在窗口时间范围内是否有 True
+            # crossing_parts 是一个布尔数组，形状为 (部件数,)
+            crossing_parts = np.any(window_mask, axis=1)
+        
+            # 穿过 SF 范围的部件总数
+            current_crossing_count = np.sum(crossing_parts)
 
             # 更新最佳结果
-            if score > best_score:
-                best_score = score
-                best_window = (x_start, x_end)
-                best_intersections = intersections
-        
-        x_center = (best_window[0] + best_window[1]) / 2
-        y_center = (y_max+y_min)/2 
+            if current_crossing_count > best_crossing_count:
+                best_crossing_count = current_crossing_count
+                best_window_indices = (start_idx, end_idx)
 
-        # 计算每个交点到中心的平方距离
-        min_sq_distance = np.inf
-        closest_point = None
-        for point in best_intersections:
-            x_p, y_p = point
-            sq_dist = (x_p - x_center)**2 + (y_p - y_center)**2
-            if sq_dist < min_sq_distance:
-                min_sq_distance = sq_dist
-                closest_point = point
+        # 4. 确定等寿命点
+        if best_crossing_count <= 0:
+            # 没有一条曲线在任何窗口内穿过目标SF范围
+            return {
+                "parts": parts, "equal_lifetime_t": None, "equal_lifetime_sf": None, "time_point": time_point
+            }
+
+        # 最佳窗口中心时间 t*
+        start_idx, end_idx = best_window_indices
+        center_idx = (start_idx + end_idx) // 2
+        equal_lifetime_t = x[center_idx]
+
+        # 等寿命 SF 值：计算 t* 处所有 SF 值的平均值（或中位数）
+        sf_at_best_t = sf_matrix[:, center_idx]
+    
+        # 确定哪些部件在 t* 处的 SF 值落在目标范围内，用于计算平均值
+        valid_sf_mask = (sf_at_best_t >= y_min) & (sf_at_best_t <= y_max)
+    
+        if np.sum(valid_sf_mask) > 0:
+            # 只对落在目标范围内的有效 SF 值取平均，作为等寿命 SF 值
+            equal_lifetime_sf = np.mean(sf_at_best_t[valid_sf_mask])
+        else:
+            # 如果中心点 t* 没有 SF 值落在 [y_min, y_max] 内，则取所有 SF 值的平均值
+            # 或者使用 y_min 和 y_max 的平均值作为默认值，这里取所有 SF 平均值作为 fallback
+            equal_lifetime_sf = np.mean(sf_at_best_t) 
+        
+        # 5. 返回结果
         return {
             "parts": parts,
-            "equal_lifetime_t": int(closest_point[0]) if closest_point else None,
-            "equal_lifetime_sf": closest_point[1] if closest_point else None,
+            "equal_lifetime_t": int(equal_lifetime_t),
+            "equal_lifetime_sf": float(equal_lifetime_sf),
             "time_point": time_point
-            }
+        }
 
     
 find_point_service: FindPointService = FindPointService()

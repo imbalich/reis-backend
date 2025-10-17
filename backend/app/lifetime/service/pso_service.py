@@ -47,7 +47,7 @@ class PS0Service:
                     dist = distribution_class(**param_dict)
                     sf_t = dist.SF(t)
                     if equal_lifetime_t is not None:
-                        sf_equal = dist.SF(int(equal_lifetime_t))
+                        sf_equal = dist.SF(equal_lifetime_t)
                         # 约束2：等寿命点误差
                         equal_constraint = abs(sf_equal - equal_lifetime_sf)
                     else:
@@ -57,14 +57,14 @@ class PS0Service:
                     # 约束3：超过目标值的部分（权重较低）
                     penalty_over = max(sf_t - target_sf, 0) * 0.1  # 调整权重控制过优化
                     # 总损失：可靠度不达标+等寿命点误差
-                    loss = sf_constraint + equal_constraint + penalty_over
+                    loss = sf_constraint + 500 * equal_constraint + penalty_over
                 except Exception:
                     loss = 1e6  # 参数无效时惩罚
                 fitness.append(loss)
             return np.array(fitness)
-        options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
-        optimizer = GlobalBestPSO(n_particles=8, dimensions=len(param_names), options=options, bounds=bounds)
-        best_cost, best_pos = optimizer.optimize(fitness_func, iters=30, verbose=False)
+        options = {'c1': 1.5, 'c2': 1.5, 'w': 0.75}
+        optimizer = GlobalBestPSO(n_particles=10, dimensions=len(param_names), options=options, bounds=bounds)
+        best_cost, best_pos = optimizer.optimize(fitness_func, iters=20, verbose=False)
 
         #5、构造结果
         optimized_params = {k: v for k, v in zip(param_names, best_pos)}

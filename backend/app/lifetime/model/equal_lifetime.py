@@ -9,7 +9,7 @@
 """
 from datetime import date
 
-from sqlalchemy import Date, String
+from sqlalchemy import Date, String, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import DataClassBase, id_key
@@ -34,6 +34,7 @@ class EqualLifetime(DataClassBase):
     # equal_lifetime_point: Mapped[tuple | None] = mapped_column(comment='等寿命点')
     equal_lifetime_t: Mapped[int | None] = mapped_column(comment='等寿命点t值')
     equal_lifetime_sf: Mapped[float | None] = mapped_column(comment='等寿命点SF值')
+    is_all_parts: Mapped[bool] = mapped_column(Integer, default=False, comment='是否所有零部件')
     created_time: Mapped[date] = mapped_column(
         Date, init=False, default_factory=timezone.now_date, sort_order=999, comment='创建时间'
     )
