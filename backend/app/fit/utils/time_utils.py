@@ -25,7 +25,7 @@ class DateUtils:
         :return: 计算后的运行时间（单位：小时）
         """
         if diff <= 0:
-            t = 15
+            t = 15 * day * hour / 365
         else:
             t = diff * day * hour / 365
         return round(t, 2)
