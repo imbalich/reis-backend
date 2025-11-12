@@ -28,3 +28,9 @@ async def get_cycle_life_result(
     items_list = json.loads(items)
     data = await cycle_life_service.get_cycle_life_result(items_list, life)
     return response_base.success(data=data)
+
+
+@router.get('/get_parts', summary='获取所有部件')
+async def get_cycle_life_parts(model: str):
+    result = await cycle_life_service.get_parts_by_model(model=model)
+    return response_base.success(data=result)

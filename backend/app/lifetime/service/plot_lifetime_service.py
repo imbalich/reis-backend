@@ -36,7 +36,7 @@ font_prop = fm.FontProperties(fname=font_path)
 
 class PlotLifetimeService:
     @staticmethod
-    async def plot_optimize_result(model,pso_results,t,target_sf,code_to_name,equal_lifetime_t,equal_lifetime_sf):
+    async def plot_optimize_result(model,pso_results,t,target_sf,code_to_name,equal_lifetime_t,equal_lifetime_sf,year_worktimes):
         '''绘制优化结果'''
         fig, ax = plt.subplots(figsize=(8, 6))
         x = np.linspace(0, t, 1000)
@@ -51,8 +51,8 @@ class PlotLifetimeService:
                     y = distribution.SF(x)
                     ax.plot(x, y, label=code_to_name[part])
         if equal_lifetime_t is not None:
-            ax.plot(equal_lifetime_t, equal_lifetime_sf, 'ro', markersize=4, label=f'等寿命点: (t={equal_lifetime_t}, sf={equal_lifetime_sf:.4f})')
-        ax.set_title(f"优化寿命曲线-{model}(时间截止点t0 = {t})",fontproperties=font_prop)
+            ax.plot(equal_lifetime_t, equal_lifetime_sf, 'ro', markersize=4, label=f'等寿命点: (t={round(equal_lifetime_t/year_worktimes,2)}, sf={equal_lifetime_sf:.4f})')
+        ax.set_title(f"优化寿命曲线-{model}(时间截止点t0 = {round(t/year_worktimes,2)}(年))",fontproperties=font_prop)
         ax.set_xlabel("时间", fontproperties=font_prop)
         ax.set_ylabel("SF", fontproperties=font_prop)
         ax.set_xlim(0, t)
@@ -63,7 +63,7 @@ class PlotLifetimeService:
                     
 
     @staticmethod
-    async def plot_original_result(model,parts,t,target_sf,pso_results):
+    async def plot_original_result(model,parts,t,target_sf,pso_results,year_worktimes):
         '''绘制原始结果'''
         fig, ax = plt.subplots(figsize=(8, 6))
         x = np.linspace(0, t, 1000)
@@ -71,7 +71,7 @@ class PlotLifetimeService:
             original_distribution = pso_result['original_distribution']
             y = original_distribution.SF(x)
             ax.plot(x, y)
-        ax.set_title(f"原始寿命曲线-{model}(时间截止点t0 = {int(t)})", fontproperties=font_prop)
+        ax.set_title(f"原始寿命曲线-{model}(时间截止点t0 = {round(t/year_worktimes,2)}(年))", fontproperties=font_prop)
         ax.set_xlabel("时间",fontproperties=font_prop)
         ax.set_ylabel("SF")
         ax.set_xlim(0, t)

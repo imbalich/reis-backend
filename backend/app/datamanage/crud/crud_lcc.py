@@ -81,11 +81,11 @@ class CRUDLCC(CRUDPlus[LCC]):
             part: str
     ) -> Sequence[LCC]:
         '''
-        根据产品型号和检测项点获取所有数据
+        根据产品型号和物料编码对应的第一条成本数据
         :param db: 数据库会话
         :param product_model: 产品型号
-        :param check_bezier: 检测项点
-        :return: 所有数据
+        :param check_bezier: 物料编码
+        :return: 第一条成本
         '''
         stmt = select(self.model.cost)
         where_list = []

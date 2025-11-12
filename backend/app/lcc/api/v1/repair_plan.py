@@ -35,3 +35,9 @@ async def  get_repair_plan_result(
     results = await repair_plan_service.get_repair_plan(model, parts,life,is_ai)
     return response_base.success(data=results)
 
+
+@router.get('/get_parts', summary='获取所有部件')
+async def get_repair_plan_parts(model: str):
+    result = await repair_plan_service.get_parts_by_model(model=model)
+    return response_base.success(data=result)
+

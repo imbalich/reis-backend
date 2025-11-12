@@ -41,6 +41,7 @@ class ProductFitService:
         scale_factor = 10000.0
         x_peaks = [x / scale_factor for x in peaks_time['x_peaks']]
         y_peaks = peaks_time['y_peaks']
+        year_worktimes = peaks_time['year_worktimes']
         fits = fit_functions(x_peaks, y_peaks)
         best_fit_model = await ProductFitService.get_best_fit_model(fits)
 
@@ -62,7 +63,7 @@ class ProductFitService:
         if failure_threshold is not None and failure_threshold.strip() != "":
             y_failure = float(failure_threshold)
             x_failure, failure_interval = await ProductFitService.find_failure_threshold_x(
-                x_smooth, y_smooth, y_upper_smooth, y_lower_smooth, y_failure
+                x_smooth, y_smooth, y_upper_smooth, y_lower_smooth, y_failure, year_worktimes
             )
         else:
             x_failure = None
@@ -72,7 +73,7 @@ class ProductFitService:
         if curret_value is not None:
             y_curret = float(curret_value)
             x_current, current_interval= await ProductFitService.find_failure_threshold_x(
-                x_smooth, y_smooth, y_upper_smooth, y_lower_smooth, y_curret
+                x_smooth, y_smooth, y_upper_smooth, y_lower_smooth, y_curret, year_worktimes
             )
         else:
             x_current = None
@@ -153,7 +154,7 @@ class ProductFitService:
         return best_fit
     
     @staticmethod
-    async def find_failure_threshold_x(x_smooth, y_smooth, y_upper_smooth, y_lower_smooth, failure_value):
+    async def find_failure_threshold_x(x_smooth, y_smooth, y_upper_smooth, y_lower_smooth, failure_value,year_worktimes):
         '''
         查找失效阈值对应的x值及其置信范围
         :x_smooth: 平滑的x值数组
@@ -174,29 +175,29 @@ class ProductFitService:
             # 对于递增曲线：查找第一个超过失效阈值的点
             above_threshold_indices = np.where(y_smooth >= failure_value)[0]
             if len(above_threshold_indices) > 0:
-                x_failure = int(x_smooth[above_threshold_indices[0]] * 10000)
+                x_failure = round((x_smooth[above_threshold_indices[0]] * 10000)/year_worktimes,2)
         
             above_threshold_upper_indices = np.where(y_upper_smooth >= failure_value)[0]
             if len(above_threshold_upper_indices) > 0:
-                x_failure_upper = int(x_smooth[above_threshold_upper_indices[0]] * 10000)
+                x_failure_upper = round((x_smooth[above_threshold_upper_indices[0]] * 10000)/year_worktimes,2)
         
             above_threshold_lower_indices = np.where(y_lower_smooth >= failure_value)[0]
             if len(above_threshold_lower_indices) > 0:
-                x_failure_lower = int(x_smooth[above_threshold_lower_indices[0]] * 10000)
+                x_failure_lower = round((x_smooth[above_threshold_lower_indices[0]] * 10000)/year_worktimes,2)
             failure_interval = [x_failure_upper,x_failure_lower]
         else:
             # 对于递减曲线：查找第一个低于失效阈值的点
             below_threshold_indices = np.where(y_smooth <= failure_value)[0]
             if len(below_threshold_indices) > 0:
-                x_failure = int(x_smooth[below_threshold_indices[0]] * 10000)
+                x_failure = round((x_smooth[below_threshold_indices[0]] * 10000)/year_worktimes,2)
         
             below_threshold_upper_indices = np.where(y_upper_smooth <= failure_value)[0]
             if len(below_threshold_upper_indices) > 0:
-                x_failure_upper = int(x_smooth[below_threshold_upper_indices[0]] * 10000)
+                x_failure_upper = round((x_smooth[below_threshold_upper_indices[0]] * 10000)/year_worktimes,2)
         
             below_threshold_lower_indices = np.where(y_lower_smooth <= failure_value)[0]
             if len(below_threshold_lower_indices) > 0:
-                x_failure_lower = int(x_smooth[below_threshold_lower_indices[0]] * 10000)
+                x_failure_lower = round((x_smooth[below_threshold_lower_indices[0]] * 10000)/year_worktimes,2)
             failure_interval = [x_failure_lower,x_failure_upper]
         return x_failure, failure_interval
 

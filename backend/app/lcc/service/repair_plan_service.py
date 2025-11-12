@@ -14,7 +14,10 @@ from backend.database.db import async_db_session
 from backend.app.datamanage.crud.crud_repair_interval import repair_interval_dao
 from backend.common.exception import errors
 from backend.app.datamanage.crud.crud_replace import replace_dao
+from backend.app.fit.crud.crud_fit_part import fit_part_dao
+from backend.app.datamanage.crud.crud_product import product_dao
 from backend.app.datamanage.crud.crud_ebom import ebom_dao
+from backend.common.exception.errors import DataValidationError
 from backend.app.datamanage.crud.crud_lcc import lcc_dao
 from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.datamanage.crud.crud_unqualify import unqualify_dao
@@ -148,7 +151,7 @@ class RepirPlanService:
             })
                 
         # 计算可靠性经济型一体化提升比
-        ratio = ((lcc_old_sum - lcc_new_sum) / lcc_new_sum)*100
+        ratio = ((lcc_old_sum - lcc_new_sum) / lcc_new_sum)*100 if lcc_new_sum != 0 else 0
 
         #结果输出
         return {
@@ -156,10 +159,7 @@ class RepirPlanService:
             'result':result,
             'ratio':ratio,
         }
-        
-    
-            
-            
+               
     @staticmethod
     async def get_online_repair_cost(model: str, part: str, time:float):
         """
@@ -368,8 +368,7 @@ class RepirPlanService:
         best_distribution = await reliability_index_service._get_best_distribution(model, part)
         x = np.linspace(0, time, 2000)
         y = best_distribution.PDF(x)
-        fpmh = np.max(y) * 1000000
-        
+        fpmh = np.max(y) * 1000000        
         return fpmh   
 
     @staticmethod
@@ -381,6 +380,52 @@ class RepirPlanService:
                 fpmh_index = 0.01 
             return fpmh_index
  
+
+
+    @staticmethod
+    async def get_parts_by_model(model: str):
+        """
+        获取model下所有零部件编码,用于级联查询
+        """
+        try:
+            async with async_db_session() as db:
+                # 1. 获取fit_part表中该型号的所有零部件
+                parts = await fit_part_dao.get_parts_for_lifetime_by_model(db, model)   
+
+                # 2. 创建有效零部件列表
+                valid_parts = []
+
+                # 3. 验证每个部件是否同时存在于EBOM和成本数据中
+                for part in parts:
+                    # 检查EBOM数据是否存在
+                    ebom_data = await ebom_dao.get_by_model_and_part(db, model, part)
+                    # 检查产品信息数据是否存在
+                    product_date = await product_dao.get_by_model(db, model)
+                    # 检查LCC数据
+                    lcc_data = await lcc_dao.get_by_model_and_part(db, model, part)
+                    # 检查不合格品
+                    unqualify_data = await unqualify_dao.get_by_model_and_part(db, model, part)
+                
+                    # 仅当两个数据源都存在时才保留该部件
+                    if ebom_data and product_date.year_days and product_date.avg_worktime and lcc_data and unqualify_data:
+                        valid_parts.append(part)
+                
+                 # 4、获取所有部件的故障名称和编码
+                failure_parts = await failure_dao.get_parts_with_names_only_by_model(db, model)
+
+                # 5. 创建编码到名称的映射字典
+                code_to_name = {code: name for name, code in failure_parts}
+                
+                # 6. 筛选出既有分布数据又有名称的零部件，返回二元组
+                result = []
+                for part_code in valid_parts:
+                    if part_code in code_to_name:
+                        result.append((code_to_name[part_code], part_code))
+            
+            return result
+                
+        except Exception as e:
+            raise DataValidationError(msg=f"获取所有零部件时发生错误: {str(e)}")
 
 
 

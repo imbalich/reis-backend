@@ -22,6 +22,7 @@ from backend.common.exception.errors import DataValidationError
 from backend.database.db import async_db_session
 from backend.app.calcu.schema.distribute_param import DistributeType
 from backend.app.calcu.conf import predict_settings
+from backend.app.lcc.service.cycle_life_service import cycle_life_service
 from backend.app.lifetime.utils.convert_model import (
     convert_to_euqal_lifetime_params,
 )
@@ -221,8 +222,9 @@ class EqualLifetimeService:
             code_to_name = {code: name for name, code in failure_parts}
 
             # 5. 绘制优化前后SF图
-            plot_original_result = await plot_lifetime_service.plot_original_result(model,parts,t,target_sf,pso_results)
-            plot_optimize_result = await plot_lifetime_service.plot_optimize_result(model,pso_results,t,target_sf,code_to_name,equal_lifetime_t,equal_lifetime_sf)
+            year_worktimes = await cycle_life_service.year_worktimes(model)
+            plot_original_result = await plot_lifetime_service.plot_original_result(model,parts,t,target_sf,pso_results,year_worktimes)
+            plot_optimize_result = await plot_lifetime_service.plot_optimize_result(model,pso_results,t,target_sf,code_to_name,equal_lifetime_t,equal_lifetime_sf,year_worktimes)
             
             # 6. 创建结果
             parts_results = []
