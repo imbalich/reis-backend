@@ -67,3 +67,9 @@ async def get_assgin_commpare(
         reserved_value=reserved_value
     )
     return response_base.success(data=result)
+
+
+@router.get('/get_parts', summary='获取所有部件')
+async def get_assign_parts(model: str):
+    result = await assign_service.get_parts_by_model(model=model)
+    return response_base.success(data=result)

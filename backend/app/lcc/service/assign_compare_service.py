@@ -44,6 +44,11 @@ class AssignCompareService:
         
         # 循环处理两个方案
         for i, items in enumerate(items_list):
+            # 1、判断items中的part是否为空，如果为空，则提取全量数据
+            for item in items:
+                if item['part'] is None or len(item['part']) == 0: 
+                    item['part'] = await assign_service.get_all_parts(item['model'])
+
             # 1、判断是否满足用户要求
             fpmh = await assign_service.get_fpmh_by_part(items)
             fpmh_pre = sum(fpmh) * (1 + reserved_value)
@@ -66,20 +71,33 @@ class AssignCompareService:
             
             # 5、构建详细的部件信息列表
             parts_detail = []
-            for j, item in enumerate(items):
+            j = 0
+            for item in items:
                 model = item['model']
-                part = item['part']
-                # 获取部件名称和数量
-                part_name = cm_gz_cost['part_name'][j] if 'part_name' in cm_gz_cost and j < len(cm_gz_cost['part_name']) else part
-                quantity = cm_gz_cost['quantity'][j] if 'quantity' in cm_gz_cost and j < len(cm_gz_cost['quantity']) else 1
+                parts = item['part']
+                for part in parts:       
+                    parts_detail.append({
+                        'model': model,
+                        'part': part,
+                        'part_name': cm_gz_cost['part_name'][j] if 'part_name' in cm_gz_cost and j < len(cm_gz_cost['part_name']) else part,
+                        'quantity': cm_gz_cost['quantity'][j] if 'quantity' in cm_gz_cost and j < len(cm_gz_cost['quantity']) else 1,
+                        'fpmh': round(assigned_fpmh[j],4)
+                    })
+                    j += 1
+            # for j, item in enumerate(items):
+            #     model = item['model']
+            #     part = item['part']
+            #     # 获取部件名称和数量
+            #     part_name = cm_gz_cost['part_name'][j] if 'part_name' in cm_gz_cost and j < len(cm_gz_cost['part_name']) else part
+            #     quantity = cm_gz_cost['quantity'][j] if 'quantity' in cm_gz_cost and j < len(cm_gz_cost['quantity']) else 1
                 
-                parts_detail.append({
-                    'model': model,
-                    'part': part,
-                    'part_name': part_name,
-                    'quantity': quantity,
-                    'fpmh': round(assigned_fpmh[j], 4)
-                })
+            #     parts_detail.append({
+            #         'model': model,
+            #         'part': part,
+            #         'part_name': part_name,
+            #         'quantity': quantity,
+            #         'fpmh': round(assigned_fpmh[j], 4)
+            #     })
             
             # 存储结果
             lcc_companies.append(lcc_company)

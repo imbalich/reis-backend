@@ -123,7 +123,7 @@ class CRUDFailure(CRUDPlus[Failure]):
         """
         stmt = select(self.model).order_by(desc(self.model.product_model))
         where_list = []
-        if product_model:
+        if product_model is not None:
             where_list.append(self.model.product_model == product_model)
         if fault_location is not None:
             where_list.append(self.model.fault_location == fault_location)
@@ -295,6 +295,22 @@ class CRUDFailure(CRUDPlus[Failure]):
                 self.model.product_number == product_number,
                 self.model.is_zero_distance == 0,
                 self.model.final_fault_responsibility != "用户",
+            )
+            .order_by(self.model.discovery_date)
+        )
+        result = await db.execute(stmt)
+        return result.scalars().all()
+    
+    async def get_job_loss_by_model_and_part(self, db: AsyncSession, model: str, part: str)-> Sequence[Failure]:
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.product_model == model,
+                self.model.fault_material_code == part,
+                self.model.is_zero_distance == 0,
+                self.model.loss_accounting.isnot(None),
+                self.model.loss_accounting != "/",
+                self.model.job_duration.isnot(None)
             )
             .order_by(self.model.discovery_date)
         )

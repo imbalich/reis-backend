@@ -23,6 +23,7 @@ from backend.app.fit.crud.crud_fit_part import fit_part_dao
 from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.common.exception.errors import DataValidationError
 from backend.database.db import async_db_session
+from backend.app.lcc.service.cycle_life_service import cycle_life_service
 
 # 设置中文字体支持
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei"]
@@ -393,6 +394,8 @@ class OptService:
                     q=0,
                 )
 
+                year_worktimes = await cycle_life_service.year_worktimes(obj.model)
+
                 # 手动获取所有图片并中文化处理
                 plots = []
                 for fig_num in plt.get_fignums():
@@ -408,7 +411,7 @@ class OptService:
                     plots.append(img_base64)
                     plt.close(figure)  # 关闭图片释放内存
 
-                return {"data": (opt.ORT, opt.min_cost), "plots": plots}
+                return {"data": (round(opt.ORT/year_worktimes,2), opt.ORT*opt.min_cost), "plots": plots}
 
         except DataValidationError:
             raise

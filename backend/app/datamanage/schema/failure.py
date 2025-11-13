@@ -77,19 +77,20 @@ class GetFailureParam(SchemaBase):
 
     pk: int
     report_id: str
-    product_model: str = Field(..., description='产品型号')
-    fault_location: str = Field(..., description='终判故障部位')
-    fault_material_code: str = Field(..., description='终判故障部位物料编码')
-    product_lifetime_stage: str = Field(..., description='产品寿命阶段')
-    product_number: str = Field(..., description='产品编号')
-    discovery_date: str = Field(..., description='发现时间（日期）')
-    is_zero_distance: int = Field(..., description='是否零公里(是/否)')
+    product_model: Optional[str] = Field(None, description='产品型号')
+    fault_location: Optional[str] = Field(None, description='终判故障部位')
+    fault_material_code: Optional[str] = Field(None, description='终判故障部位物料编码')
+    product_number: Optional[str] = Field(None, description='产品编号')
+    discovery_date: Optional[str] = Field(None, description='发现时间（日期）')
+    is_zero_distance: Optional[int] = Field(None, description='是否零公里(是/否)')
+    product_lifetime_stage: Optional[str] = Field(None, description='产品寿命阶段')
 
 
 class GetFailureDetails(GetFailureParam):
     model_config = ConfigDict(from_attributes=True)
 
     id: Optional[str] = Field(None, description='故障基本信息表中的报告ID')
+    # product_lifetime_stage: Optional[str] = Field(None, description='产品寿命阶段')
     fault_mode: Optional[str] = Field(None, description='终判故障模式')
     fault_material_code:Optional[str] = Field(None, description='终判故障部位物料编码')
     maintenance_location: Optional[str] = Field(None, description='检修地点')

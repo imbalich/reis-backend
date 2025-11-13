@@ -50,8 +50,8 @@ async def  get_equal_lifetime_result(
     model: str = Query(..., description='产品型号'),
     # parts: list[str] = Query(..., description='零部件名称'),
     parts: Annotated[list[str] | None, Query(description='零部件名称')] = None,
-    target_sf: Annotated[float | None, Query(description='寿命目标值')] = 0.90,
-    step_start: Annotated[float | None, Query(description='步长开始值')] = 0.90,
+    target_sf: Annotated[float | None, Query(description='寿命目标值')] = 0.95,
+    step_start: Annotated[float | None, Query(description='步长开始值')] = 0.95,
     step_end: Annotated[float | None, Query(description='步长结束值')] = 0.99,
 ):
     """

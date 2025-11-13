@@ -18,14 +18,14 @@ class CreateEuqalLifetimeInParam(SchemaBase):
     # 创建等寿命优化信息入参
     model: str
     parts: list[str] | None = None
-    target_sf: float  = 0.90
-    step_start: float = 0.90
+    target_sf: float  = 0.95
+    step_start: float = 0.95
     step_end: float = 0.99
 
 class CreateEuqalLifetimeAllPartInParam(SchemaBase):
     # 创建多型号等寿命优化信息入参
-    target_sf: float  = 0.90
-    step_start: float = 0.90
+    target_sf: float  = 0.95
+    step_start: float = 0.95
     step_end: float = 0.99
 
 
@@ -70,6 +70,7 @@ class CreateEqualLifetimeParam(SchemaBase):
     group_id: str
     model: str
     parts: str
+    is_all_parts: bool
     target_sf: float
     time_point: int
     step_start: float

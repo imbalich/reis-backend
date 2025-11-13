@@ -43,14 +43,14 @@ class ProductDistributeService:
             
             # 2、获取年运行小时并计算x_peaks
             if product_model == '测试':
-                year_worktimes = 13140
+                repair_worktimes = 13140
             else:
-                year_worktimes = await ProductDistributeService.repair_interval_times(product_model)
+                repair_worktimes, year_worktimes = await ProductDistributeService.repair_interval_times(product_model)
 
             if '新造' in stage_columns:
-                x_peaks = [0] + [year_worktimes * i for i in range(1, len(stage_columns))]
+                x_peaks = [0] + [repair_worktimes * i for i in range(1, len(stage_columns))]
             else:
-                x_peaks = [year_worktimes * (i + 1) for i in range(len(stage_columns))]
+                x_peaks = [repair_worktimes * (i + 1) for i in range(len(stage_columns))]
 
             # 3、拟合每个阶段的分布函数并计算峰值y_peaks
             y_peaks = []
@@ -74,7 +74,7 @@ class ProductDistributeService:
                 y_peaks.append(peak_y.tolist())
 
             # 4、返回结果
-            return {'x_peaks': x_peaks, 'y_peaks': y_peaks}
+            return {'x_peaks': x_peaks, 'y_peaks': y_peaks, 'year_worktimes': year_worktimes}
 
         except DataValidationError:
             raise
@@ -123,12 +123,13 @@ class ProductDistributeService:
         async with async_db_session() as db:
             try:
                 product_date = await product_dao.get_by_model(db, model)
-                if product_date is None:
+                if product_date.repair_times is None or product_date.avg_worktime is None or product_date.year_days is None:
                     raise DataValidationError(
                         msg=f"型号为 {model} 的产品信息不存在"
                     )
-                year_worktimes = product_date.repair_times * product_date.avg_worktime
-                return year_worktimes
+                repair_worktimes = product_date.repair_times * product_date.avg_worktime
+                year_worktimes = product_date.year_days * product_date.avg_worktime
+                return repair_worktimes, year_worktimes
             except DataValidationError:
                 raise
 

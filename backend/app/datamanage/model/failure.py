@@ -88,4 +88,6 @@ class Failure(DataClassBase):
     first_failure_mode: Mapped[str] = mapped_column(String(128), nullable=True, comment='初判故障模式')
     first_fault_type: Mapped[str] = mapped_column(String(128), nullable=True, comment='初判故障类型')
     fault_part_name_old: Mapped[str] = mapped_column(String(128), nullable=True, comment='终判故障部位名称_未改')
+    job_duration: Mapped[str] = mapped_column(String(8), nullable=True, comment='作业时长')
+    loss_accounting: Mapped[str] = mapped_column(String(128), nullable=True, comment='损失核算')
     is_zero_distance: Mapped[int] = mapped_column(nullable=True, comment='是否为零公里 1:是,0:否', name='is_zero')

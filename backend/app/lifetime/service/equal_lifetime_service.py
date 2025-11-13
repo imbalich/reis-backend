@@ -22,6 +22,7 @@ from backend.common.exception.errors import DataValidationError
 from backend.database.db import async_db_session
 from backend.app.calcu.schema.distribute_param import DistributeType
 from backend.app.calcu.conf import predict_settings
+from backend.app.lcc.service.cycle_life_service import cycle_life_service
 from backend.app.lifetime.utils.convert_model import (
     convert_to_euqal_lifetime_params,
 )
@@ -128,9 +129,14 @@ class EqualLifetimeService:
         '''
         async with async_db_session() as db:
             async with db.begin():
+                is_all_parts = False
+                if parts is None or len(parts) == 0:
+                    parts_and_name = await equal_lifetime_service.get_all_parts(model)
+                    parts = [item[1] for item in parts_and_name]
+                    is_all_parts = True
                 result = await find_point_service.find_equal_lifetime_point(model, parts, step_start,step_end)
                 distribution_params = convert_to_euqal_lifetime_params(
-                    result, model, parts,target_sf,step_start,step_end
+                    result, model, parts,target_sf,step_start,step_end,is_all_parts
                 )
                 await equal_lifetime_dao.creates(db, distribution_params)
     
@@ -149,17 +155,19 @@ class EqualLifetimeService:
         parts: list[str],
         target_sf: float,
         step_start: float,
-        step_end: float
+        step_end: float,
+        is_all_parts: bool = False
     ):
         """
         获取指定模型和部件的等寿命点结果
         """
         async with async_db_session() as db:
         
-            models = await equal_lifetime_dao.get_by_model(db, model,target_sf,step_start,step_end)
+            models = await equal_lifetime_dao.get_by_model(db, model,target_sf,step_start,step_end,is_all_parts)
             if not models:
                 return None
-            
+            if is_all_parts == True:
+                return models[0]
             # 按group_id分组，保持原有顺序（已经按created_time排序）
             groups = {}
             for item in models:
@@ -175,8 +183,8 @@ class EqualLifetimeService:
 
                 if sorted(db_parts) == sorted(parts):
                 # 找到匹配的group，返回该group的所有记录
-                    return group_results
-                
+                    return group_results[0]
+                                
             return None
         
     
@@ -192,16 +200,19 @@ class EqualLifetimeService:
         async with async_db_session() as db:
 
             # 1. 如果传入部件为空，获取fit_parts表中型号下所有部件
+            is_all_parts = False
             if parts is None or len(parts) == 0:
-                parts = await find_point_service.get_part_by_model(model)
+                # parts = await find_point_service.get_part_by_model(model)
+                is_all_parts = True
 
             # 2、获取等寿命点结果
-            optimize_result = await EqualLifetimeService.get_best_by_model_and_parts(model, parts,target_sf,step_start,step_end)
+            optimize_result = await EqualLifetimeService.get_best_by_model_and_parts(model, parts,target_sf,step_start,step_end,is_all_parts)
             if not optimize_result: 
                 return None
-            equal_lifetime_t = optimize_result[0].equal_lifetime_t
-            equal_lifetime_sf = optimize_result[0].equal_lifetime_sf
-            t = int(optimize_result[0].time_point)
+            equal_lifetime_t = optimize_result.equal_lifetime_t
+            equal_lifetime_sf = optimize_result.equal_lifetime_sf
+            t = int(optimize_result.time_point)
+            parts = json.loads(optimize_result.parts) if isinstance(optimize_result.parts, str) else optimize_result.parts
 
             # 3. 获取PSO优化结果
             pso_results = await EqualLifetimeService.get_result(model, parts,target_sf,equal_lifetime_t,equal_lifetime_sf,t)
@@ -211,8 +222,9 @@ class EqualLifetimeService:
             code_to_name = {code: name for name, code in failure_parts}
 
             # 5. 绘制优化前后SF图
-            plot_original_result = await plot_lifetime_service.plot_original_result(model,parts,t,target_sf,pso_results)
-            plot_optimize_result = await plot_lifetime_service.plot_optimize_result(model,pso_results,t,target_sf,code_to_name,equal_lifetime_t,equal_lifetime_sf)
+            year_worktimes = await cycle_life_service.year_worktimes(model)
+            plot_original_result = await plot_lifetime_service.plot_original_result(model,parts,t,target_sf,pso_results,year_worktimes)
+            plot_optimize_result = await plot_lifetime_service.plot_optimize_result(model,pso_results,t,target_sf,code_to_name,equal_lifetime_t,equal_lifetime_sf,year_worktimes)
             
             # 6. 创建结果
             parts_results = []

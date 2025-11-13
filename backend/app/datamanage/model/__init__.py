@@ -22,3 +22,6 @@ from backend.app.datamanage.model.allotment import Allotment
 from backend.app.datamanage.model.warehouse_inventory import WarehouseInventory
 from backend.app.datamanage.model.part_spare_mapping import PartSpareMapping
 from backend.app.datamanage.model.lcc import LCC
+from backend.app.datamanage.model.unqualify import Unqualify
+from backend.app.datamanage.model.repair_interval import RepairInterval
+from backend.app.datamanage.model.reliability_index import ReliabilityIndex
