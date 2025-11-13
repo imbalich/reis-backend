@@ -58,7 +58,7 @@ class FailureParam(SchemaBase):
     final_fault_responsibility: Optional[str] = Field(default=None, description='最终判责')  # 新表:respons
     is_zero_distance: Optional[int] = Field(default=None, description='是否零公里')  # 新表:is_zero
 
-    # is_ours: Optional[str] = Field(default=None, description="是否永济公司产品")  # 新表暂无该字段
+    is_company: Optional[int] = Field(default=None, description="是否永济公司产品")  # 新表is_company
     # locomotive_type: Optional[str] = Field(default=None, description="产品类型")  # 新表暂无该字段
 
     @field_validator('fault_part_number', 'replacement_part_number', mode='before')

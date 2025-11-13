@@ -153,6 +153,55 @@ async def get_latest_calculation_statistics() -> ResponseSchemaModel[Dict[str, A
         raise HTTPException(status_code=500, detail=f"获取最新统计信息失败: {str(e)}")
 
 
+@router.get("/warehouses", summary="获取库房编码和名称的列表")
+async def get_warehouse_code_name_pairs() -> ResponseModel:
+    """
+    获取库房编码和名称的列表，用于前端下拉框选择
+    返回格式: [["库房编码", "库房名称"], ...]
+
+    :return: 库房编码和名称的列表
+    """
+    try:
+        pairs = await science_warehouse_service.get_warehouse_code_name_pairs()
+        return response_base.success(data=pairs)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取库房列表失败: {str(e)}")
+
+
+@router.get("/spare-parts", summary="根据库房编码获取备品编码和名称的列表")
+async def get_spare_part_code_name_pairs(
+    warehouse_code: Annotated[str | None, Query()] = None,
+) -> ResponseModel:
+    """
+    根据库房编码获取备品编码和名称的列表（级联筛选），用于前端下拉框选择
+    返回格式: [["备品编码", "备品名称"], ...]
+
+    :param warehouse_code: 库房编码（可选，用于级联筛选）
+    :return: 备品编码和名称的列表
+    """
+    try:
+        pairs = await science_warehouse_service.get_spare_part_code_name_pairs(
+            warehouse_code=warehouse_code
+        )
+        return response_base.success(data=pairs)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取备品列表失败: {str(e)}")
+
+
+@router.get("/calculation-methods", summary="获取所有计算方法")
+async def get_calculation_methods() -> ResponseModel:
+    """
+    获取所有唯一的计算方法，用于前端下拉框选择
+
+    :return: 计算方法列表
+    """
+    try:
+        methods = await science_warehouse_service.get_calculation_methods()
+        return response_base.success(data=methods)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取计算方法列表失败: {str(e)}")
+
+
 @router.get(
     "/list", summary="分页获取科学库存计算结果", dependencies=[DependsPagination]
 )
@@ -160,9 +209,7 @@ async def get_pagination_science_warehouse_results(
     db: CurrentSession,
     calculation_id: Annotated[str | None, Query()] = None,
     warehouse_code: Annotated[str | None, Query()] = None,
-    warehouse_name: Annotated[str | None, Query()] = None,
     spare_part_code: Annotated[str | None, Query()] = None,
-    spare_part_name: Annotated[str | None, Query()] = None,
     calculation_method: Annotated[str | None, Query()] = None,
     time_range: Annotated[list[str] | None, Query()] = None,
 ) -> ResponseSchemaModel[PageData[ScienceWarehouseListDetails]]:
@@ -170,12 +217,10 @@ async def get_pagination_science_warehouse_results(
     分页获取科学库存计算结果列表
 
     :param db: 数据库会话
-    :param calculation_id: 计算批次ID
-    :param warehouse_code: 库房编码
-    :param warehouse_name: 库房名称
-    :param spare_part_code: 备品编码
-    :param spare_part_name: 备品名称
-    :param calculation_method: 计算方法
+    :param calculation_id: 计算批次ID（支持模糊匹配）
+    :param warehouse_code: 库房编码（精确匹配）
+    :param spare_part_code: 备品编码（精确匹配）
+    :param calculation_method: 计算方法（精确匹配）
     :param time_range: 创建时间范围 [开始日期, 结束日期]
     :return: 分页的科学库存计算结果列表
     """
@@ -183,9 +228,7 @@ async def get_pagination_science_warehouse_results(
         science_warehouse_select = await science_warehouse_service.get_select(
             calculation_id=calculation_id,
             warehouse_code=warehouse_code,
-            warehouse_name=warehouse_name,
             spare_part_code=spare_part_code,
-            spare_part_name=spare_part_name,
             calculation_method=calculation_method,
             time_range=time_range,
         )

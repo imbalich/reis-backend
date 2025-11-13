@@ -25,6 +25,7 @@ from backend.app.datamanage.crud.crud_despatch import despatch_dao
 from backend.app.calcu.crud.crud_science_warehouse_result import (
     science_warehouse_result_dao,
 )
+from typing import Sequence
 from backend.app.calcu.crud.crud_science_warehouse_statistics import (
     science_warehouse_statistics_dao,
 )
@@ -1379,21 +1380,17 @@ class ScienceWarehouseService:
     async def get_select(
         calculation_id: Optional[str] = None,
         warehouse_code: Optional[str] = None,
-        warehouse_name: Optional[str] = None,
         spare_part_code: Optional[str] = None,
-        spare_part_name: Optional[str] = None,
         calculation_method: Optional[str] = None,
         time_range: Optional[list[str]] = None,
     ):
         """
         获取科学库存计算结果的查询条件
 
-        :param calculation_id: 计算批次ID
-        :param warehouse_code: 库房编码
-        :param warehouse_name: 库房名称
-        :param spare_part_code: 备品编码
-        :param spare_part_name: 备品名称
-        :param calculation_method: 计算方法
+        :param calculation_id: 计算批次ID（支持模糊匹配）
+        :param warehouse_code: 库房编码（精确匹配）
+        :param spare_part_code: 备品编码（精确匹配）
+        :param calculation_method: 计算方法（精确匹配）
         :param time_range: 创建时间范围 [开始日期, 结束日期]
         :return: 查询条件
         """
@@ -1405,35 +1402,23 @@ class ScienceWarehouseService:
         conditions = []
 
         if calculation_id:
+            # 计算批次ID支持模糊匹配（因为用户手动输入）
             conditions.append(
                 ScienceWarehouseResult.calculation_id.like(f"%{calculation_id}%")
             )
 
         if warehouse_code:
-            conditions.append(
-                ScienceWarehouseResult.warehouse_code.like(f"%{warehouse_code}%")
-            )
-
-        if warehouse_name:
-            conditions.append(
-                ScienceWarehouseResult.warehouse_name.like(f"%{warehouse_name}%")
-            )
+            # 库房编码精确匹配（下拉框选择）
+            conditions.append(ScienceWarehouseResult.warehouse_code == warehouse_code)
 
         if spare_part_code:
-            conditions.append(
-                ScienceWarehouseResult.spare_part_code.like(f"%{spare_part_code}%")
-            )
-
-        if spare_part_name:
-            conditions.append(
-                ScienceWarehouseResult.spare_part_name.like(f"%{spare_part_name}%")
-            )
+            # 备品编码精确匹配（下拉框选择）
+            conditions.append(ScienceWarehouseResult.spare_part_code == spare_part_code)
 
         if calculation_method:
+            # 计算方法精确匹配（下拉框选择）
             conditions.append(
-                ScienceWarehouseResult.calculation_method.like(
-                    f"%{calculation_method}%"
-                )
+                ScienceWarehouseResult.calculation_method == calculation_method
             )
 
         if time_range:
@@ -1454,6 +1439,43 @@ class ScienceWarehouseService:
             .where(and_(*conditions))
             .order_by(ScienceWarehouseResult.id.desc())
         )
+
+    @staticmethod
+    async def get_warehouse_code_name_pairs() -> Sequence[List[str]]:
+        """
+        获取库房编码和名称的列表（去重）
+
+        :return: [[库房编码, 库房名称], ...] 的列表
+        """
+        async with async_db_session() as db:
+            return await science_warehouse_result_dao.get_warehouse_code_name_pairs(db)
+
+    @staticmethod
+    async def get_spare_part_code_name_pairs(
+        warehouse_code: str | None = None,
+    ) -> Sequence[List[str]]:
+        """
+        根据库房编码获取备品编码和名称的列表（级联筛选）
+
+        :param warehouse_code: 库房编码（可选，用于级联筛选）
+        :return: [[备品编码, 备品名称], ...] 的列表
+        """
+        async with async_db_session() as db:
+            return await science_warehouse_result_dao.get_spare_part_code_name_pairs(
+                db, warehouse_code
+            )
+
+    @staticmethod
+    async def get_calculation_methods() -> Sequence[str]:
+        """
+        获取所有唯一的计算方法
+
+        :return: 计算方法列表
+        """
+        async with async_db_session() as db:
+            return await science_warehouse_result_dao.get_distinct_calculation_methods(
+                db
+            )
 
     @staticmethod
     async def get_latest_calculation_statistics() -> Dict[str, Any]:

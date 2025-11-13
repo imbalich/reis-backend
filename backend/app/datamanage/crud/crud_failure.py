@@ -10,7 +10,7 @@
 
 from typing import Any, List, Sequence
 
-from sqlalchemy import Row, Select, desc, distinct, select
+from sqlalchemy import Row, Select, desc, distinct, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -18,6 +18,24 @@ from backend.app.datamanage.model import Failure
 
 
 class CRUDFailure(CRUDPlus[Failure]):
+    @staticmethod
+    def _non_user_responsibility_condition(model):
+        """
+        生成非用户责任的条件
+        包含：NULL值、空字符串、不包含"用户"的值
+
+        Args:
+            model: Failure 模型类
+
+        Returns:
+            SQLAlchemy 条件表达式
+        """
+        return or_(
+            model.final_fault_responsibility.is_(None),  # NULL 值
+            model.final_fault_responsibility == "",  # 空字符串
+            ~model.final_fault_responsibility.contains("用户"),  # 不包含"用户"
+        )
+
     async def get_distinct_column_values(
         self, db: AsyncSession, column_name: str
     ) -> Sequence[Any]:
@@ -158,8 +176,9 @@ class CRUDFailure(CRUDPlus[Failure]):
         where_list = []
         where_list.append(self.model.product_model == model)
         where_list.append(self.model.is_zero_distance == 0)
-        where_list.append(self.model.final_fault_responsibility != "用户")
+        where_list.append(CRUDFailure._non_user_responsibility_condition(self.model))
         where_list.append(self.model.manufacturing_date.isnot(None))  # 添加这个条件
+        where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
@@ -175,7 +194,8 @@ class CRUDFailure(CRUDPlus[Failure]):
         where_list = []
         where_list.append(self.model.fault_material_code == part)
         where_list.append(self.model.is_zero_distance == 0)
-        where_list.append(self.model.final_fault_responsibility != "用户")
+        where_list.append(CRUDFailure._non_user_responsibility_condition(self.model))
+        where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
         if where_list:
             stmt = stmt.where(*where_list)
         return stmt
@@ -195,8 +215,9 @@ class CRUDFailure(CRUDPlus[Failure]):
         where_list.append(self.model.product_model == model)
         where_list.append(self.model.fault_material_code == part)
         where_list.append(self.model.is_zero_distance == 0)
-        where_list.append(self.model.final_fault_responsibility != "用户")
+        where_list.append(CRUDFailure._non_user_responsibility_condition(self.model))
         where_list.append(self.model.manufacturing_date.isnot(None))  # 添加这个条件
+        where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
@@ -247,14 +268,17 @@ class CRUDFailure(CRUDPlus[Failure]):
                 self.model.fault_material_code.isnot(None),  # 物料编码不为空
                 self.model.fault_location.isnot(None),  # 部位名称不为空
                 self.model.is_zero_distance == 0,  # 非零公里故障
-                self.model.final_fault_responsibility != "用户",  # 非用户责任
+                CRUDFailure._non_user_responsibility_condition(
+                    self.model
+                ),  # 非用户责任（包含NULL和空字符串）
+                self.model.is_company == 1,  # 添加这个条件2025-11-13
             )
             .order_by(self.model.fault_location, self.model.fault_material_code)
         )
 
         result = await db.execute(stmt)
         return [(row[0], row[1]) for row in result.all()]
-    
+
     async def get_parts_with_names_only_by_model(
         self, db: AsyncSession, model: str
     ) -> Sequence[tuple[str, str]]:
@@ -294,14 +318,17 @@ class CRUDFailure(CRUDPlus[Failure]):
             .where(
                 self.model.product_number == product_number,
                 self.model.is_zero_distance == 0,
-                self.model.final_fault_responsibility != "用户",
+                CRUDFailure._non_user_responsibility_condition(self.model),
+                self.model.is_company == 1,  # 添加这个条件2025-11-13
             )
             .order_by(self.model.discovery_date)
         )
         result = await db.execute(stmt)
         return result.scalars().all()
-    
-    async def get_job_loss_by_model_and_part(self, db: AsyncSession, model: str, part: str)-> Sequence[Failure]:
+
+    async def get_job_loss_by_model_and_part(
+        self, db: AsyncSession, model: str, part: str
+    ) -> Sequence[Failure]:
         stmt = (
             select(self.model)
             .where(
@@ -310,7 +337,7 @@ class CRUDFailure(CRUDPlus[Failure]):
                 self.model.is_zero_distance == 0,
                 self.model.loss_accounting.isnot(None),
                 self.model.loss_accounting != "/",
-                self.model.job_duration.isnot(None)
+                self.model.job_duration.isnot(None),
             )
             .order_by(self.model.discovery_date)
         )

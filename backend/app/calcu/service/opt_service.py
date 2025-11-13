@@ -7,10 +7,12 @@
 @Author  : imbalich
 @Time    : 2025/5/7 16:38
 """
+import os
 import matplotlib
 
 matplotlib.use("Agg")  # 设置非交互式后端
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm  # 正确导入FontProperties
 from io import BytesIO
 import base64
 import re
@@ -25,9 +27,21 @@ from backend.common.exception.errors import DataValidationError
 from backend.database.db import async_db_session
 from backend.app.lcc.service.cycle_life_service import cycle_life_service
 
+# 同样，构建字体路径
+base_dir = os.path.dirname(os.path.abspath(__file__))
+font_path = os.path.join(base_dir, "..", "..", "..", "static", "msyh.ttc")
+
+# 验证字体文件是否存在
+if not os.path.exists(font_path):
+    print(f"警告：字体文件不存在于 {font_path}")
+    # 可以添加备用方案
+else:
+    # print(f"使用字体文件: {font_path}")
+    pass
+
+
 # 设置中文字体支持
-plt.rcParams["font.sans-serif"] = ["Microsoft YaHei"]
-plt.rcParams["axes.unicode_minus"] = False
+font_prop = fm.FontProperties(fname=font_path)
 
 
 @contextmanager
@@ -88,12 +102,13 @@ class OptService:
             raise DataValidationError(msg=f"计算最佳更换周期时发生错误: {str(e)}")
 
     @staticmethod
-    def _translate_plot_to_chinese(figure):
+    def _translate_plot_to_chinese(figure, font_prop):
         """
         将图表中的英文标签翻译为中文并统一图片大小
 
         Args:
             figure: matplotlib figure 对象
+            font_prop: matplotlib FontProperties 对象，用于中文字体支持
         """
         # 统一设置图片大小
         figure.set_size_inches(8, 6)
@@ -177,7 +192,9 @@ class OptService:
                             )
                             break
                 if translated_title != title:
-                    ax.set_title(translated_title, fontsize=12)
+                    ax.set_title(
+                        translated_title, fontsize=12, fontproperties=font_prop
+                    )
 
             # 翻译 x 轴标签
             xlabel = ax.get_xlabel()
@@ -219,7 +236,9 @@ class OptService:
                                 break
 
                 if translated_xlabel != xlabel:
-                    ax.set_xlabel(translated_xlabel, fontsize=11)
+                    ax.set_xlabel(
+                        translated_xlabel, fontsize=11, fontproperties=font_prop
+                    )
 
             # 翻译 y 轴标签
             ylabel = ax.get_ylabel()
@@ -235,7 +254,9 @@ class OptService:
                             translated_ylabel = translated_ylabel.replace(en, zh)
                             break
                 if translated_ylabel != ylabel:
-                    ax.set_ylabel(translated_ylabel, fontsize=11)
+                    ax.set_ylabel(
+                        translated_ylabel, fontsize=11, fontproperties=font_prop
+                    )
 
             # 获取坐标轴范围，用于调整注释位置
             xlim = ax.get_xlim()
@@ -322,8 +343,9 @@ class OptService:
                     # 标记为需要移除和重新添加
                     texts_to_remove.append((text, translated))
                 else:
-                    # 如果已经在内部，只更新文本
+                    # 如果已经在内部，只更新文本和字体
                     text.set_text(translated)
+                    text.set_fontproperties(font_prop)
 
             # 处理需要重新定位的文本
             if texts_to_remove:
@@ -347,6 +369,7 @@ class OptService:
                         fontsize=9,
                         verticalalignment="top",
                         horizontalalignment="left",
+                        fontproperties=font_prop,
                         bbox=dict(
                             boxstyle="round", facecolor="wheat", alpha=0.6, pad=0.5
                         ),
@@ -359,7 +382,11 @@ class OptService:
             if title_text:
                 for en, zh in translation_map:
                     if en in title_text:
-                        figure.suptitle(title_text.replace(en, zh), fontsize=13)
+                        figure.suptitle(
+                            title_text.replace(en, zh),
+                            fontsize=13,
+                            fontproperties=font_prop,
+                        )
                         break
 
     @staticmethod
@@ -402,7 +429,7 @@ class OptService:
                     figure = plt.figure(fig_num)
 
                     # 将图表中的英文标签翻译为中文并统一大小
-                    OptService._translate_plot_to_chinese(figure)
+                    OptService._translate_plot_to_chinese(figure, font_prop)
 
                     buffer = BytesIO()
                     figure.savefig(buffer, format="png", dpi=300, bbox_inches="tight")
@@ -411,7 +438,13 @@ class OptService:
                     plots.append(img_base64)
                     plt.close(figure)  # 关闭图片释放内存
 
-                return {"data": (round(opt.ORT/year_worktimes,2), opt.ORT*opt.min_cost), "plots": plots}
+                return {
+                    "data": (
+                        round(opt.ORT / year_worktimes, 2),
+                        opt.ORT * opt.min_cost,
+                    ),
+                    "plots": plots,
+                }
 
         except DataValidationError:
             raise

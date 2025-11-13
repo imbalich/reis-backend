@@ -24,7 +24,8 @@ if not os.path.exists(font_path):
     print(f"警告：字体文件不存在于 {font_path}")
     # 可以添加备用方案
 else:
-    print(f"使用字体文件: {font_path}")
+    # print(f"使用字体文件: {font_path}")
+    pass
 
 
 # 设置中文字体支持

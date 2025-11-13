@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from typing import List, Sequence, Any
 
-from sqlalchemy import Select, delete, select, func, text
+from sqlalchemy import Select, delete, distinct, select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -36,16 +36,20 @@ class CRUDScienceWarehouseResult(CRUDPlus[ScienceWarehouseResult]):
 
         return query
 
-    async def clear_by_calculation_id(self, db: AsyncSession, calculation_id: str) -> None:
+    async def clear_by_calculation_id(
+        self, db: AsyncSession, calculation_id: str
+    ) -> None:
         """
         清空指定计算批次的结果数据
 
         :param db: 数据库会话
         :param calculation_id: 计算批次ID
         """
-        await db.execute(delete(ScienceWarehouseResult).where(
-            ScienceWarehouseResult.calculation_id == calculation_id
-        ))
+        await db.execute(
+            delete(ScienceWarehouseResult).where(
+                ScienceWarehouseResult.calculation_id == calculation_id
+            )
+        )
         await db.commit()
 
     async def bulk_create(
@@ -64,6 +68,61 @@ class CRUDScienceWarehouseResult(CRUDPlus[ScienceWarehouseResult]):
         for result in results:
             await db.refresh(result)
         return results
+
+    async def get_warehouse_code_name_pairs(
+        self, db: AsyncSession
+    ) -> Sequence[List[str]]:
+        """
+        获取库房编码和名称的列表（去重）
+
+        :param db: 数据库会话
+        :return: [[库房编码, 库房名称], ...] 的列表
+        """
+        stmt = (
+            select(
+                self.model.warehouse_code,
+                self.model.warehouse_name,
+            )
+            .distinct()
+            .order_by(self.model.warehouse_code, self.model.warehouse_name)
+        )
+        result = await db.execute(stmt)
+        return [[row[0], row[1]] for row in result.all()]
+
+    async def get_spare_part_code_name_pairs(
+        self,
+        db: AsyncSession,
+        warehouse_code: str | None = None,
+    ) -> Sequence[List[str]]:
+        """
+        根据库房编码获取备品编码和名称的列表（级联筛选）
+
+        :param db: 数据库会话
+        :param warehouse_code: 库房编码（可选，用于级联筛选）
+        :return: [[备品编码, 备品名称], ...] 的列表
+        """
+        stmt = select(
+            self.model.spare_part_code,
+            self.model.spare_part_name,
+        ).distinct()
+        if warehouse_code:
+            stmt = stmt.where(self.model.warehouse_code == warehouse_code)
+        stmt = stmt.order_by(self.model.spare_part_code, self.model.spare_part_name)
+        result = await db.execute(stmt)
+        return [[row[0], row[1]] for row in result.all()]
+
+    async def get_distinct_calculation_methods(self, db: AsyncSession) -> Sequence[str]:
+        """
+        获取所有唯一的计算方法
+
+        :param db: 数据库会话
+        :return: 计算方法列表
+        """
+        stmt = select(distinct(self.model.calculation_method)).order_by(
+            self.model.calculation_method
+        )
+        result = await db.execute(stmt)
+        return result.scalars().all()
 
 
 science_warehouse_result_dao: CRUDScienceWarehouseResult = CRUDScienceWarehouseResult(
