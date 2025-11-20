@@ -27,21 +27,23 @@ class PartTagProcessService(TagProcessService):
         input_date: str | date = None,
         **kwargs: Any,
     ) -> list[list]:
-        if 'replace_data' not in kwargs:
+        replace_data = kwargs.get('replace_data')
+        repair_data = kwargs.get('repair_data')
+        repair_despatch_data = kwargs.get('repair_despatch_data')
+        if not replace_data:
             # 非必换件
             return await self._process_non_essential(despatch_data, failure_data, product_data, bom_data, input_date)
-        else:
-            # 必换件
-            return await self._process_essential(
-                despatch_data,
-                failure_data,
-                product_data,
-                bom_data,
-                kwargs['replace_data'],
-                kwargs['repair_data'],
-                kwargs['repair_despatch_data'],
-                input_date,
-            )
+        # 必换件
+        return await self._process_essential(
+            despatch_data,
+            failure_data,
+            product_data,
+            bom_data,
+            replace_data,
+            repair_data,
+            repair_despatch_data,
+            input_date,
+        )
 
     async def _process_non_essential(
         self,
@@ -92,7 +94,7 @@ class PartTagProcessService(TagProcessService):
             container, repair_despatch_data
         )
         # 4.故障数据插入
-        container, error_info_list_failure = self.container_insert_non_essential(container, failure_data)
+        container, error_info_list_failure = await self.container_insert_non_essential(container, failure_data)
         tags = await self.tag_create_essential(container, product_data, input_date)
         results = {'tags': tags}
         if error_info_list_repair:
