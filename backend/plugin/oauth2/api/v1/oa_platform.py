@@ -8,6 +8,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, Respons
 from fastapi_limiter.depends import RateLimiter
 from starlette.responses import RedirectResponse
 
+from backend.common.log import log
 from backend.common.response.response_schema import ResponseSchemaModel, response_base
 from backend.core.conf import settings
 from backend.database.redis import redis_client
@@ -79,11 +80,18 @@ async def oa_platform_oauth2_callback(
     :param state: 状态参数
     :return: 重定向响应
     """
+    log.info(
+        f"OA callback start: code={code} state={state} ip={getattr(request.client, 'host', None)}"
+    )
+
     # 验证state参数
     state_key = f"{OA_PLATFORM_STATE_REDIS_PREFIX}:{state}"
     stored_state = await redis_client.get(state_key)
     if not stored_state:
         # state无效或已过期
+        log.warning(
+            f"OA callback invalid state: state={state} ip={getattr(request.client, 'host', None)}"
+        )
         return RedirectResponse(
             url=f"{settings.OAUTH2_FRONTEND_REDIRECT_URI}?error=invalid_state"
         )
@@ -92,6 +100,8 @@ async def oa_platform_oauth2_callback(
     await redis_client.delete(state_key)
 
     try:
+        log.info(f"OA token exchange start: code={code}")
+
         # 第二步：用code换取access_token
         token_url = f"{settings.OAUTH2_OA_PLATFORM_BASE_URL}/sso/oauth2/token"
         token_data = {
@@ -110,15 +120,18 @@ async def oa_platform_oauth2_callback(
             )
             token_response.raise_for_status()
             token_result = token_response.json()
+            log.info(f"OA token response: {token_result}")
 
             # 检查是否有错误
             if "error" in token_result:
+                log.error(f"OA token response contains error: {token_result}")
                 return RedirectResponse(
                     url=f'{settings.OAUTH2_FRONTEND_REDIRECT_URI}?error={token_result.get("error_description", "token_error")}'
                 )
 
             access_token = token_result.get("access_token")
             if not access_token:
+                log.error("OA token response missing access_token")
                 return RedirectResponse(
                     url=f"{settings.OAUTH2_FRONTEND_REDIRECT_URI}?error=no_access_token"
                 )
@@ -138,10 +151,13 @@ async def oa_platform_oauth2_callback(
             )
             userinfo_response.raise_for_status()
             userinfo_result = userinfo_response.json()
+            log.info(f"OA userinfo response: {userinfo_result}")
 
             # 检查返回结果
-            if userinfo_result.get("ret") != "0":
+            ret_value = userinfo_result.get("ret")
+            if str(ret_value) != "0":
                 error_msg = userinfo_result.get("msg", "获取用户信息失败")
+                log.error(f"OA userinfo ret invalid: {userinfo_result}")
                 return RedirectResponse(
                     url=f"{settings.OAUTH2_FRONTEND_REDIRECT_URI}?error={error_msg}"
                 )
@@ -153,10 +169,15 @@ async def oa_platform_oauth2_callback(
                 "id": userinfo_result.get("uid", ""),
                 "uuid": userinfo_result.get("uid", ""),
                 "username": userinfo_result.get("uid", ""),
-                "nickname": userinfo_result.get("name", userinfo_result.get("uid", "")),
+                "nickname": userinfo_result.get(
+                    "name",
+                    userinfo_result.get("loginName", userinfo_result.get("uid", "")),
+                ),
                 # "email": userinfo_result.get("email", ""),
                 # "avatar_url": userinfo_result.get("avatar", ""),
             }
+
+            log.info(f"OA create_with_login start for user: {user}")
 
             # 调用service创建用户并登录
             data = await oa_platform_service.create_with_login(
@@ -167,21 +188,27 @@ async def oa_platform_oauth2_callback(
             )
 
             if not data:
+                log.error(f"OA create_with_login returned None, user={user}")
                 return RedirectResponse(
                     url=f"{settings.OAUTH2_FRONTEND_REDIRECT_URI}?error=login_failed"
                 )
 
-            return RedirectResponse(
-                url=f"{settings.OAUTH2_FRONTEND_REDIRECT_URI}?access_token={data.access_token}&session_uuid={data.session_uuid}"
+            success_url = (
+                f"{settings.OAUTH2_FRONTEND_REDIRECT_URI}"
+                f"?access_token={data.access_token}&session_uuid={data.session_uuid}"
             )
+            log.info(f"OA success redirect url: {success_url}")
+            return RedirectResponse(url=success_url)
 
     except httpx.HTTPError as e:
         # HTTP请求错误
+        log.exception("OA callback HTTP error")
         return RedirectResponse(
             url=f"{settings.OAUTH2_FRONTEND_REDIRECT_URI}?error=http_error"
         )
     except Exception as e:
         # 其他错误
+        log.exception("OA callback unknown error")
         return RedirectResponse(
             url=f"{settings.OAUTH2_FRONTEND_REDIRECT_URI}?error=unknown_error"
         )
