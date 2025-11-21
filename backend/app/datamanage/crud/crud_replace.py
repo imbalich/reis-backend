@@ -130,6 +130,32 @@ class CRUDReplace(CRUDPlus[Replace]):
         
         # 按replace_level升序返回结果
         return [grouped_items[level] for level in sorted(grouped_items.keys())]
+    
+
+    async def get_replace_parts_with_names_only_by_model(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[tuple[str, str]]:
+        """
+        根据型号获取零部件物料编码和名称的二元组列表
+        :param db: 数据库会话
+        :param model: 产品型号
+        :return: (零部件名称, 零部件物料编码) 的二元组列表
+        """
+        stmt = (
+            select(
+                distinct(self.model.part_name),  # 零部件名称
+                self.model.part_code,  # 零部件物料编码
+            )
+            .where(
+                self.model.model == model,
+                self.model.part_code.isnot(None),  # 物料编码不为空
+                self.model.part_name.isnot(None),  # 部位名称不为空
+            )
+            .order_by(self.model.part_name ,self.model.part_code)
+        )
+
+        result = await db.execute(stmt)
+        return [(row[0], row[1]) for row in result.all()]
 
 
 replace_dao: CRUDReplace = CRUDReplace(Replace)

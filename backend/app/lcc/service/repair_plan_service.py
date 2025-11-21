@@ -23,6 +23,15 @@ from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.datamanage.crud.crud_unqualify import unqualify_dao
 from backend.app.calcu.service.reliability_index_service import reliability_index_service
 from backend.app.datamanage.crud.crud_reliability_index import reliability_index_dao
+import matplotlib.font_manager as fm  # 正确导入FontProperties
+import os
+
+# 同样，构建字体路径
+base_dir = os.path.dirname(os.path.abspath(__file__))
+font_path = os.path.join(base_dir,'..', '..', '..',  'static', 'msyh.ttc')
+
+# 设置中文字体支持
+font_prop = fm.FontProperties(fname=font_path)
 
 class RepirPlanService:
 
@@ -134,6 +143,7 @@ class RepirPlanService:
                 sf = fault['sf']
                 lcc_result = '保持' if year_new == year_old else ('延长' if year_new > year_old else '缩短')
                 level_new = level[min_index]
+                lcc_result_tag = f" " if year_new == year_old else ( f"在{level_new}之后，故障率明细增高" if year_new > year_old else f"在{level_new}之前，偶换成本<预防性更换成本")
                 lcc_old_sum += lcc_old
                 lcc_new_sum += lcc_new
 
@@ -148,6 +158,7 @@ class RepirPlanService:
                 'sf': round(sf,4),
                 'lcc_old': lcc_old,
                 'lcc_result': lcc_result,
+                'lcc_result_tag': lcc_result_tag,
             })
                 
         # 计算可靠性经济型一体化提升比
@@ -390,33 +401,33 @@ class RepirPlanService:
         try:
             async with async_db_session() as db:
                 # 1. 获取fit_part表中该型号的所有零部件
-                parts = await fit_part_dao.get_parts_for_lifetime_by_model(db, model)   
+                parts = await fit_part_dao.get_parts_for_lifetime_by_model(db, model) 
 
-                # 2. 创建有效零部件列表
+                # 2、检查产品信息数据是否存在
+                product_date = await product_dao.get_by_model(db, model)  
+
+                # 3. 创建有效零部件列表
                 valid_parts = []
 
-                # 3. 验证每个部件是否同时存在于EBOM和成本数据中
+                # 4. 验证每个部件是否同时存在于EBOM和成本数据中
                 for part in parts:
-                    # 检查EBOM数据是否存在
-                    ebom_data = await ebom_dao.get_by_model_and_part(db, model, part)
-                    # 检查产品信息数据是否存在
-                    product_date = await product_dao.get_by_model(db, model)
-                    # 检查LCC数据
-                    lcc_data = await lcc_dao.get_by_model_and_part(db, model, part)
                     # 检查不合格品
                     unqualify_data = await unqualify_dao.get_by_model_and_part(db, model, part)
+
+                    # 检查必换件表，如果part在必换件表中，则不输出该part
+                    replace_data = await replace_dao.get_all_by_model_and_part(db, model, part) 
                 
-                    # 仅当两个数据源都存在时才保留该部件
-                    if ebom_data and product_date.year_days and product_date.avg_worktime and lcc_data and unqualify_data:
+                    # 仅当数据源都存在时才保留该部件
+                    if product_date.year_days and product_date.avg_worktime and unqualify_data and not replace_data:
                         valid_parts.append(part)
                 
-                 # 4、获取所有部件的故障名称和编码
-                failure_parts = await failure_dao.get_parts_with_names_only_by_model(db, model)
+                # 5、获取所有部件的故障名称和编码
+                cost_parts = await lcc_dao.get_lcc_parts_with_names_only_by_model(db, model)
 
-                # 5. 创建编码到名称的映射字典
-                code_to_name = {code: name for name, code in failure_parts}
+                # 6. 创建编码到名称的映射字典
+                code_to_name = {code: name for name, code in cost_parts}
                 
-                # 6. 筛选出既有分布数据又有名称的零部件，返回二元组
+                # 7. 筛选出既有分布数据又有名称的零部件，返回二元组
                 result = []
                 for part_code in valid_parts:
                     if part_code in code_to_name:

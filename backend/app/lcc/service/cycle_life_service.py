@@ -128,20 +128,18 @@ class CycleLifeService:
 
                 # 3. 验证每个部件是否同时存在于EBOM和成本数据中
                 for part in parts:
-                    # 检查EBOM数据是否存在
-                    ebom_data = await ebom_dao.get_by_model_and_part(db, model, part)
                     # 检查产品信息数据是否存在
                     product_date = await product_dao.get_by_model(db, model)
                     # 检查必换件数据
                     replace_data = await replace_dao.get_all_by_model_and_part(db, model, part)
                 
                     # 仅当两个数据源都存在时才保留该部件
-                    if ebom_data and product_date.year_days and product_date.avg_worktime and replace_data:
+                    if product_date.year_days and product_date.avg_worktime and replace_data:
                         valid_parts.append(part)
                     else:
                         # 可选：添加日志记录缺失数据的部件
                         logger.warning(
-                            f"部件 {part} 缺少必要数据 - EBOM: {bool(ebom_data)}, 产品信息: {bool(product_date)}, 必换件: {bool(replace_data)}")
+                            f"部件 {part} 缺少必要数据 - 产品信息: {bool(product_date)}, 必换件: {bool(replace_data)}")
                         pass
             
             return valid_parts
@@ -159,33 +157,23 @@ class CycleLifeService:
         try:
             async with async_db_session() as db:
                 # 1. 获取fit_part表中该型号的所有零部件
-                parts = await fit_part_dao.get_parts_for_lifetime_by_model(db, model)      
+                parts = await fit_part_dao.get_parts_for_lifetime_by_model(db, model)
 
-                # 2. 创建有效零部件列表
-                valid_parts = []
+                # 2、# 检查产品信息数据是否存在
+                product_date = await product_dao.get_by_model(db, model)      
 
-                # 3. 验证每个部件是否同时存在于EBOM和成本数据中
-                for part in parts:
-                    # 检查EBOM数据是否存在
-                    ebom_data = await ebom_dao.get_by_model_and_part(db, model, part)
-                    # 检查产品信息数据是否存在
-                    product_date = await product_dao.get_by_model(db, model)
-                    # 检查必换件数据
-                    replace_data = await replace_dao.get_all_by_model_and_part(db, model, part)
+                if product_date.year_days is None or product_date.avg_worktime is None:
+                    return None
                 
-                    # 仅当两个数据源都存在时才保留该部件
-                    if ebom_data and product_date.year_days and product_date.avg_worktime and replace_data:
-                        valid_parts.append(part)
-                
-                 # 4、获取所有部件的故障名称和编码
-                failure_parts = await failure_dao.get_parts_with_names_only_by_model(db, model)
+                # 3、获取必换件信息
+                replace_parts = await replace_dao.get_replace_parts_with_names_only_by_model(db, model)
 
                 # 5. 创建编码到名称的映射字典
-                code_to_name = {code: name for name, code in failure_parts}
+                code_to_name = {code: name for name, code in replace_parts}
                 
                 # 6. 筛选出既有分布数据又有名称的零部件，返回二元组
                 result = []
-                for part_code in valid_parts:
+                for part_code in parts:
                     if part_code in code_to_name:
                         result.append((code_to_name[part_code], part_code))
             
