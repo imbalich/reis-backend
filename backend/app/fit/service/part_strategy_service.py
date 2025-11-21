@@ -105,6 +105,9 @@ class PartStrategyService:
 
                 ebom_data = convert_dict_to_pydantic_model(ebom_dict, EbomParam)
 
+                repair_data = None
+                repair_despatch_data = None
+
                 replace_data = convert_to_pydantic_models(
                     await replace_dao.get_by_model_and_part(db, model, part),
                     ReplaceParam,

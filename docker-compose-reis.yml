@@ -22,7 +22,7 @@ services:
       - bash
       - -c
       - |
-        wait-for-it -s fba_mysql:3306 -s fba_redis:6379 -t 300
+        wait-for-it -s fba_mysql:3306 -s fba_redis:6379 -t 60
         supervisord -c /etc/supervisor/supervisord.conf
         supervisorctl restart
     ports:
