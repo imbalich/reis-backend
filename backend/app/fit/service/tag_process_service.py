@@ -15,7 +15,7 @@ from operator import attrgetter
 
 from pydantic import ValidationError
 
-from backend.app.datamanage.model import Despatch, Failure
+from backend.app.datamanage.model import Despatch, FailureModel
 from backend.app.fit.schema.base_param import DespatchParam, FailureParam
 
 
@@ -64,7 +64,7 @@ class TagProcessService(ABC):
         return result
 
     @abstractmethod
-    async def process_failure_data(self, failure_data: list[Failure], input_date: date) -> list[FailureParam]:
+    async def process_failure_data(self, failure_data: list[FailureModel], input_date: date) -> list[FailureParam]:
         """
         处理故障数据，按时间顺序排序，降序。
         :param failure_data: 故障数据列表

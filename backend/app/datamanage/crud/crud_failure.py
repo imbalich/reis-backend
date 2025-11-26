@@ -8,16 +8,21 @@
 @Date    ：2024/12/26 16:51
 """
 
-from typing import Any, List, Sequence
+from typing import Any, List, Sequence,TypeVar
 
 from sqlalchemy import Row, Select, desc, distinct, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
-from backend.app.datamanage.model import Failure
+from backend.app.datamanage.model import FailureModel
 
+T = TypeVar("T")
 
-class CRUDFailure(CRUDPlus[Failure]):
+class CRUDFailure(CRUDPlus[T]):
+    
+    def __init__(self, model: type[T]):
+        super().__init__(model=model)
+        
     @staticmethod
     def _non_user_responsibility_condition(model):
         """
@@ -165,7 +170,7 @@ class CRUDFailure(CRUDPlus[Failure]):
             stmt = stmt.where(*where_list)
         return stmt
 
-    async def get_by_model(self, db: AsyncSession, model: str) -> Sequence[Failure]:
+    async def get_by_model(self, db: AsyncSession, model: str) -> Sequence[FailureModel]:
         """
         根据产品型号获取故障列表
         :param db: 数据库会话
@@ -202,7 +207,7 @@ class CRUDFailure(CRUDPlus[Failure]):
 
     async def get_by_model_and_part(
         self, db: AsyncSession, model: str, part: str
-    ) -> Sequence[Failure]:
+    ) -> Sequence[FailureModel]:
         """
         查询单型号单零部件故障信息:做检测用，不用考虑是否新造
         :param db: 数据库会话
@@ -306,7 +311,7 @@ class CRUDFailure(CRUDPlus[Failure]):
 
     async def get_by_product_number(
         self, db: AsyncSession, product_number: str
-    ) -> Sequence[Failure]:
+    ) -> Sequence[FailureModel]:
         """
         根据产品编号获取故障数据
         :param db: 数据库会话
@@ -328,7 +333,7 @@ class CRUDFailure(CRUDPlus[Failure]):
 
     async def get_job_loss_by_model_and_part(
         self, db: AsyncSession, model: str, part: str
-    ) -> Sequence[Failure]:
+    ) -> Sequence[FailureModel]:
         stmt = (
             select(self.model)
             .where(
@@ -345,4 +350,4 @@ class CRUDFailure(CRUDPlus[Failure]):
         return result.scalars().all()
 
 
-failure_dao: CRUDFailure = CRUDFailure(Failure)
+failure_dao: CRUDFailure = CRUDFailure(FailureModel)

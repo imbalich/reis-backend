@@ -7,6 +7,7 @@
 @Author  : imbalich
 @Time    : 2025/4/16 14:27
 """
+from backend.core.conf import settings
 
 from backend.app.datamanage.model.configuration import Configuration
 from backend.app.datamanage.model.despatch import Despatch
@@ -25,3 +26,11 @@ from backend.app.datamanage.model.lcc import LCC
 from backend.app.datamanage.model.unqualify import Unqualify
 from backend.app.datamanage.model.repair_interval import RepairInterval
 from backend.app.datamanage.model.reliability_index import ReliabilityIndex
+from backend.app.datamanage.model.failure_mro_correct import FailureMROCorrect  # 故障信息-来源MRO-修正数据
+
+def get_failure_model():
+    if settings.FAILURE_DATA_SOURCE == "mro_correct":
+        return FailureMROCorrect
+    return Failure
+
+FailureModel = get_failure_model()

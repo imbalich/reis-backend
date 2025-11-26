@@ -11,7 +11,7 @@
 from datetime import date
 from typing import Any
 
-from backend.app.datamanage.model import Despatch, Failure, Product
+from backend.app.datamanage.model import Despatch, FailureModel, Product
 from backend.app.fit.schema.base_param import DespatchParam, FailureParam
 from backend.app.fit.service.tag_process_service import TagProcessService
 from backend.app.fit.utils.time_utils import dateutils
@@ -21,7 +21,7 @@ class ProductTagProcessService(TagProcessService):
     async def process_data(
         self,
         despatch_data: list[Despatch],
-        failure_data: list[Failure],
+        failure_data: list[FailureModel],
         product_data: Product,
         input_date: str | date = None,
         **kwargs: Any,
@@ -54,7 +54,7 @@ class ProductTagProcessService(TagProcessService):
         """
         return await super().process_despatch_data(despatch_data, input_date)
 
-    async def process_failure_data(self, failure_data: list[Failure], input_date: date):
+    async def process_failure_data(self, failure_data: list[FailureModel], input_date: date):
         """
         处理故障数据，按时间顺序排序，降序。
         :param failure_data: 故障数据列表

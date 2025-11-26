@@ -256,6 +256,9 @@ class Settings(BaseSettings):
     EMAIL_SSL: bool = True
     EMAIL_CAPTCHA_REDIS_PREFIX: str = "fba:email:captcha"
     EMAIL_CAPTCHA_EXPIRE_SECONDS: int = 60 * 3  # 3 分钟
+    
+    # 业务配置
+    FAILURE_DATA_SOURCE: Literal["legacy", "mro_correct"] = "mro_correct"   # legacy / mro_correct
 
     @model_validator(mode="before")
     @classmethod
