@@ -9,14 +9,13 @@
 """
 
 from fastapi import APIRouter, Query
-from backend.app.lifetime.schema.lifetime_param import CreateEuqalLifetimeInParam,CreateEuqalLifetimeAllPartInParam
 from backend.app.lifetime.service.equal_lifetime_service import equal_lifetime_service
 from typing import Annotated
 
 from backend.common.response.response_schema import response_base
 from backend.app.lcc.service.repair_plan_service import repair_plan_service
 from backend.app.task.tasks.lifetime_task.tasks import equal_lifetime_task,equal_lifetime_all_task
-
+from backend.app.lcc.schema.lcc_param import CreateRepairPlanInParam
 
 
 router = APIRouter()
@@ -26,7 +25,7 @@ async def  get_repair_plan_result(
     model: str = Query(..., description='产品型号'),
     # parts: list[str] = Query(..., description='零部件名称'),
     parts: Annotated[list[str] | None, Query(description='零部件名称')] = None,
-    life: Annotated[float | None, Query(description='寿命目标值')] = 30,
+    life: Annotated[int | None, Query(description='寿命目标值')] = 30,
     is_ai: Annotated[bool | None, Query(description='是否考虑可用度')] = False
 ):
     """
@@ -41,3 +40,8 @@ async def get_repair_plan_parts(model: str):
     result = await repair_plan_service.get_parts_by_model(model=model)
     return response_base.success(data=result)
 
+
+@router.post('/swagger', summary='等寿命设计-->仅调试使用')
+async def repair_plan(obj: CreateRepairPlanInParam):
+    await repair_plan_service.create(obj=obj)
+    return response_base.success()

@@ -41,6 +41,7 @@ async def sense_tag(
 ):
     tags = await process_service.process(model, part, stage, process_name, check_project, check_bezier,
                                         time_range, extra_material_names)
+    print(tags)
     return response_base.success(data=tags)
 
 @router.post("/sense/swagger", summary="识别故障关键影响要素及其敏感度-->仅调试使用")

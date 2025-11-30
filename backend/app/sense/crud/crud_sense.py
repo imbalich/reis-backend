@@ -104,7 +104,7 @@ class CRUDSensePart(CRUDPlus[SenseSort]):
             self.model.model == model,
             self.model.part == part,
             self.model.stage == stage,
-            self.model.f1_score >= 0.6,
+            self.model.f1_score >= 0.75,
         ]
 
         if process_name:

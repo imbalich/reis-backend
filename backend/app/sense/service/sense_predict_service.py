@@ -9,7 +9,7 @@
 """
 import uuid
 from datetime import date, datetime
-from typing import Union, List
+from typing import Union, List, Any, Dict
 import json
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -127,7 +127,8 @@ class SensePredictService:
                 categorical_dict = json.loads(sense.categorical_analysis)
                 category_values = {}
                 for category, items in categorical_dict.items():
-                    raw_values = [item['value'] for item in items]
+                    # raw_values = [item['value'] for item in items]
+                    raw_values = [f"{item['value']} --- {item.get('Fault')}" for item in items]
                     category_values[category] = raw_values
 
                 sense.categorical_analysis = json.dumps(category_values, ensure_ascii=False)

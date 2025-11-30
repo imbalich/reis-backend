@@ -227,6 +227,27 @@ class CRUDFailure(CRUDPlus[T]):
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()
+    
+
+    async def get_by_model_and_part_usesense(
+        self, db: AsyncSession, model: str, part: str
+    ) -> Sequence[FailureModel]:
+        """
+        查询单型号单零部件故障信息:做检测用，不用考虑是否新造
+        :param db: 数据库会话
+        :param model: 产品型号
+        :param part: 零部件
+        :return: 故障列表
+        """
+        stmt = select(self.model).order_by(self.model.discovery_date)
+        where_list = []
+        where_list.append(self.model.product_model == model)
+        where_list.append(self.model.fault_material_code == part)
+        where_list.append(CRUDFailure._non_user_responsibility_condition(self.model))
+        if where_list:
+            stmt = stmt.where(*where_list)
+        result = await db.execute(stmt)
+        return result.scalars().all()
 
     async def get_number_by_model(
         self, db: AsyncSession, model: str, part: str, stage: str, time_range: list[str]
@@ -302,6 +323,10 @@ class CRUDFailure(CRUDPlus[T]):
                 self.model.product_model == model,
                 self.model.fault_material_code.isnot(None),  # 物料编码不为空
                 self.model.fault_location.isnot(None),  # 部位名称不为空
+                ~self.model.fault_location.like('%电机%'),  # 排除包含"电机"字眼的数据
+                ~self.model.fault_location.like('%电动机%'),
+                ~self.model.fault_location.like('%变流器%'),  # 排除包含"变流器"字眼的数据
+                ~self.model.fault_location.like('%变流柜%'),
             )
             .order_by(self.model.fault_location, self.model.fault_material_code)
         )

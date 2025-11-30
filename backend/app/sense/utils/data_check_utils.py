@@ -24,7 +24,7 @@ class DataCheckUtils:
         :return:布尔类型
         """
         async with async_db_session() as db:
-            failures = await failure_dao.get_by_model_and_part(db, model, part)
+            failures = await failure_dao.get_by_model_and_part_usesense(db, model, part)
             if failures and len(failures) > 4:
                 return True
             return False

@@ -35,5 +35,31 @@ class CRUDRepairInterval(CRUDPlus[RepairInterval]):
         results = await db.execute(stmt)
         return results.scalars().all()
 
+    async def get_repair_parts_with_names_only_by_model(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[tuple[str, str]]:
+        """
+        根据型号获取零部件物料编码和名称的二元组列表
+        :param db: 数据库会话
+        :param model: 产品型号
+        :return: (零部件名称, 零部件物料编码) 的二元组列表
+        """
+        stmt = (
+            select(
+                distinct(self.model.repair_years),  # 零部件名称
+                self.model.repair_levels,  # 零部件物料编码
+            )
+            .where(
+                self.model.model == model,
+                self.model.repair_levels.isnot(None),  # 物料编码不为空
+                self.model.repair_years.isnot(None),  # 部位名称不为空
+                self.model.repair_levels.in_(['C5', 'C6', '首轮三级修', '首轮四级修', '首轮五级修','D4','D5','D6'])
+            )
+            .order_by(self.model.repair_years ,self.model.repair_years)
+        )
+
+        result = await db.execute(stmt)
+        return [(row[0], row[1]) for row in result.all()]
+
 
 repair_interval_dao: CRUDRepairInterval = CRUDRepairInterval(RepairInterval)

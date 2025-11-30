@@ -38,6 +38,26 @@ class CRUDUnqualify(CRUDPlus[Unqualify]):
         stmt = stmt.distinct() 
         results = await db.execute(stmt)
         return results.scalars().all()
+    
+
+    async def get_major_repair_by_model_and_part(self, db: AsyncSession, model: str, part:str) -> Sequence[Unqualify]:
+        """
+        根据产品型号修程级别
+        :param db: 数据库会话
+        :param model: 产品型号
+        :return: 修成级别表
+        """
+        # stmt = select(self.model)
+        stmt = select(self.model.mark)
+        where_list = []
+        where_list.append(self.model.product_model == model)
+        where_list.append(self.model.ncr_material_code == part)
+        where_list.append(self.model.mark.isnot(None))
+        if where_list:
+            stmt = stmt.where(*where_list)
+        stmt = stmt.distinct() 
+        results = await db.execute(stmt)
+        return results.scalars().first()
 
 
 unqualify_dao: CRUDUnqualify = CRUDUnqualify(Unqualify)

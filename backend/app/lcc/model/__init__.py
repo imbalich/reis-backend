@@ -7,3 +7,4 @@
 @Author  ：Seven-ln
 @Date    ：2025/9/2 14:53
 """
+from backend.app.lcc.model.repair_plan import RepairPlan

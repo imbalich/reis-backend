@@ -265,6 +265,19 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         result = await db.execute(stmt)
         return result.scalars().all()
     
+    async def get_parts_for_lifetime_by_model1(self, db: AsyncSession, model: str) -> Sequence[str]:
+        """
+        获取指定型号下所有能够计算等寿命设计的零部件物料编码
+        """
+        stmt = (
+            select(distinct(self.model.part))
+            .where(
+                self.model.model == model,
+            )
+        )
+        result = await db.execute(stmt)
+        return result.scalars().all()
+    
     async def get_distinct_column_values(
         self, db: AsyncSession, column_name: str
     ) -> Sequence[Any]:

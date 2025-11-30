@@ -102,6 +102,12 @@ def self_create_by(name_str):
         if sep in name_str:
             name_str = name_str.split(sep)[0]
             break
+    
+     # === 新增：提取开头的连续中文字符（含间隔号·） ===
+    match = re.match(r'^[\u4e00-\u9fff\u00b7]+', name_str)  # 匹配中文字符+间隔号
+    if match:
+        return match.group(0)
+    # ===========================================
 
     return name_str.strip()
 

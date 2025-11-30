@@ -34,9 +34,10 @@ class ProcessService:
             try:
                 # 1. 并行获取基础数据
                 figure_data = await failure_dao.get_number_by_model(db, model, part, stage, time_range)
+                print(figure_data)
                 config_data = await configuration_dao.get_by_model_and_part(db, model, part, stage, process_names,
                                                                             extra_material_names)
-
+                print('config_data',config_data)
                 # config_data中的product_no去重
                 seen = set()
                 filtered_config_data = []
@@ -51,7 +52,7 @@ class ProcessService:
 
                 # 2. 提前获取所有PC数据并建立内存索引
                 pc_groups = await ProcessService._get_pc_groups(db, model, stage,config_data,check_project,check_bezier)
-
+                print(pc_groups)
                 # 3. 构建响应数据
                 processed_data = []
                 for config in config_data:

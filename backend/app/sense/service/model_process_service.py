@@ -80,7 +80,7 @@ class ModelProcessService:
                 # 计算每个特征下各类别特征重要度
                 categorical_analysis = {}
                 for col in categorical_cols:
-                    categorical_analysis[col] = ModelProcessService._analyze_categorical_feature(x_test_raw[col],shap_values)
+                    categorical_analysis[col] = ModelProcessService._analyze_categorical_feature(x_test_raw[col],shap_values,tags['data'],col)
 
                 # 组装结果
                 results.append({
@@ -284,7 +284,7 @@ class ModelProcessService:
             return {'error': f'{model_type} SHAP计算失败: {str(e)}'}
 
     @staticmethod
-    def _analyze_categorical_feature(feature_series: pd.Series, shap_values: np.ndarray) -> List[Dict]:
+    def _analyze_categorical_feature(feature_series: pd.Series, shap_values: np.ndarray,original_data: List[Dict],feature_name: str) -> List[Dict]:
         """
         分析每个特征下单个类别特征
         :param feature_series: 编码前单列特征值
@@ -292,19 +292,50 @@ class ModelProcessService:
         :return: 每个类别SHAP值并排序
         """
         analysis = []
+        value_set = set(feature_series.unique())
         for value in feature_series.unique():
+            if value not in value_set:
+                continue
+            value_set.add(value)
             mask = (feature_series == value)
             if mask.sum() > 0:
                 indices = np.where(mask)[0]
                 value_shap = np.mean(shap_values.values[indices], axis=0)
                 if np.mean(value_shap) > 0:
+                    fault_count = ModelProcessService.calculate_fault_rate(original_data, feature_name, value)
                     analysis.append({
                         "value": value,
                         "count": mask.sum().item(),
                         "mean_shap": float(np.mean(value_shap)),
+                        "Fault": fault_count  # 添加故障计数字段
                     })
         sorted_analysis = sorted(analysis, key=lambda x: x["mean_shap"], reverse=True)
 
         return sorted_analysis[:min(3, len(sorted_analysis))]
+    
+
+
+    @staticmethod
+    def calculate_fault_rate(data: List[Dict], feature: str, value: Any) -> float:
+        """
+        计算特定特征值的故障率
+    
+        :param data: 数据列表，每个元素是一个字典(与tags['data']结构相同)
+        :param feature: 要分析的特征名(如'check_tools_sign')
+        :param value: 特征的具体值(如'LS110918-1')
+        :return: 故障次数占比(n1/n)
+        """
+        total_count = 0
+        fault_count = 0
+    
+        for record in data:
+            # 检查特征值是否匹配
+            if record.get(feature) == value:
+                total_count += 1
+                # 检查是否为故障
+                if record.get('is_figure') == 1:
+                    fault_count += 1
+    
+        return f"{fault_count}/{total_count}"
 
 model_process_service: ModelProcessService=ModelProcessService()

@@ -7,7 +7,7 @@
 @Author  ：Seven-ln
 @Date    ：2025/9/10 09:48
 """
-
+import time
 from typing import Any
 from backend.database.db import async_db_session
 from backend.app.lcc.service.assign_service import assign_service
@@ -41,7 +41,7 @@ class AssignCompareService:
         results = []
         items_list = [items1, items2]
         lcc_companies = []
-        
+        section_start = time.time()
         # 循环处理两个方案
         for i, items in enumerate(items_list):
             # 1、判断items中的part是否为空，如果为空，则提取全量数据
@@ -49,15 +49,17 @@ class AssignCompareService:
                 if item['part'] is None or len(item['part']) == 0: 
                     item['part'] = await assign_service.get_all_parts(item['model'])
 
+            # 1、计算所有部件信息
+            fpmh_and_cost = await assign_service.get_fpmh_and_cost(items)
+
             # 1、判断是否满足用户要求
-            fpmh = await assign_service.get_fpmh_by_part(items)
+            fpmh = fpmh_and_cost['fpmh']
             fpmh_pre = sum(fpmh) * (1 + reserved_value)
             fpmh_result = bool(fpmh_pre < fpmh_user)
 
             # 2、获取成本计算lcc全寿命周期成本费
-            cm_gz_cost = await assign_service.get_cm_cost(items)
-            gz_total = sum(cm_gz_cost['gz'])
-            cm_total = sum(cm_gz_cost['cm'])
+            gz_total = sum(fpmh_and_cost['gz'])
+            cm_total = sum(fpmh_and_cost['cm'])
             lcc_company = int(yan_cost + (gz_total + cm_total + shou_cost) * order)
             
             # 4、根据fpmh_result决定是否需要重新分配fpmh
@@ -79,8 +81,8 @@ class AssignCompareService:
                     parts_detail.append({
                         'model': model,
                         'part': part,
-                        'part_name': cm_gz_cost['part_name'][j] if 'part_name' in cm_gz_cost and j < len(cm_gz_cost['part_name']) else part,
-                        'quantity': cm_gz_cost['quantity'][j] if 'quantity' in cm_gz_cost and j < len(cm_gz_cost['quantity']) else 1,
+                        'part_name': fpmh_and_cost['part_name'][j] if 'part_name' in fpmh_and_cost and j < len(fpmh_and_cost['part_name']) else part,
+                        'quantity': fpmh_and_cost['quantity'][j] if 'quantity' in fpmh_and_cost and j < len(fpmh_and_cost['quantity']) else 1,
                         'fpmh': round(assigned_fpmh[j],4)
                     })
                     j += 1
@@ -108,7 +110,9 @@ class AssignCompareService:
                 'lcc_company': lcc_company,
                 'parts_detail': parts_detail
             })
-        
+
+        section_end = time.time()
+        print(f"[1] 参数处理完成: {section_end - section_start:.3f}秒")
         # lcc公司评估计算，以最小值为基准，计算比例
         min_lcc_company = min(lcc_companies)
         for i, result in enumerate(results):
