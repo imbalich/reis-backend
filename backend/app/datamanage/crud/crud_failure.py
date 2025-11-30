@@ -133,6 +133,7 @@ class CRUDFailure(CRUDPlus[T]):
         fault_mode: str = None,
         time_range: list[str] = None,
         is_zero_distance: int = 1,
+        is_company: int = 1,
         fault_material_code: str = None,
     ) -> Select:
         """
@@ -144,6 +145,7 @@ class CRUDFailure(CRUDPlus[T]):
         :param fault_mode:
         :param time_range:
         :param is_zero_distance:
+        :param is_company:
         :param fault_material_code:
         :return: 查询语句
         """
@@ -167,6 +169,8 @@ class CRUDFailure(CRUDPlus[T]):
             )
         if is_zero_distance is not None:
             where_list.append(self.model.is_zero_distance == is_zero_distance)
+        if is_company is not None:
+            where_list.append(self.model.is_company == is_company)
         if fault_material_code is not None:
             where_list.append(self.model.fault_material_code == fault_material_code)
         if where_list:

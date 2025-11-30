@@ -66,6 +66,7 @@ async def get_pagination_failure(
     fault_mode: Annotated[str | None, Query()] = None,
     time_range: Annotated[list[str] | None, Query()] = None,
     is_zero_distance: Annotated[int | None, Query()] = None,
+    is_company:Annotated[int | None, Query()] = None,
     fault_material_code: Annotated[str | None, Query()] = None,
 ) -> ResponseSchemaModel[PageData[GetFailureDetails]]:
     """
@@ -77,6 +78,7 @@ async def get_pagination_failure(
     param fault_mode: 故障模式
     param time_range: 时间范围
     param is_zero_distance: 是否为零距离
+    param is_company: 是否为本公司产品
     param fault_material_code: 终判故障部位物料编码
     return: 故障数据列表
     """
@@ -88,6 +90,7 @@ async def get_pagination_failure(
         fault_mode=fault_mode,
         time_range=time_range,
         is_zero_distance=is_zero_distance,
+        is_company=is_company,
         fault_material_code=fault_material_code,
     )
     page_data = await paging_data(db, failure_select)

@@ -117,6 +117,9 @@ class ProductTagProcessService(TagProcessService):
                 # 添加一个新的字典,fault_list中插入[发运时间,发现时间],fault_part_list插入故障部件
                 # 加一个判断，如果发现时间大于发运时间，不插入
                 # 新表利用production_date(转换后的manufacturing_date)字段来判断
+                # 如果 manufacturing_date 为 None，跳过这条记录
+                if failure.manufacturing_date is None:
+                    continue
                 if discovery_date < failure.manufacturing_date:
                     continue
                 cur = {

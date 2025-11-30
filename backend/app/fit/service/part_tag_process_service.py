@@ -151,6 +151,9 @@ class PartTagProcessService(TagProcessService):
     ) -> dict[str, Any]:
         # 故障数据补充容器
         for failure in failure_data:
+            # 如果 manufacturing_date 为 None，跳过这条记录
+            if failure.manufacturing_date is None:
+                continue
             if failure.product_number not in container['part_container']:
                 # 向container内追加
                 product = {
