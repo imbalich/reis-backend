@@ -25343,3 +25343,715 @@ sqlalchemy.exc.OperationalError: (asyncmy.errors.OperationalError) (2013, 'Lost 
 2025-11-26 18:14:00,367 - _granian.workers - INFO - Started worker-1 runtime-1
 2025-11-26 18:15:09,671 - _granian.workers - INFO - Stopping worker-1
 2025-11-26 18:15:09,696 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2025-11-27 09:06:06,445 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:06:06,461 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 09:43:36,493 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:43:36,525 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 09:47:37,989 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:47:37,990 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 09:54:30,283 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:54:30,284 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 09:54:57,794 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:54:57,795 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 09:55:15,192 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:55:15,193 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 09:58:28,246 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:58:28,246 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 09:58:38,323 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:58:38,324 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 09:58:49,071 - _granian.workers - INFO - Started worker-1
+2025-11-27 09:58:49,071 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:00:32,487 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:00:32,488 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:02:22,421 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:02:22,422 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:35:06,419 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:35:06,420 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:38:44,026 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:38:44,027 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:39:57,138 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:39:57,139 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:40:16,097 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:40:16,097 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:40:30,756 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:40:30,756 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:40:41,858 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:40:41,858 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 10:42:30,510 - _granian.workers - INFO - Started worker-1
+2025-11-27 10:42:30,511 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 14:39:57,380 - _granian.asgi.io - INFO - ASGI transport error: SendError { .. }
+2025-11-27 14:47:15,388 - _granian.workers - INFO - Started worker-1
+2025-11-27 14:47:15,388 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 18:06:01,698 - _granian.workers - INFO - Started worker-1
+2025-11-27 18:06:01,780 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 18:28:24,828 - _granian.workers - INFO - Started worker-1
+2025-11-27 18:28:24,829 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 18:30:00,289 - _granian.utils - ERROR - Application callable raised an exception
+Traceback (most recent call last):
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\granian\_futures.py", line 15, in future_watcher
+    await inner(watcher.scope, watcher.proto)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\asgi_correlation_id\middleware.py", line 90, in __call__
+    await self.app(scope, receive, handle_outgoing_request)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\access_middleware.py", line 34, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\i18n_middleware.py", line 29, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\authentication.py", line 48, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\state_middleware.py", line 32, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 116, in dispatch
+    raise error from None
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 53, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\api\v1\spare\predict_part.py", line 59, in part_spare_predict
+    spare_num = await spare_service.get_part_spare_num(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 179, in get_part_spare_num
+    result = await SpareService.get_spare_num(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 63, in get_spare_num
+    product["yvals"] = distribution.CDF(xvals=product["xvals"], show_plot=False)
+                       ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'CDF'
+2025-11-27 18:30:34,439 - _granian.utils - ERROR - Application callable raised an exception
+Traceback (most recent call last):
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\granian\_futures.py", line 15, in future_watcher
+    await inner(watcher.scope, watcher.proto)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\asgi_correlation_id\middleware.py", line 90, in __call__
+    await self.app(scope, receive, handle_outgoing_request)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\access_middleware.py", line 34, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\i18n_middleware.py", line 29, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\authentication.py", line 48, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\state_middleware.py", line 32, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 116, in dispatch
+    raise error from None
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 53, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\api\v1\spare\predict_part.py", line 59, in part_spare_predict
+    spare_num = await spare_service.get_part_spare_num(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 179, in get_part_spare_num
+    result = await SpareService.get_spare_num(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 63, in get_spare_num
+    product["yvals"] = distribution.CDF(xvals=product["xvals"], show_plot=False)
+                       ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'CDF'
+2025-11-27 18:31:14,449 - _granian.utils - ERROR - Application callable raised an exception
+Traceback (most recent call last):
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\granian\_futures.py", line 15, in future_watcher
+    await inner(watcher.scope, watcher.proto)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\asgi_correlation_id\middleware.py", line 90, in __call__
+    await self.app(scope, receive, handle_outgoing_request)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\access_middleware.py", line 34, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\i18n_middleware.py", line 29, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\authentication.py", line 48, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\state_middleware.py", line 32, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 116, in dispatch
+    raise error from None
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 53, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\api\v1\spare\predict_part.py", line 59, in part_spare_predict
+    spare_num = await spare_service.get_part_spare_num(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 179, in get_part_spare_num
+    result = await SpareService.get_spare_num(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 63, in get_spare_num
+    product["yvals"] = distribution.CDF(xvals=product["xvals"], show_plot=False)
+                       ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'CDF'
+2025-11-27 18:48:02,560 - _granian.workers - INFO - Started worker-1
+2025-11-27 18:48:02,626 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:04:32,032 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:04:32,032 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:04:49,778 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:04:49,778 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:05:04,995 - _granian.utils - ERROR - Application callable raised an exception
+Traceback (most recent call last):
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\granian\_futures.py", line 15, in future_watcher
+    await inner(watcher.scope, watcher.proto)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\asgi_correlation_id\middleware.py", line 90, in __call__
+    await self.app(scope, receive, handle_outgoing_request)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\access_middleware.py", line 34, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\i18n_middleware.py", line 29, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\authentication.py", line 48, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\state_middleware.py", line 32, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 116, in dispatch
+    raise error from None
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 53, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\api\v1\spare\predict_part.py", line 59, in part_spare_predict
+    spare_num = await spare_service.get_part_spare_num(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 183, in get_part_spare_num
+    result = await SpareService.get_spare_num(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 64, in get_spare_num
+    product["yvals"] = distribution.CDF(xvals=product["xvals"], show_plot=False)
+                       ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'CDF'
+2025-11-27 19:08:49,122 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:08:49,123 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:08:59,229 - _granian.utils - ERROR - Application callable raised an exception
+Traceback (most recent call last):
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\granian\_futures.py", line 15, in future_watcher
+    await inner(watcher.scope, watcher.proto)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\asgi_correlation_id\middleware.py", line 90, in __call__
+    await self.app(scope, receive, handle_outgoing_request)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\access_middleware.py", line 34, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\i18n_middleware.py", line 29, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\authentication.py", line 48, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\state_middleware.py", line 32, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 116, in dispatch
+    raise error from None
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 53, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\api\v1\spare\predict_part.py", line 59, in part_spare_predict
+    spare_num = await spare_service.get_part_spare_num(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 183, in get_part_spare_num
+    result = await SpareService.get_spare_num(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\service\spare_service.py", line 64, in get_spare_num
+    product["yvals"] = distribution.CDF(xvals=product["xvals"], show_plot=False)
+                       ^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'CDF'
+2025-11-27 19:09:31,275 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:09:31,275 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:14:55,180 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:14:55,181 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:15:09,406 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:15:09,407 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:15:32,723 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:15:32,723 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:16:18,272 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:16:18,273 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:16:34,594 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:16:34,594 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:17:04,986 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:17:04,987 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:17:29,590 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:17:29,591 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:18:00,907 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:18:00,908 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:29:21,657 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:29:21,658 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:29:58,222 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:29:58,223 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:30:51,893 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:30:51,893 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:32:17,143 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:32:17,144 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:39:31,820 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:39:31,821 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:41:10,569 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:41:10,570 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:54:35,386 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:54:35,387 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-27 19:59:45,060 - _granian.workers - INFO - Started worker-1
+2025-11-27 19:59:45,061 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-28 13:48:53,742 - asyncio - ERROR - Exception in callback _ProactorBasePipeTransport._call_connection_lost(None)
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost(None)>
+Traceback (most recent call last):
+  File "D:\PYTHON312\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "D:\PYTHON312\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。
+2025-11-29 10:53:16,028 - _granian.workers - INFO - Started worker-1
+2025-11-29 10:53:16,028 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-30 11:43:17,673 - asyncio - ERROR - Exception in callback _ProactorBasePipeTransport._call_connection_lost(None)
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost(None)>
+Traceback (most recent call last):
+  File "D:\PYTHON312\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "D:\PYTHON312\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。
+2025-11-30 11:52:07,772 - _granian.workers - INFO - Started worker-1
+2025-11-30 11:52:07,772 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-11-30 12:14:50,520 - _granian.workers - INFO - Started worker-1
+2025-11-30 12:14:50,589 - _granian.workers - INFO - Started worker-1 runtime-1

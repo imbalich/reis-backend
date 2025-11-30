@@ -26,9 +26,10 @@ from backend.app.calcu.crud.crud_science_warehouse_result import (
     science_warehouse_result_dao,
 )
 from typing import Sequence
-from backend.app.calcu.crud.crud_science_warehouse_statistics import (
-    science_warehouse_statistics_dao,
-)
+# 统计表相关逻辑已移除，不再导入
+# from backend.app.calcu.crud.crud_science_warehouse_statistics import (
+#     science_warehouse_statistics_dao,
+# )
 from backend.app.fit.service.part_strategy_service import part_strategy_service
 from backend.app.fit.service.part_fit_service import part_fit_service
 from backend.app.fit.utils.time_utils import dateutils
@@ -1067,9 +1068,10 @@ class ScienceWarehouseService:
             await science_warehouse_result_dao.clear_by_calculation_id(
                 db, calculation_id
             )
-            await science_warehouse_statistics_dao.clear_by_calculation_id(
-                db, calculation_id
-            )
+            # 统计表相关逻辑已移除
+            # await science_warehouse_statistics_dao.clear_by_calculation_id(
+            #     db, calculation_id
+            # )
 
             # 2. 准备结果数据
             result_data = []
@@ -1093,17 +1095,18 @@ class ScienceWarehouseService:
                             "input_date": input_date,
                             "created_time": date.today(),
                             "confidence": spare_info["confidence"],
-                            "coverage_info": json.dumps(
-                                spare_info.get("coverage_info", {}), ensure_ascii=False
-                            ),
-                            "maintenance_analysis": json.dumps(
-                                spare_info.get("maintenance_analysis", {}),
-                                ensure_ascii=False,
-                            ),
-                            "calculation_details": json.dumps(
-                                spare_info.get("calculation_details", {}),
-                                ensure_ascii=False,
-                            ),
+                            # 后三个字段已移除，避免数据过大导致写入失败
+                            # "coverage_info": json.dumps(
+                            #     spare_info.get("coverage_info", {}), ensure_ascii=False
+                            # ),
+                            # "maintenance_analysis": json.dumps(
+                            #     spare_info.get("maintenance_analysis", {}),
+                            #     ensure_ascii=False,
+                            # ),
+                            # "calculation_details": json.dumps(
+                            #     spare_info.get("calculation_details", {}),
+                            #     ensure_ascii=False,
+                            # ),
                         }
                     )
 
@@ -1111,53 +1114,12 @@ class ScienceWarehouseService:
             if result_data:
                 await science_warehouse_result_dao.bulk_create(db, result_data)
 
-            # 4. 保存统计信息
-            from backend.app.calcu.model.science_warehouse_statistics import (
-                ScienceWarehouseStatistics,
-            )
-
-            # 简化的统计信息，只保留核心数据
-            simplified_statistics = {
-                "total_warehouse_spares": statistics["total_warehouse_spares"],
-                "calculated_spares": statistics["calculated_spares"],
-                "default_spares": statistics["default_spares"],
-                "insufficient_failure_data_spares": statistics.get(
-                    "insufficient_failure_data_spares", 0
-                ),
-                "skipped_failures_count": len(statistics.get("skipped_failures", [])),
-                "mapping_errors_count": len(statistics.get("mapping_errors", [])),
-                "calculation_period": {
-                    "time_interval_days": time_interval_days,
-                    "input_date": input_date.isoformat() if input_date else None,
-                },
-                "performance_metrics": {
-                    "total_warehouses": len(
-                        statistics.get("maintenance_responsibility_analysis", {})
-                    ),
-                    "calculation_timestamp": date.today().isoformat(),
-                },
-            }
-
-            statistics_data = {
-                "calculation_id": calculation_id,
-                "total_warehouse_spares": statistics["total_warehouse_spares"],
-                "calculated_spares": statistics["calculated_spares"],
-                "default_spares": statistics["default_spares"],
-                "skipped_failures_count": len(statistics.get("skipped_failures", [])),
-                "mapping_errors_count": len(statistics.get("mapping_errors", [])),
-                "time_interval_days": time_interval_days,
-                "input_date": input_date,
-                "calculation_summary": json.dumps(
-                    simplified_statistics, ensure_ascii=False
-                ),
-                "created_time": date.today(),
-            }
-
-            # 直接使用字典创建统计信息
-            statistics_obj = ScienceWarehouseStatistics(**statistics_data)
-            db.add(statistics_obj)
-            await db.commit()
-            await db.refresh(statistics_obj)
+            # 统计表相关逻辑已移除，只保留核心计算结果
+            # # 4. 保存统计信息
+            # from backend.app.calcu.model.science_warehouse_statistics import (
+            #     ScienceWarehouseStatistics,
+            # )
+            # ... (统计表创建逻辑已注释)
 
     @staticmethod
     async def get_warehouse_name(warehouse_code: str) -> str:
@@ -1212,10 +1174,11 @@ class ScienceWarehouseService:
                 db, calculation_id__eq=calculation_id
             )
 
-            # 获取统计信息
-            statistics = await science_warehouse_statistics_dao.select_model(
-                db, calculation_id__eq=calculation_id
-            )
+            # 统计表相关逻辑已移除
+            # statistics = await science_warehouse_statistics_dao.select_model(
+            #     db, calculation_id__eq=calculation_id
+            # )
+            statistics = None
 
             # 转换为内部格式
             results_dict = {}
@@ -1228,19 +1191,20 @@ class ScienceWarehouseService:
                     "required_quantity": result.required_quantity,
                     "calculation_method": result.calculation_method,
                     "confidence": result.confidence,
-                    "coverage_info": (
-                        json.loads(result.coverage_info) if result.coverage_info else {}
-                    ),
-                    "maintenance_analysis": (
-                        json.loads(result.maintenance_analysis)
-                        if result.maintenance_analysis
-                        else {}
-                    ),
-                    "calculation_details": (
-                        json.loads(result.calculation_details)
-                        if result.calculation_details
-                        else {}
-                    ),
+                    # 后三个字段已移除
+                    # "coverage_info": (
+                    #     json.loads(result.coverage_info) if result.coverage_info else {}
+                    # ),
+                    # "maintenance_analysis": (
+                    #     json.loads(result.maintenance_analysis)
+                    #     if result.maintenance_analysis
+                    #     else {}
+                    # ),
+                    # "calculation_details": (
+                    #     json.loads(result.calculation_details)
+                    #     if result.calculation_details
+                    #     else {}
+                    # ),
                 }
 
             # 导入Schema类
@@ -1251,11 +1215,7 @@ class ScienceWarehouseService:
             return ScienceWarehouseDetailsResponse(
                 calculation_id=calculation_id,
                 results=results_dict,
-                statistics=(
-                    json.loads(statistics.calculation_summary)
-                    if statistics and statistics.calculation_summary
-                    else {}
-                ),
+                statistics={},  # 统计表已移除，返回空字典
             )
 
     @staticmethod
@@ -1302,17 +1262,18 @@ class ScienceWarehouseService:
         :return: 最新批次的计算结果列表
         """
         async with async_db_session() as db:
-            # 1. 获取最新的统计记录（按自增ID倒序，确保唯一性）
-            latest_statistics = await science_warehouse_statistics_dao.select_model(
+            # 统计表已移除，改为从结果表获取最新的calculation_id
+            # 1. 获取最新的结果记录（按自增ID倒序，确保唯一性）
+            latest_result = await science_warehouse_result_dao.select_model(
                 db, order_by="id", desc=True
             )
 
-            if not latest_statistics:
+            if not latest_result:
                 return []
 
-            # 2. 根据最新统计记录的calculation_id获取结果数据
+            # 2. 根据最新结果记录的calculation_id获取结果数据
             return await ScienceWarehouseService.get_calculation_results_for_api(
-                latest_statistics.calculation_id
+                latest_result.calculation_id
             )
 
     @staticmethod
@@ -1323,17 +1284,18 @@ class ScienceWarehouseService:
         :return: 最新批次的详细计算结果列表
         """
         async with async_db_session() as db:
-            # 1. 获取最新的统计记录（按自增ID倒序，确保唯一性）
-            latest_statistics = await science_warehouse_statistics_dao.select_model(
+            # 统计表已移除，改为从结果表获取最新的calculation_id
+            # 1. 获取最新的结果记录（按自增ID倒序，确保唯一性）
+            latest_result = await science_warehouse_result_dao.select_model(
                 db, order_by="id", desc=True
             )
 
-            if not latest_statistics:
+            if not latest_result:
                 return []
 
             # 2. 获取详细的结果数据
             results = await science_warehouse_result_dao.select_models(
-                db, calculation_id__eq=latest_statistics.calculation_id
+                db, calculation_id__eq=latest_result.calculation_id
             )
 
             if not results:
@@ -1358,19 +1320,20 @@ class ScienceWarehouseService:
                     "created_time": (
                         result.created_time.isoformat() if result.created_time else None
                     ),
-                    "coverage_info": (
-                        json.loads(result.coverage_info) if result.coverage_info else {}
-                    ),
-                    "maintenance_analysis": (
-                        json.loads(result.maintenance_analysis)
-                        if result.maintenance_analysis
-                        else {}
-                    ),
-                    "calculation_details": (
-                        json.loads(result.calculation_details)
-                        if result.calculation_details
-                        else {}
-                    ),
+                    # 后三个字段已移除
+                    # "coverage_info": (
+                    #     json.loads(result.coverage_info) if result.coverage_info else {}
+                    # ),
+                    # "maintenance_analysis": (
+                    #     json.loads(result.maintenance_analysis)
+                    #     if result.maintenance_analysis
+                    #     else {}
+                    # ),
+                    # "calculation_details": (
+                    #     json.loads(result.calculation_details)
+                    #     if result.calculation_details
+                    #     else {}
+                    # ),
                 }
                 detailed_results.append(detailed_item)
 
@@ -1480,44 +1443,12 @@ class ScienceWarehouseService:
     @staticmethod
     async def get_latest_calculation_statistics() -> Dict[str, Any]:
         """
-        获取最新一批次的统计信息
+        获取最新一批次的统计信息（统计表已移除，返回空字典）
 
         :return: 最新批次的统计信息
         """
-        async with async_db_session() as db:
-            # 获取最新的统计记录（按自增ID倒序，确保唯一性）
-            latest_statistics = await science_warehouse_statistics_dao.select_model(
-                db, order_by="id", desc=True
-            )
-
-            if not latest_statistics:
-                return {}
-
-            # 返回统计信息
-            return {
-                "calculation_id": latest_statistics.calculation_id,
-                "total_warehouse_spares": latest_statistics.total_warehouse_spares,
-                "calculated_spares": latest_statistics.calculated_spares,
-                "default_spares": latest_statistics.default_spares,
-                "skipped_failures_count": latest_statistics.skipped_failures_count,
-                "mapping_errors_count": latest_statistics.mapping_errors_count,
-                "time_interval_days": latest_statistics.time_interval_days,
-                "input_date": (
-                    latest_statistics.input_date.isoformat()
-                    if latest_statistics.input_date
-                    else None
-                ),
-                "created_time": (
-                    latest_statistics.created_time.isoformat()
-                    if latest_statistics.created_time
-                    else None
-                ),
-                "calculation_summary": (
-                    json.loads(latest_statistics.calculation_summary)
-                    if latest_statistics.calculation_summary
-                    else {}
-                ),
-            }
+        # 统计表已移除，返回空字典
+        return {}
 
 
 science_warehouse_service: ScienceWarehouseService = ScienceWarehouseService()

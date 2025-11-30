@@ -86,7 +86,10 @@ class CRUDFailure(CRUDPlus[T]):
         # 先查产品型号==column下的所有product_model，然后针对product_model去重
         stmt = (
             select(distinct(column))
-            .where(self.model.product_model == product_model)
+            .where(
+                self.model.product_model == product_model,
+                column.isnot(None),  # 过滤掉 NULL 值
+            )
             .order_by(column)
         )
         # 执行查询
