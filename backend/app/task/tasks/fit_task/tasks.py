@@ -85,7 +85,7 @@ async def product_fit_all_task(
     Fitting
     后台任务:手动触发/自动执行
     全型号产品级别拟合任务
-    
+
     :param input_date: 输入日期 YYYY-MM-DD
     :param method: 拟合方法
     :return:
@@ -142,7 +142,7 @@ async def part_fit_all_task(
     Fitting
     后台任务:手动触发/自动执行
     全型号零部件级别拟合任务
-    
+
     :param input_date: 输入日期 YYYY-MM-DD
     :param method: 拟合方法
     :return:
@@ -222,5 +222,73 @@ async def part_fit_all_task(
 
     if final_results:
         result_summary += f' Final results: {", ".join(final_results)}'
+
+    return result_summary
+
+
+@celery_app.task(name="part_fit_model_all_task")
+async def part_fit_model_all_task(
+    model: str, input_date: str | None = None, method: FitMethodType = FitMethodType.MLE
+) -> str:
+    """
+    Fitting
+    后台任务:手动触发
+    单型号全零部件级别拟合任务
+
+    :param model: 产品型号
+    :param input_date: 输入日期 YYYY-MM-DD
+    :param method: 拟合方法
+    :return:
+    """
+    start_time = time.time()
+    total_parts = 0
+    successful_parts = 0
+    problematic_parts: list[str] = []
+
+    try:
+        # 1. 查出该型号下的所有零部件
+        parts = await failure_service.get_parts_by_model(model)
+        total_parts = len(parts)
+
+        # 2. 对每个零部件进行拟合
+        for part in parts:
+            try:
+                fit_param = CreateFitPartInParam(
+                    model=model, part=part, input_date=input_date, method=method
+                )
+                await part_fit_service.create(obj=fit_param)
+                successful_parts += 1
+            except DataValidationError as e:
+                log.error(f"Error processing model {model}, part {part}: {str(e.msg)}")
+                problematic_parts.append(f"{model} + {part}")
+            except Exception as e:
+                log.error(
+                    f"Unexpected Error processing model {model}, part {part}: {str(e)}"
+                )
+                problematic_parts.append(f"{model} + {part}")
+
+    except Exception as e:
+        log.error(
+            f"Unexpected Error in part_fit_model_all_task for model {model}: {str(e)}"
+        )
+        return f"Task failed for model {model}: {str(e)}"
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+
+    result_summary = (
+        f"Task completed in {execution_time:.2f} seconds. "
+        f"Processed model {model}, "
+        f"{total_parts} total parts, "
+        f"{successful_parts} successful, "
+        f"{len(problematic_parts)} problematic."
+    )
+
+    if problematic_parts:
+        result_summary += (
+            f' Problematic parts: {", ".join(problematic_parts[:10])}'  # 只显示前10个
+        )
+        if len(problematic_parts) > 10:
+            result_summary += f" ... and {len(problematic_parts) - 10} more"
 
     return result_summary

@@ -34,6 +34,7 @@ from backend.app.fit.utils.convert_model import (
 from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
 from backend.common.exception import errors
+from backend.common.log import log
 from backend.database.db import async_db_session
 
 
@@ -73,9 +74,21 @@ class PartStrategyService:
                 despatch_data = convert_to_pydantic_models(
                     await despatch_dao.get_despatchs_by_model(db, model), DespatchParam
                 )
+                raw_failure_data = await failure_dao.get_by_model_and_part(
+                    db, model, part
+                )
                 failure_data = convert_to_pydantic_models(
-                    await failure_dao.get_by_model_and_part(db, model, part),
+                    raw_failure_data,
                     FailureParam,
+                )
+                failure_count = len(failure_data)
+                failure_preview = [item.model_dump() for item in failure_data[:5]]
+                log.info(
+                    "[零部件打标] 型号%s 零部件%s 故障数据共%s条，示例: %s",
+                    model,
+                    part,
+                    failure_count,
+                    failure_preview,
                 )
                 product_data = convert_to_pydantic_model(
                     await product_dao.get_by_model(db, model), ProductParam
@@ -142,7 +155,15 @@ class PartStrategyService:
                     tags = await part_tag_process_service.process_data(
                         despatch_data, failure_data, product_data, ebom_data, input_date
                     )
-
+                tag_count = len(tags) if tags else 0
+                tag_preview = tags[:3] if tags else []
+                log.info(
+                    "[零部件打标] 型号%s 零部件%s 打标完成，标签条数:%s，示例:%s",
+                    model,
+                    part,
+                    tag_count,
+                    tag_preview,
+                )
                 return tags
 
             except errors.DataValidationError as e:

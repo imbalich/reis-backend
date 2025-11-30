@@ -60,6 +60,13 @@ class CreateFitAllPartInParam(SchemaBase):
     method: FitMethodType = FitMethodType.MLE
 
 
+class CreateFitModelAllPartInParam(SchemaBase):
+    # 创建单型号全零部件级别拟合信息入参
+    model: str
+    input_date: str | None = None
+    method: FitMethodType = FitMethodType.MLE
+
+
 class CreateProductDistributionParam(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
