@@ -8,9 +8,9 @@
 @Date    ：2024/12/26 16:51
 """
 
-from typing import Any, List, Sequence,TypeVar
+from typing import Any, List, Sequence, TypeVar
 
-from sqlalchemy import Row, Select, desc, distinct, or_, select
+from sqlalchemy import Row, Select, desc, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -18,11 +18,12 @@ from backend.app.datamanage.model import FailureModel
 
 T = TypeVar("T")
 
+
 class CRUDFailure(CRUDPlus[T]):
-    
+
     def __init__(self, model: type[T]):
         super().__init__(model=model)
-        
+
     @staticmethod
     def _non_user_responsibility_condition(model):
         """
@@ -177,7 +178,9 @@ class CRUDFailure(CRUDPlus[T]):
             stmt = stmt.where(*where_list)
         return stmt
 
-    async def get_by_model(self, db: AsyncSession, model: str) -> Sequence[FailureModel]:
+    async def get_by_model(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[FailureModel]:
         """
         根据产品型号获取故障列表
         :param db: 数据库会话
@@ -234,7 +237,6 @@ class CRUDFailure(CRUDPlus[T]):
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()
-    
 
     async def get_by_model_and_part_usesense(
         self, db: AsyncSession, model: str, part: str
@@ -330,10 +332,12 @@ class CRUDFailure(CRUDPlus[T]):
                 self.model.product_model == model,
                 self.model.fault_material_code.isnot(None),  # 物料编码不为空
                 self.model.fault_location.isnot(None),  # 部位名称不为空
-                ~self.model.fault_location.like('%电机%'),  # 排除包含"电机"字眼的数据
-                ~self.model.fault_location.like('%电动机%'),
-                ~self.model.fault_location.like('%变流器%'),  # 排除包含"变流器"字眼的数据
-                ~self.model.fault_location.like('%变流柜%'),
+                ~self.model.fault_location.like("%电机%"),  # 排除包含"电机"字眼的数据
+                ~self.model.fault_location.like("%电动机%"),
+                ~self.model.fault_location.like(
+                    "%变流器%"
+                ),  # 排除包含"变流器"字眼的数据
+                ~self.model.fault_location.like("%变流柜%"),
             )
             .order_by(self.model.fault_location, self.model.fault_material_code)
         )
@@ -380,6 +384,40 @@ class CRUDFailure(CRUDPlus[T]):
         )
         result = await db.execute(stmt)
         return result.scalars().all()
+
+    async def get_failure_count_by_model_and_part_in_products(
+        self,
+        db: AsyncSession,
+        model: str,
+        part: str,
+        start_date: str,
+        end_date: str,
+        products: list,
+    ):
+        """
+        获取型号+故障件在指定时间范围内的故障次数
+        :param db: 数据库会话
+        :param model: 产品型号
+        :param part: 故障件
+        :param start_date: 开始日期（字符串格式 "YYYY-MM-DD"）
+        :param end_date: 结束日期（字符串格式 "YYYY-MM-DD"）
+        :param products: 需要被管理的产品编号列表
+        :return: 故障次数（整数）
+        """
+        stmt = select(func.count(self.model.pk)).where(
+            self.model.product_model == model,
+            self.model.fault_material_code == part,
+            self.model.product_number.in_(products),
+            # 使用字符串比较，因为discovery_date是String类型，格式为"YYYY-MM-DD"
+            # "YYYY-MM-DD"格式的字符串按字典序比较也能得到正确结果
+            self.model.discovery_date >= start_date,
+            self.model.discovery_date <= end_date,
+            self.model.is_zero_distance == 0,
+            CRUDFailure._non_user_responsibility_condition(self.model),
+        )
+        result = await db.execute(stmt)
+        count = result.scalar()
+        return count if count is not None else 0
 
 
 failure_dao: CRUDFailure = CRUDFailure(FailureModel)

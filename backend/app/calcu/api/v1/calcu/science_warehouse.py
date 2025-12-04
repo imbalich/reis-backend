@@ -21,6 +21,7 @@ from backend.app.calcu.service.science_warehouse_service import (
 from backend.app.task.tasks.science_warehouse_task.tasks import (
     science_warehouse_calculation_task,
     science_warehouse_calculation_and_api_task,
+    science_warehouse_calculation_v2_task,
 )
 from backend.common.response.response_schema import (
     ResponseModel,
@@ -56,6 +57,35 @@ async def calculate_science_warehouse_requirements(
                 "task_id": task.id,
                 "task_name": science_warehouse_calculation_task.name,
                 "message": "科学库存计算任务已提交到后台执行",
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"任务提交失败: {str(e)}")
+
+
+@router.post("/calculate-v2", summary="科学库存需求计算（新版本）-->后台任务执行")
+async def calculate_science_warehouse_requirements_v2(
+    request: ScienceWarehouseRequest,
+) -> ResponseModel:
+    """
+    提交科学库存需求计算任务到后台执行（新版本）
+
+    :param request: 计算请求参数
+    :return: 任务提交结果（包含任务ID）
+    """
+    try:
+        # 提交新版本后台任务
+        task = science_warehouse_calculation_v2_task.delay(
+            time_interval_days=request.time_interval_days,
+            input_date=request.input_date.isoformat() if request.input_date else None,
+        )
+
+        return response_base.success(
+            data={
+                "task_id": task.id,
+                "task_name": science_warehouse_calculation_v2_task.name,
+                "message": "科学库存计算任务（新版本）已提交到后台执行",
             }
         )
 

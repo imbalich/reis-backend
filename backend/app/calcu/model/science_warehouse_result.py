@@ -30,6 +30,9 @@ class ScienceWarehouseResult(Base):
     spare_part_name: Mapped[str] = mapped_column(
         String(255), nullable=False, index=True, comment="备品名称"
     )
+    max_failure_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, comment="最大滚动故障次数"
+    )
     required_quantity: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="需求数量"
     )
@@ -45,13 +48,4 @@ class ScienceWarehouseResult(Base):
     created_time: Mapped[date] = mapped_column(Date, nullable=False, comment="创建时间")
     confidence: Mapped[float] = mapped_column(
         Float, nullable=False, default=0.5, comment="置信度"
-    )
-    coverage_info: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, default=None, comment="覆盖信息（JSON格式）"
-    )
-    maintenance_analysis: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, default=None, comment="维护责任分析（JSON格式）"
-    )
-    calculation_details: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, default=None, comment="计算详情（JSON格式）"
     )

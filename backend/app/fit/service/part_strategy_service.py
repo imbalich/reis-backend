@@ -103,7 +103,19 @@ class PartStrategyService:
                 total_bl_quantity = convert_to_total_quantity(ebom_data, part)
 
                 # bom合并（转换为EbomParam）
-                ebom_data = convert_to_pydantic_models(ebom_data, EbomParam)
+                # 过滤掉 y8_matbnum1 为 None 的节点（这些是父级节点，不是零部件节点）
+                # 只保留有 y8_matbnum1 的节点用于转换为 EbomParam
+                filtered_ebom_data = [
+                    item
+                    for item in ebom_data
+                    if hasattr(item, "y8_matbnum1")
+                    and getattr(item, "y8_matbnum1", None) is not None
+                ]
+                if not filtered_ebom_data:
+                    raise errors.DataValidationError(
+                        msg=f"型号{model}的零部件{part}的BOM信息中未找到有效的零部件节点"
+                    )
+                ebom_data = convert_to_pydantic_models(filtered_ebom_data, EbomParam)
 
                 # 处理ebom_dict
                 ebom_dict = {
@@ -236,7 +248,19 @@ class PartStrategyService:
                 total_bl_quantity = convert_to_total_quantity(ebom_data, part)
 
                 # bom合并（转换为EbomParam）
-                ebom_data = convert_to_pydantic_models(ebom_data, EbomParam)
+                # 过滤掉 y8_matbnum1 为 None 的节点（这些是父级节点，不是零部件节点）
+                # 只保留有 y8_matbnum1 的节点用于转换为 EbomParam
+                filtered_ebom_data = [
+                    item
+                    for item in ebom_data
+                    if hasattr(item, "y8_matbnum1")
+                    and getattr(item, "y8_matbnum1", None) is not None
+                ]
+                if not filtered_ebom_data:
+                    raise errors.DataValidationError(
+                        msg=f"型号{model}的零部件{part}的BOM信息中未找到有效的零部件节点"
+                    )
+                ebom_data = convert_to_pydantic_models(filtered_ebom_data, EbomParam)
 
                 # 处理ebom_dict
                 ebom_dict = {

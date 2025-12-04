@@ -32469,3 +32469,47 @@ TypeError: FailureService.get_select() got an unexpected keyword argument 'is_co
 2025-11-30 15:20:29,695 - _granian.workers - INFO - Started worker-1 runtime-1
 2025-11-30 17:24:55,869 - _granian.workers - INFO - Started worker-1
 2025-11-30 17:24:55,869 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 14:00:24,022 - _granian.workers - INFO - Started worker-1
+2025-12-04 14:00:24,150 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 14:05:20,986 - _granian.workers - INFO - Started worker-1
+2025-12-04 14:05:20,986 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 14:11:04,434 - _granian.workers - INFO - Started worker-1
+2025-12-04 14:11:04,434 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 14:11:17,274 - _granian.workers - INFO - Started worker-1
+2025-12-04 14:11:17,275 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 14:11:34,457 - _granian.workers - INFO - Started worker-1
+2025-12-04 14:11:34,457 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 14:27:02,753 - _granian.workers - INFO - Started worker-1
+2025-12-04 14:27:02,794 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 16:52:30,533 - _granian.workers - INFO - Started worker-1
+2025-12-04 16:52:30,644 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:13:34,533 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:13:34,533 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:17:46,247 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:17:46,248 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:18:17,164 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:18:17,165 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:18:34,209 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:18:34,210 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:19:21,407 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:19:21,408 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:19:39,308 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:19:39,309 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:20:54,855 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:20:54,856 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:21:02,860 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:21:02,861 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:21:31,673 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:21:31,673 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:23:59,579 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:23:59,579 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:24:14,822 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:24:14,823 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:51:29,692 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:51:29,693 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:51:37,913 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:51:37,914 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:51:50,827 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:51:50,828 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-04 17:56:01,580 - _granian.workers - INFO - Started worker-1
+2025-12-04 17:56:01,581 - _granian.workers - INFO - Started worker-1 runtime-1

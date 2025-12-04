@@ -76,12 +76,9 @@ class ScienceWarehouseResultDetails(SchemaBase):
     time_interval_days: int = Field(..., description="时间间隔（天）")
     input_date: date = Field(..., description="计算截止日期")
     created_time: date = Field(..., description="创建时间")
+    max_failure_count: int = Field(..., description="最大滚动故障次数")
     confidence: float = Field(..., description="置信度")
-    coverage_info: Optional[Dict[str, Any]] = Field(None, description="覆盖信息")
-    maintenance_analysis: Optional[Dict[str, Any]] = Field(
-        None, description="维护责任分析"
-    )
-    calculation_details: Optional[Dict[str, Any]] = Field(None, description="计算详情")
+    max_failure_count: int = Field(..., description="最大滚动故障次数")
 
 
 class ScienceWarehouseFilterParam(SchemaBase):
@@ -134,3 +131,4 @@ class ScienceWarehouseListDetails(SchemaBase):
     time_interval_days: int = Field(..., description="时间间隔（天）")
     input_date: date = Field(..., description="计算截止日期")
     created_time: date = Field(..., description="创建时间")
+    max_failure_count: int = Field(..., description="最大滚动故障次数")
