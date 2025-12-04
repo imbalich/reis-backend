@@ -61,16 +61,11 @@ class FailureService:
             # 使用字典去重，按mc的唯一值存储
             unique_models = {}
             for fl, mc in results:
-<<<<<<< HEAD
                 if mc and mc[0] in ['C', 'M','Z']:
                     if mc not in unique_models:
                         unique_models[mc] = fl
             # models.append([fl, mc])
             models = [[fl, mc] for mc, fl in unique_models.items()]
-=======
-                if mc and mc[0] in ["C", "M", "Z"]:
-                    models.append([fl, mc])
->>>>>>> imba
             return models
 
     @staticmethod
