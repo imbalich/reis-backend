@@ -190,7 +190,7 @@ class CRUDFailure(CRUDPlus[T]):
         where_list.append(self.model.is_zero_distance == 0)
         where_list.append(CRUDFailure._non_user_responsibility_condition(self.model))
         where_list.append(self.model.manufacturing_date.isnot(None))  # 添加这个条件
-        where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
+        # where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
@@ -207,7 +207,7 @@ class CRUDFailure(CRUDPlus[T]):
         where_list.append(self.model.fault_material_code == part)
         where_list.append(self.model.is_zero_distance == 0)
         where_list.append(CRUDFailure._non_user_responsibility_condition(self.model))
-        where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
+        # where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
         if where_list:
             stmt = stmt.where(*where_list)
         return stmt
@@ -229,7 +229,7 @@ class CRUDFailure(CRUDPlus[T]):
         where_list.append(self.model.is_zero_distance == 0)
         where_list.append(CRUDFailure._non_user_responsibility_condition(self.model))
         where_list.append(self.model.manufacturing_date.isnot(None))  # 添加这个条件
-        where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
+        # where_list.append(self.model.is_company == 1)  # 添加这个条件2025-11-13
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
@@ -304,7 +304,7 @@ class CRUDFailure(CRUDPlus[T]):
                 CRUDFailure._non_user_responsibility_condition(
                     self.model
                 ),  # 非用户责任（包含NULL和空字符串）
-                self.model.is_company == 1,  # 添加这个条件2025-11-13
+                # self.model.is_company == 1,  # 添加这个条件2025-11-13
             )
             .order_by(self.model.fault_location, self.model.fault_material_code)
         )
@@ -356,7 +356,7 @@ class CRUDFailure(CRUDPlus[T]):
                 self.model.product_number == product_number,
                 self.model.is_zero_distance == 0,
                 CRUDFailure._non_user_responsibility_condition(self.model),
-                self.model.is_company == 1,  # 添加这个条件2025-11-13
+                # self.model.is_company == 1,  # 添加这个条件2025-11-13
             )
             .order_by(self.model.discovery_date)
         )

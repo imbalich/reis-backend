@@ -30,6 +30,7 @@ from backend.app.fit.utils.convert_model import (
     convert_to_pydantic_model,
     convert_to_pydantic_models,
     convert_to_total_quantity,
+    get_ebom_tree_with_parents,
 )
 from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
@@ -82,27 +83,27 @@ class PartStrategyService:
                     FailureParam,
                 )
                 failure_count = len(failure_data)
-                failure_preview = [item.model_dump() for item in failure_data[:5]]
                 log.info(
-                    "[零部件打标] 型号%s 零部件%s 故障数据共%s条，示例: %s",
+                    "[零部件打标] 型号{} 零部件{} 故障数据共{}",
                     model,
                     part,
                     failure_count,
-                    failure_preview,
                 )
                 product_data = convert_to_pydantic_model(
                     await product_dao.get_by_model(db, model), ProductParam
                 )
-                ebom_data = await ebom_dao.get_by_model_and_part(db, model, part)
+                # 获取完整的BOM树（包括所有父级节点）
+                ebom_data = await get_ebom_tree_with_parents(db, model, part)
                 if not ebom_data:
                     raise errors.DataValidationError(
                         msg=f"型号{model}的零部件{part}的BOM信息不存在"
                     )
-                # bom合并
-                ebom_data = convert_to_pydantic_models(ebom_data, EbomParam)
 
-                # 获取bl_quantity
-                total_bl_quantity = convert_to_total_quantity(ebom_data)
+                # 获取bl_quantity（在转换为EbomParam之前计算，因为需要层级信息）
+                total_bl_quantity = convert_to_total_quantity(ebom_data, part)
+
+                # bom合并（转换为EbomParam）
+                ebom_data = convert_to_pydantic_models(ebom_data, EbomParam)
 
                 # 处理ebom_dict
                 ebom_dict = {
@@ -156,13 +157,11 @@ class PartStrategyService:
                         despatch_data, failure_data, product_data, ebom_data, input_date
                     )
                 tag_count = len(tags) if tags else 0
-                tag_preview = tags[:3] if tags else []
                 log.info(
-                    "[零部件打标] 型号%s 零部件%s 打标完成，标签条数:%s，示例:%s",
+                    "[零部件打标] 型号{} 零部件{} 打标完成，标签条数:{}",
                     model,
                     part,
                     tag_count,
-                    tag_preview,
                 )
                 return tags
 
@@ -226,17 +225,18 @@ class PartStrategyService:
                 product_data = convert_to_pydantic_model(
                     await product_dao.get_by_model(db, model), ProductParam
                 )
-                ebom_data = await ebom_dao.get_by_model_and_part(db, model, part)
+                # 获取完整的BOM树（包括所有父级节点）
+                ebom_data = await get_ebom_tree_with_parents(db, model, part)
                 if not ebom_data:
                     raise errors.DataValidationError(
                         msg=f"型号{model}的零部件{part}的BOM信息不存在"
                     )
 
-                # bom合并
-                ebom_data = convert_to_pydantic_models(ebom_data, EbomParam)
+                # 获取bl_quantity（在转换为EbomParam之前计算，因为需要层级信息）
+                total_bl_quantity = convert_to_total_quantity(ebom_data, part)
 
-                # 获取bl_quantity
-                total_bl_quantity = convert_to_total_quantity(ebom_data)
+                # bom合并（转换为EbomParam）
+                ebom_data = convert_to_pydantic_models(ebom_data, EbomParam)
 
                 # 处理ebom_dict
                 ebom_dict = {
