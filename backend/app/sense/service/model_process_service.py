@@ -311,7 +311,7 @@ class ModelProcessService:
                     })
         sorted_analysis = sorted(analysis, key=lambda x: x["mean_shap"], reverse=True)
 
-        return sorted_analysis[:min(3, len(sorted_analysis))]
+        return sorted_analysis[:min(6, len(sorted_analysis))]
     
 
 
