@@ -252,12 +252,13 @@ class FindPointService:
         replace_parts =[]
 
         # 生成足够密集的时间点 x 轴
-        num_points = 50000
-        x = np.linspace(1000, time_point, num_points)
+        num_points = 500000
+        x = np.linspace(5000, time_point, num_points)
         step_size = x[1] - x[0] # 每个时间点的间隔
     
         for part in parts:
             best_distribution = await reliability_index_service._get_best_distribution(model, part)
+            print("best_distribution",best_distribution)
             sf = best_distribution.SF(x)
             sf_list.append(sf)
             replace = await FindPointService._find_replace_part(model, part)
@@ -266,7 +267,7 @@ class FindPointService:
 
         sf_matrix = np.array(sf_list)
         
-        filtered_replace_parts = [part for part in parts if part not in replace_parts]
+        # filtered_replace_parts = [part for part in parts if part not in replace_parts]
 
 
 
@@ -283,22 +284,28 @@ class FindPointService:
             'D': {'indices': [], 'parts': [], 'sf_values': []}
         }
     
-        for i, (part, sf_val) in enumerate(zip(filtered_replace_parts, sf_at_time_point)):
-            if sf_val >= 0.99:
+        for i, (part, sf_val) in enumerate(zip(parts, sf_at_time_point)):
+            print("part",part)
+            print("sf_val",sf_val)
+            if sf_val >= 0.99 and part not in replace_parts:
                 classifications['A']['indices'].append(i)
                 classifications['A']['parts'].append(part)
                 classifications['A']['sf_values'].append(sf_val)
-            elif sf_val >= 0.95:
+            elif sf_val >= 0.95 and part not in replace_parts:
                 classifications['B']['indices'].append(i)
                 classifications['B']['parts'].append(part)
                 classifications['B']['sf_values'].append(sf_val)
-            else:
+            elif sf_val < 0.95 and part not in replace_parts:
                 classifications['C']['indices'].append(i)
                 classifications['C']['parts'].append(part)
                 classifications['C']['sf_values'].append(sf_val)
+            else:
+                classifications['D']['indices'].append(i)
+                classifications['D']['parts'].append(part)
+                classifications['D']['sf_values'].append(sf_val)
         
-        for part in replace_parts:
-            classifications['D']['parts'].append(part)
+        # for part in replace_parts:
+        #     classifications['D']['parts'].append(part)
 
     
         # 【新增第2步】对每个分类分别处理
@@ -400,31 +407,57 @@ class FindPointService:
         window_length = year_worktimes
         step_size = x[1] - x[0]
         window_size_idx = int(window_length / step_size)
-        step_idx = max(1, int(window_size_idx / 10))
+        step_idx = max(1, int(window_size_idx / 20))
+
+        # 
+        y_mid = (y_min + y_max) / 2
 
         # 初始化最佳结果
-        best_crossing_count = -1
+        # best_crossing_count = -1
+        # best_window_indices = (0, 0)
+        best_crossing_score = (-1, -1) 
         best_window_indices = (0, 0)
 
         # 预计算：哪些 SF 值在目标范围内
-        in_range_mask = (sf_matrix >= y_min) & (sf_matrix <= y_max)
+        # in_range_mask = (sf_matrix >= y_min) & (sf_matrix <= y_max)
+        # 区间1：可靠性较低，优先关注 [y_min, y_mid]
+        in_range_mask_lower = (sf_matrix >= y_min) & (sf_matrix <= y_mid)
+        # 区间2：可靠性较高 [y_mid, y_max]
+        in_range_mask_upper = (sf_matrix > y_mid) & (sf_matrix <= y_max)
 
         # 执行滑动窗口
         for start_idx in range(0, num_points - window_size_idx + 1, step_idx):
             end_idx = start_idx + window_size_idx
 
             # 提取窗口内的布尔掩码
-            window_mask = in_range_mask[:, start_idx:end_idx]
+            # window_mask = in_range_mask[:, start_idx:end_idx]
+            window_mask_lower = in_range_mask_lower[:, start_idx:end_idx]
+            window_mask_upper = in_range_mask_upper[:, start_idx:end_idx]
 
             # 统计穿过目标范围的部件
-            crossing_parts = np.any(window_mask, axis=1)
-            current_crossing_count = np.sum(crossing_parts)
+            # crossing_parts = np.any(window_mask, axis=1)
+            # current_crossing_count = np.sum(crossing_parts)
+
+            crossing_parts_lower = np.any(window_mask_lower, axis=1)
+            current_crossing_count_lower = np.sum(crossing_parts_lower)
+            
+            crossing_parts_upper = np.any(window_mask_upper, axis=1)
+            current_crossing_count_upper = np.sum(crossing_parts_upper)
+
+            current_crossing_score = (current_crossing_count_lower, current_crossing_count_upper)
+
 
             # 更新最佳结果
-            if current_crossing_count > best_crossing_count:
-                best_crossing_count = current_crossing_count
-                best_window_indices = (start_idx, end_idx)
+            # if current_crossing_count > best_crossing_count:
+            #     best_crossing_count = current_crossing_count
+            #     best_window_indices = (start_idx, end_idx)
+            # 更新最佳结果：优先保证低可靠性部件（Lower Count）最多，其次是总数最多
+            # Python 元组比较 (a, b) > (c, d) 会先比较 a 和 c，再比较 b 和 d
+            if current_crossing_score > best_crossing_score:
+                best_crossing_score = current_crossing_score
+                best_window_indices = (start_idx, end_idx)            
 
+        best_crossing_count = best_crossing_score[0] + best_crossing_score[1]
         # 确定等寿命点
         if best_crossing_count <= 0:
             return {
@@ -440,6 +473,7 @@ class FindPointService:
         start_idx, end_idx = best_window_indices
         center_idx = (start_idx + end_idx) // 2
         equal_lifetime_t = x[center_idx]
+        # print('equal_lifetime_t',equal_lifetime_t)
 
 
         # 计算等寿命 SF 值
@@ -449,8 +483,10 @@ class FindPointService:
         if np.sum(valid_sf_mask) > 0:
             equal_lifetime_sf = np.mean(sf_at_best_t[valid_sf_mask])
         else:
-            # equal_lifetime_sf = np.mean(sf_at_best_t)
-            equal_lifetime_sf = y_min
+            equal_lifetime_sf = np.mean(sf_at_best_t)
+            
+            if equal_lifetime_sf < y_min:
+                equal_lifetime_sf = y_min
 
         repair_levels = [item[0] for item in repair_result if item[0] != 0.0]
         equal_lifetime_t_time = min(repair_levels, key=lambda point: (abs(equal_lifetime_t/year_worktimes - point), -point))
@@ -458,6 +494,8 @@ class FindPointService:
         equal_lifetime_t_year = repair_result_dict.get(equal_lifetime_t_time)
         # equal_lifetime_t_year = next((result[0] for result in repair_result if result[1] == equal_lifetime_t_time))
         equal_lifetime_t = equal_lifetime_t_time*year_worktimes
+        print('year_worktimes',year_worktimes)
+        print('equal_lifetime_t_year',equal_lifetime_t)
 
         
 

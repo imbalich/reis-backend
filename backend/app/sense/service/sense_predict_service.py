@@ -128,7 +128,16 @@ class SensePredictService:
                 category_values = {}
                 for category, items in categorical_dict.items():
                     # raw_values = [item['value'] for item in items]
-                    raw_values = [f"{item['value']} --- {item.get('Fault')}" for item in items]
+                    # raw_values = [f"{item['value']} --- {item.get('Fault')}" for item in items]
+                    # raw_values = list(set(raw_values))
+                    value_fault_dict = {}
+                    for item in items:
+                        value = item['value']
+                        fault = item.get('Fault')
+                        if value not in value_fault_dict:
+                            value_fault_dict[value] = fault
+
+                        raw_values = [f"{value} --- {value_fault_dict[value]}" for value in value_fault_dict]
                     category_values[category] = raw_values
 
                 sense.categorical_analysis = json.dumps(category_values, ensure_ascii=False)

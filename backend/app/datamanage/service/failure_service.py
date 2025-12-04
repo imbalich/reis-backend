@@ -52,9 +52,14 @@ class FailureService:
             else:
                 raise errors.NotFoundError(msg='请输入产品型号')
             models = []
+            # 使用字典去重，按mc的唯一值存储
+            unique_models = {}
             for fl, mc in results:
                 if mc and mc[0] in ['C', 'M','Z']:
-                    models.append([fl, mc])
+                    if mc not in unique_models:
+                        unique_models[mc] = fl
+            # models.append([fl, mc])
+            models = [[fl, mc] for mc, fl in unique_models.items()]
             return models
 
     @staticmethod

@@ -51,7 +51,8 @@ class ProductFitService:
         residuals = y_peaks - y_pred
         dof = max(1, len(y_peaks) - 2)
         s_err = np.sqrt(np.sum(residuals ** 2) / dof)
-        t_val = stats.t.ppf(0.975, dof)  # 95%置信区间
+        # t_val = stats.t.ppf(0.975, dof)  # 95%置信区间
+        t_val = stats.t.ppf(0.8, dof)
         ci = (t_val * s_err)
 
         # 4、计算失效阈值对应的运行时间以及置信区间
@@ -175,29 +176,29 @@ class ProductFitService:
             # 对于递增曲线：查找第一个超过失效阈值的点
             above_threshold_indices = np.where(y_smooth >= failure_value)[0]
             if len(above_threshold_indices) > 0:
-                x_failure = round((x_smooth[above_threshold_indices[0]] * 10000)/year_worktimes,2)
+                x_failure = min(round((x_smooth[above_threshold_indices[0]] * 10000)/year_worktimes,2),30)
         
             above_threshold_upper_indices = np.where(y_upper_smooth >= failure_value)[0]
             if len(above_threshold_upper_indices) > 0:
-                x_failure_upper = round((x_smooth[above_threshold_upper_indices[0]] * 10000)/year_worktimes,2)
+                x_failure_upper = min(round((x_smooth[above_threshold_upper_indices[0]] * 10000)/year_worktimes,2),30)
         
             above_threshold_lower_indices = np.where(y_lower_smooth >= failure_value)[0]
             if len(above_threshold_lower_indices) > 0:
-                x_failure_lower = round((x_smooth[above_threshold_lower_indices[0]] * 10000)/year_worktimes,2)
+                x_failure_lower = min(round((x_smooth[above_threshold_lower_indices[0]] * 10000)/year_worktimes,2),30)
             failure_interval = [x_failure_upper,x_failure_lower]
         else:
             # 对于递减曲线：查找第一个低于失效阈值的点
             below_threshold_indices = np.where(y_smooth <= failure_value)[0]
             if len(below_threshold_indices) > 0:
-                x_failure = round((x_smooth[below_threshold_indices[0]] * 10000)/year_worktimes,2)
+                x_failure = min(round((x_smooth[below_threshold_indices[0]] * 10000)/year_worktimes,2),30)
         
             below_threshold_upper_indices = np.where(y_upper_smooth <= failure_value)[0]
             if len(below_threshold_upper_indices) > 0:
-                x_failure_upper = round((x_smooth[below_threshold_upper_indices[0]] * 10000)/year_worktimes,2)
+                x_failure_upper = min(round((x_smooth[below_threshold_upper_indices[0]] * 10000)/year_worktimes,2),30)
         
             below_threshold_lower_indices = np.where(y_lower_smooth <= failure_value)[0]
             if len(below_threshold_lower_indices) > 0:
-                x_failure_lower = round((x_smooth[below_threshold_lower_indices[0]] * 10000)/year_worktimes,2)
+                x_failure_lower = min(round((x_smooth[below_threshold_lower_indices[0]] * 10000)/year_worktimes,2),30)
             failure_interval = [x_failure_lower,x_failure_upper]
         return x_failure, failure_interval
 

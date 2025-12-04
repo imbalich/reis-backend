@@ -7,7 +7,7 @@ from backend.app.sense.utils.format_process_utils import split_multiple_names
 class WOEAnalysisService:
 
     @staticmethod
-    def _top_negative_woe(df: pd.DataFrame, topn: int = 3) -> pd.DataFrame:
+    def _top_negative_woe(df: pd.DataFrame, topn: int = 8) -> pd.DataFrame:
         """
         只保留 woe<0，按|woe|降序取前 topn
         """
@@ -31,7 +31,7 @@ class WOEAnalysisService:
             df = pd.DataFrame(data)
         categorical_cols = ['extra_source_code', 'extra_supplier', 'check_tools_sign', 'rela_self_value', 'version']
         target_col = 'is_figure'
-        special_cols = ['extra_source_code','version']
+        special_cols = ['version']
         woe_results = {}
         iv_summary = []
         # 处理 self_create_by（操作员工，多标签）

@@ -522,7 +522,7 @@ class EqualLifetimeService:
                         if part in result_dict:
                             rr = result_dict[part]
                             rr['category'] = category_label
-                            rr['equal_lifetime_t_year'] = equal_lifetime_t_year + '大修' if major_part else equal_lifetime_t_year + '维护'
+                            rr['equal_lifetime_t_year'] = equal_lifetime_t_year + '大修'
                             rr['original_equal_t_year'] = major_part + '大修' if major_part else '偶换维护'
                         return result_dict
 

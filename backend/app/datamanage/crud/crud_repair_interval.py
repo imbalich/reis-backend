@@ -53,7 +53,7 @@ class CRUDRepairInterval(CRUDPlus[RepairInterval]):
                 self.model.model == model,
                 self.model.repair_levels.isnot(None),  # 物料编码不为空
                 self.model.repair_years.isnot(None),  # 部位名称不为空
-                self.model.repair_levels.in_(['C5', 'C6', '首轮三级修', '首轮四级修', '首轮五级修','D4','D5','D6'])
+                self.model.repair_levels.in_(['C5', 'C6', '首轮三级修', '首轮四级修', '首轮五级修','D5','D6'])
             )
             .order_by(self.model.repair_years ,self.model.repair_years)
         )
