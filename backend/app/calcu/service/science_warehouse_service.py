@@ -26,6 +26,7 @@ from backend.app.calcu.crud.crud_science_warehouse_result import (
     science_warehouse_result_dao,
 )
 from typing import Sequence
+
 # 统计表相关逻辑已移除，不再导入
 # from backend.app.calcu.crud.crud_science_warehouse_statistics import (
 #     science_warehouse_statistics_dao,
@@ -170,9 +171,6 @@ class ScienceWarehouseService:
                     exponential_success = maintenance_analysis.get(
                         "exponential_fit_success_count", 0
                     )
-                    exponential_fail = maintenance_analysis.get(
-                        "exponential_fit_fail_count", 0
-                    )
 
                     if exponential_success > 0:
                         # 使用了指数分布拟合
@@ -190,8 +188,6 @@ class ScienceWarehouseService:
                         "required_quantity": requirement_result["quantity"],
                         "calculation_method": calculation_method,
                         "confidence": confidence,
-                        "coverage_info": requirement_result.get("coverage_info", {}),
-                        "maintenance_analysis": maintenance_analysis,
                     }
                     statistics["maintenance_responsibility_analysis"][warehouse_code][
                         "calculated"
@@ -219,8 +215,6 @@ class ScienceWarehouseService:
                         "required_quantity": spare_part["default_quantity"],
                         "calculation_method": calculation_method,
                         "confidence": 0.3,
-                        "coverage_info": requirement_result.get("coverage_info", {}),
-                        "maintenance_analysis": maintenance_analysis,
                     }
                     statistics["maintenance_responsibility_analysis"][warehouse_code][
                         "default"
@@ -232,10 +226,6 @@ class ScienceWarehouseService:
                         "required_quantity": spare_part["default_quantity"],
                         "calculation_method": "default",
                         "confidence": 0.5,
-                        "coverage_info": requirement_result.get("coverage_info", {}),
-                        "maintenance_analysis": requirement_result.get(
-                            "maintenance_analysis", {}
-                        ),
                     }
                     statistics["default_spares"] += 1
                     statistics["maintenance_responsibility_analysis"][warehouse_code][
@@ -323,7 +313,6 @@ class ScienceWarehouseService:
             "quantity": 0,
             "skipped_failures": [],
             "mapping_errors": [],
-            "coverage_info": {},
             "maintenance_analysis": {},
         }
 
@@ -343,8 +332,6 @@ class ScienceWarehouseService:
                 )
                 return result
 
-            result["coverage_info"]["warehouse_allotments"] = warehouse_allotments
-
             # 2. 获取使用此备品的产品型号（通过映射表）
             related_models = await ScienceWarehouseService.get_models_using_spare(
                 spare_part["part_code"]
@@ -359,8 +346,6 @@ class ScienceWarehouseService:
                     }
                 )
                 return result
-
-            result["coverage_info"]["related_models"] = related_models
 
             # 3. 获取运行在库房覆盖路局上且型号匹配的产品编号（优化版本）
             filtered_products = []
@@ -383,8 +368,6 @@ class ScienceWarehouseService:
                     }
                 )
                 return result
-
-            result["coverage_info"]["relevant_products_count"] = len(filtered_products)
 
             # 5. 获取相关产品的故障数据
             all_failures = []
@@ -430,12 +413,6 @@ class ScienceWarehouseService:
                             )
 
                 # 记录时间过滤结果
-                result["coverage_info"][
-                    f"product_{product_number}_time_filtered_failures"
-                ] = len(time_filtered_failures)
-                result["coverage_info"][
-                    f"product_{product_number}_date_parse_errors"
-                ] = len(date_parse_errors)
 
                 # 将日期解析错误添加到跳过的故障中
                 skipped_failures.extend(date_parse_errors)
@@ -464,8 +441,6 @@ class ScienceWarehouseService:
                         )
 
             result["skipped_failures"] = skipped_failures
-            result["coverage_info"]["total_failures"] = len(all_failures)
-            result["coverage_info"]["skipped_failures_count"] = len(skipped_failures)
 
             if not all_failures:
                 result["mapping_errors"].append(
@@ -552,7 +527,6 @@ class ScienceWarehouseService:
 
             # 2. 对每个型号+零部件组合进行备件量计算
             total_requirement = 0.0
-            calculation_details = []
             responsible_products = 0
             non_responsible_products = 0
             insufficient_failure_data_combinations = 0
@@ -579,15 +553,6 @@ class ScienceWarehouseService:
                         if model_part_spare_quantity > 0:
                             # 指数分布拟合成功
                             total_requirement += model_part_spare_quantity
-                            calculation_details.append(
-                                {
-                                    "model_part": model_part_key,
-                                    "method": "exponential_fit",
-                                    "failure_count": len(model_part_failures),
-                                    "quantity": model_part_spare_quantity,
-                                    "confidence": 0.5,  # 指数分布拟合的置信度较低
-                                }
-                            )
                             responsible_products += len(
                                 set([f.product_number for f in model_part_failures])
                             )
@@ -648,45 +613,14 @@ class ScienceWarehouseService:
                         # 该库房负责维护，计入总需求
                         total_requirement += model_part_spare_quantity
                         responsible_products += 1
-
-                        calculation_details.append(
-                            {
-                                "product_number": product_number,
-                                "product_model": product_model,
-                                "part_code": part_code,
-                                "failures_count": len(model_part_failures),
-                                "spare_quantity": model_part_spare_quantity,
-                                "distribution": fit_result.best_distribution_name,
-                                "maintenance_responsible": True,
-                                "responsibility_reason": maintenance_responsibility[
-                                    "reason"
-                                ],
-                            }
-                        )
                     else:
                         # 该库房不负责维护，不计入总需求
                         non_responsible_products += 1
-
-                        calculation_details.append(
-                            {
-                                "product_number": product_number,
-                                "product_model": product_model,
-                                "part_code": part_code,
-                                "failures_count": len(model_part_failures),
-                                "spare_quantity": model_part_spare_quantity,
-                                "distribution": fit_result.best_distribution_name,
-                                "maintenance_responsible": False,
-                                "responsibility_reason": maintenance_responsibility[
-                                    "reason"
-                                ],
-                            }
-                        )
 
             return {
                 "success": True,
                 "quantity": max(1, math.ceil(total_requirement)),  # 向上取整且最小为1
                 "confidence": 0.8,
-                "calculation_details": calculation_details,
                 "maintenance_analysis": {
                     "total_model_part_combinations": len(failures_by_model_part),
                     "responsible_products": responsible_products,
@@ -1095,18 +1029,7 @@ class ScienceWarehouseService:
                             "input_date": input_date,
                             "created_time": date.today(),
                             "confidence": spare_info["confidence"],
-                            # 后三个字段已移除，避免数据过大导致写入失败
-                            # "coverage_info": json.dumps(
-                            #     spare_info.get("coverage_info", {}), ensure_ascii=False
-                            # ),
-                            # "maintenance_analysis": json.dumps(
-                            #     spare_info.get("maintenance_analysis", {}),
-                            #     ensure_ascii=False,
-                            # ),
-                            # "calculation_details": json.dumps(
-                            #     spare_info.get("calculation_details", {}),
-                            #     ensure_ascii=False,
-                            # ),
+                            "max_failure_count": 0,  # 旧版本服务不计算此字段，设为0
                         }
                     )
 
@@ -1191,20 +1114,7 @@ class ScienceWarehouseService:
                     "required_quantity": result.required_quantity,
                     "calculation_method": result.calculation_method,
                     "confidence": result.confidence,
-                    # 后三个字段已移除
-                    # "coverage_info": (
-                    #     json.loads(result.coverage_info) if result.coverage_info else {}
-                    # ),
-                    # "maintenance_analysis": (
-                    #     json.loads(result.maintenance_analysis)
-                    #     if result.maintenance_analysis
-                    #     else {}
-                    # ),
-                    # "calculation_details": (
-                    #     json.loads(result.calculation_details)
-                    #     if result.calculation_details
-                    #     else {}
-                    # ),
+                    "max_failure_count": getattr(result, "max_failure_count", 0),
                 }
 
             # 导入Schema类
@@ -1320,20 +1230,7 @@ class ScienceWarehouseService:
                     "created_time": (
                         result.created_time.isoformat() if result.created_time else None
                     ),
-                    # 后三个字段已移除
-                    # "coverage_info": (
-                    #     json.loads(result.coverage_info) if result.coverage_info else {}
-                    # ),
-                    # "maintenance_analysis": (
-                    #     json.loads(result.maintenance_analysis)
-                    #     if result.maintenance_analysis
-                    #     else {}
-                    # ),
-                    # "calculation_details": (
-                    #     json.loads(result.calculation_details)
-                    #     if result.calculation_details
-                    #     else {}
-                    # ),
+                    "max_failure_count": getattr(result, "max_failure_count", 0),
                 }
                 detailed_results.append(detailed_item)
 
@@ -1364,6 +1261,10 @@ class ScienceWarehouseService:
 
         conditions = []
 
+        # 固定条件：required_quantity必须大于0
+        conditions.append(ScienceWarehouseResult.required_quantity > 0)
+        conditions.append(ScienceWarehouseResult.required_quantity >= ScienceWarehouseResult.max_failure_count)
+
         if calculation_id:
             # 计算批次ID支持模糊匹配（因为用户手动输入）
             conditions.append(
@@ -1391,16 +1292,10 @@ class ScienceWarehouseService:
                 )
             )
 
-        # 如果没有条件，返回所有记录
-        if not conditions:
-            return select(ScienceWarehouseResult).order_by(
-                ScienceWarehouseResult.id.desc()
-            )
-
         return (
             select(ScienceWarehouseResult)
             .where(and_(*conditions))
-            .order_by(ScienceWarehouseResult.id.desc())
+            .order_by(ScienceWarehouseResult.required_quantity.desc())
         )
 
     @staticmethod
