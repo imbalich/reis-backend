@@ -79,7 +79,7 @@ class TagProcessService(ABC):
                 processed_failure = FailureParam.model_validate(failure)
                 if (
                     processed_failure.discovery_date <= input_date
-                    and processed_failure.manufacturing_date <= input_date
+                    and (processed_failure.manufacturing_date is None or processed_failure.manufacturing_date <= input_date)
                 ):
                     # 将验证后的 FailureParam 模型实例添加到处理列表中
                     processed_data.append(processed_failure)
@@ -91,7 +91,8 @@ class TagProcessService(ABC):
 
         # 过滤掉为空的故障数据
         filtered_failure_data = [
-            failure for failure in processed_data if failure.discovery_date != '' and failure.manufacturing_date != ''
+            failure for failure in processed_data 
+            if failure.discovery_date is not None and failure.manufacturing_date is not None
         ]
         # 按故障数据中的时间属性升序排序
         sorted_failure_data = sorted(filtered_failure_data, key=lambda x: x.discovery_date, reverse=False)

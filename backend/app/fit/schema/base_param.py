@@ -50,7 +50,7 @@ class FailureParam(SchemaBase):
     discovery_date: date = Field(..., description='发现日期')  # 新表:fault_date
     product_model: Optional[str] = Field(default=None, description='产品型号')  # 新表:product_model
     product_number: Optional[str] = Field(default=None, description='产品编号')  # 新表:product_no
-    manufacturing_date: date = Field(..., description='新造出厂日期')  # 新表:life_cycle_time_erp
+    manufacturing_date: Optional[date] = Field(default=None, description='新造出厂日期')  # 新表:life_cycle_time_erp
     fault_location: Optional[str] = Field(default=None, description='终判故障部位')  # 新表:fault_part_name
     fault_material_code: Optional[str] = Field(default=None, description='终判故障部位物料编码')  # 新表:fault_part_code
     fault_part_number: str = Field('#', description='故障部件编号')  # 新表:fault_part_number
@@ -70,8 +70,13 @@ class FailureParam(SchemaBase):
 
     @field_validator('discovery_date', 'manufacturing_date', mode='before')
     @classmethod
-    def parse_date(cls, value: Any) -> date:
+    def parse_date(cls, value: Any) -> date | None:
+        if value is None:
+            return None
         if isinstance(value, str):
+            # 处理空字符串
+            if value.strip() == '':
+                return None
             # 尝试解析带有时间部分的日期字符串
             try:
                 return datetime.strptime(value, '%Y-%m-%d %H:%M:%S').date()

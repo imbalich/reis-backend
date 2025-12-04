@@ -21,45 +21,56 @@ class FailureService:
     @staticmethod
     async def get_product_lifetime_stage() -> Sequence[str]:
         async with async_db_session() as db:
-            models = await failure_dao.get_distinct_column_values(db, 'product_lifetime_stage')
+            models = await failure_dao.get_distinct_column_values(
+                db, "product_lifetime_stage"
+            )
             if not models:
-                raise errors.NotFoundError(msg='故障数据中未找到产品寿命阶段')
+                raise errors.NotFoundError(msg="故障数据中未找到产品寿命阶段")
             return models
 
     @staticmethod
     async def get_fault_mode() -> Sequence[str]:
         async with async_db_session() as db:
-            models = await failure_dao.get_distinct_column_values(db, 'fault_mode')
+            models = await failure_dao.get_distinct_column_values(db, "fault_mode")
             if not models:
-                raise errors.NotFoundError(msg='故障数据中未找到终判故障模式')
+                raise errors.NotFoundError(msg="故障数据中未找到终判故障模式")
             return models
 
     @staticmethod
     async def get_product_model() -> Sequence[str]:
         async with async_db_session() as db:
-            models = await failure_dao.get_distinct_column_values(db, 'product_model')
+            models = await failure_dao.get_distinct_column_values(db, "product_model")
             if not models:
-                raise errors.NotFoundError(msg='故障数据中未找到产品型号')
+                raise errors.NotFoundError(msg="故障数据中未找到产品型号")
             return models
 
     @staticmethod
-    async def get_fault_location_by_product_model(product_model: str = None) -> Sequence[list[str]]:
+    async def get_fault_location_by_product_model(
+        product_model: str = None,
+    ) -> Sequence[list[str]]:
         async with async_db_session() as db:
             if product_model:
-                results = await failure_dao.get_distinct_columns_values_by_product_model(
-                    db, product_model, ['fault_location', 'fault_material_code']
+                results = (
+                    await failure_dao.get_distinct_columns_values_by_product_model(
+                        db, product_model, ["fault_location", "fault_material_code"]
+                    )
                 )
             else:
-                raise errors.NotFoundError(msg='请输入产品型号')
+                raise errors.NotFoundError(msg="请输入产品型号")
             models = []
             # 使用字典去重，按mc的唯一值存储
             unique_models = {}
             for fl, mc in results:
+<<<<<<< HEAD
                 if mc and mc[0] in ['C', 'M','Z']:
                     if mc not in unique_models:
                         unique_models[mc] = fl
             # models.append([fl, mc])
             models = [[fl, mc] for mc, fl in unique_models.items()]
+=======
+                if mc and mc[0] in ["C", "M", "Z"]:
+                    models.append([fl, mc])
+>>>>>>> imba
             return models
 
     @staticmethod
@@ -72,6 +83,7 @@ class FailureService:
         fault_mode: str = None,
         time_range: list[str] = None,
         is_zero_distance: int = 1,
+        is_company: int = None,
         fault_material_code: str = None,
     ) -> Select:
         # 时间范围
@@ -83,6 +95,7 @@ class FailureService:
             fault_mode=fault_mode,
             time_range=time_range,
             is_zero_distance=is_zero_distance,
+            is_company=is_company,
             fault_material_code=fault_material_code,
         )
 
@@ -90,7 +103,7 @@ class FailureService:
     async def get_parts_by_model(product_model: str = None) -> Sequence[str]:
         async with async_db_session() as db:
             parts = await failure_dao.get_distinct_column_values_by_product_model(
-                db, product_model, 'fault_material_code'
+                db, product_model, "fault_material_code"
             )
             return parts
 

@@ -42,28 +42,49 @@ class SpareService:
     ):
         # 备件量计算方法
         result = 0
-        product_list = {}
+        if not tags:
+            return 0
+
+        # 兼容整机级（product_tag）和零部件级（part_tag）两种标签结构
+        # - 整机级: [产品编号, 开始日期, 结束日期, 天数差, 运行时间, 类型]  -> len == 6
+        # - 零部件级: [产品编号, 虚拟物料编码, 开始日期, 结束日期, 天数差, 运行时间, 类型] -> len == 7
+        tag_len = len(tags[0])
+
+        # 第一步：根据结构构建“发运日期”映射
+        # 整机级: key = 产品编号
+        # 零部件级: key = (产品编号, 虚拟物料编码)
+        despatch_map = {}
         for tag in tags:
-            # 遍历标签，给每个产品编号找到发运日期
-            if tag[0] not in product_list:
-                product_list[tag[0]] = {"despetch": tag[-5]}
+            # 防止混合结构，长度不一致时退化为按产品编号
+            if len(tag) != tag_len:
+                key = tag[0]
             else:
-                if tag[-5] < product_list[tag[0]]["despetch"]:
-                    product_list[tag[0]]["despetch"] = tag[-5]
-        for key, product in product_list.items():
-            product["xvals"] = [
-                (start_date - product["despetch"]).days
+                if tag_len >= 7:
+                    # 零部件级：产品编号 + 虚拟键
+                    key = (tag[0], tag[1])
+                else:
+                    # 整机级：只有产品编号
+                    key = tag[0]
+
+            start_tag = tag[-5]  # 开始日期（统一使用 tag[-5]）
+            if key not in despatch_map or start_tag < despatch_map[key]:
+                despatch_map[key] = start_tag
+
+        # 第二步：对每个 key（整机或“产品+虚拟件”组合）计算 CDF 差值并累加
+        for key, despatch_date in despatch_map.items():
+            xvals = [
+                (start_date - despatch_date).days
                 * product_data.year_days
                 * product_data.avg_worktime
                 / 365,
-                (end_date - product["despetch"]).days
+                (end_date - despatch_date).days
                 * product_data.year_days
                 * product_data.avg_worktime
                 / 365,
             ]
-            product["yvals"] = distribution.CDF(xvals=product["xvals"], show_plot=False)
-            product["calcu"] = product["yvals"][1] - product["yvals"][0]
-            result += product["calcu"]
+            yvals = distribution.CDF(xvals=xvals, show_plot=False)
+            result += yvals[1] - yvals[0]
+
         return math.ceil(result)
 
     @staticmethod
@@ -79,31 +100,45 @@ class SpareService:
         """
         # 备件量计算方法
         result = 0
-        product_list = {}
+        if not tags:
+            return 0
+
+        # 兼容整机级（product_tag）和零部件级（part_tag）两种标签结构
+        tag_len = len(tags[0])
+
+        # 第一步：根据结构构建“发运日期”映射
+        despatch_map = {}
         for tag in tags:
-            # 遍历标签，给每个产品编号找到发运日期
-            if tag[0] not in product_list:
-                product_list[tag[0]] = {"despetch": tag[-5]}
+            if len(tag) != tag_len:
+                key = tag[0]
             else:
-                if tag[-5] < product_list[tag[0]]["despetch"]:
-                    product_list[tag[0]]["despetch"] = tag[-5]
+                if tag_len >= 7:
+                    key = (tag[0], tag[1])
+                else:
+                    key = tag[0]
+
+            start_tag = tag[-5]  # 开始日期
+            if key not in despatch_map or start_tag < despatch_map[key]:
+                despatch_map[key] = start_tag
+
+        # 第二步：进行拟合
         distribution = await part_fit_service.tag_fit(tags, method)
-        for key, product in product_list.items():
-            product["xvals"] = [
-                (start_date - product["despetch"]).days
+
+        # 第三步：对每个 key（整机或“产品+虚拟件”组合）计算 CDF 差值并累加
+        for key, despatch_date in despatch_map.items():
+            xvals = [
+                (start_date - despatch_date).days
                 * product_data.year_days
                 * product_data.avg_worktime
                 / 365,
-                (end_date - product["despetch"]).days
+                (end_date - despatch_date).days
                 * product_data.year_days
                 * product_data.avg_worktime
                 / 365,
             ]
-            product["yvals"] = distribution.best_distribution.CDF(
-                xvals=product["xvals"], show_plot=False
-            )
-            product["calcu"] = product["yvals"][1] - product["yvals"][0]
-            result += product["calcu"]
+            yvals = distribution.best_distribution.CDF(xvals=xvals, show_plot=False)
+            result += yvals[1] - yvals[0]
+
         return math.ceil(result)
 
     @staticmethod
