@@ -20,7 +20,7 @@ class OverhaulService:
         async with async_db_session() as db:
             models = await overhaul_dao.get_distinct_column_values(db, 'product_model')
             if not models:
-                raise errors.NotFoundError(msg='故障数据中未找到产品型号')
+                raise errors.NotFoundError(msg='检修数据中未找到产品型号')
             return models
     
     @staticmethod

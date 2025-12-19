@@ -143,13 +143,13 @@ class SpareService:
 
     @staticmethod
     async def get_product_spare_num(
-        model: str,
-        distribution_type: DistributeType = DistributeType.Weibull_2P,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        input_date: str | date = None,
-        start_date: str | date = None,
-        end_date: str | date = None,
+            model: str,
+            distribution_type: DistributeType = DistributeType.Weibull_2P,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            input_date: str | date = None,
+            start_date: str | date = None,
+            end_date: str | date = None,
         source: bool | None = False,
     ):
         """
@@ -177,14 +177,14 @@ class SpareService:
 
     @staticmethod
     async def get_part_spare_num(
-        model: str,
-        part: str,
-        distribution_type: DistributeType = DistributeType.Weibull_2P,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        input_date: str | date = None,
-        start_date: str | date = None,
-        end_date: str | date = None,
+            model: str,
+            part: str,
+            distribution_type: DistributeType = DistributeType.Weibull_2P,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            input_date: str | date = None,
+            start_date: str | date = None,
+            end_date: str | date = None,
         source: bool | None = False,
     ):
         """
@@ -228,13 +228,13 @@ class SpareService:
 
     @staticmethod
     async def get_all_parts_spare_num_by_model(
-        model: str,
-        distribution_type: DistributeType = None,
-        method: FitMethodType = FitMethodType.MLE,
-        check: FitCheckType = FitCheckType.BIC,
-        input_date: str | date = None,
-        start_date: str | date = None,
-        end_date: str | date = None,
+            model: str,
+            distribution_type: DistributeType = None,
+            method: FitMethodType = FitMethodType.MLE,
+            check: FitCheckType = FitCheckType.BIC,
+            input_date: str | date = None,
+            start_date: str | date = None,
+            end_date: str | date = None,
         source: bool | None = False,
     ):
         # 1. 确定哪些零部件有分布

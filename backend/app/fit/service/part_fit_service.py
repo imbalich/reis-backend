@@ -16,6 +16,7 @@ from reliability.Distributions import Exponential_Distribution
 from reliability.Fitters import Fit_Everything
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
 from backend.app.fit.schema.fit_param import CreateFitPartInParam, FitCheckType, FitMethodType
 from backend.app.fit.service.part_strategy_service import part_strategy_service
@@ -23,9 +24,12 @@ from backend.app.fit.utils.convert_model import (
     convert_method_to_str,
     convert_to_part_distribution_params,
     convert_to_part_exponential_distribution_params,
+    convert_to_total_quantity,
+    get_ebom_tree_with_parents,
 )
 from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
+from backend.common.exception import errors
 from backend.common.exception.errors import DataValidationError, FailureCheckError
 from backend.database.db import async_db_session
 
@@ -68,24 +72,37 @@ class PartFitService:
         return fit
 
     @staticmethod
-    async def none_tag_fit(db: AsyncSession, model: str, part: str) -> float:
+    async def none_tag_fit(db: AsyncSession, model: str, part: str,input_date: date) -> float:
         """
         无标签(无故障)拟合:指定为指数分布
         """
         # 1. 计算故障总数,总运行时间
-        failures = await fit_part_dao.get_by_model_and_part(db, model, part)
+        failures = await failure_dao.get_by_model_and_part(db, model, part,input_date)
         t = await datacheckutils.total_run_time(db, model)
         if t == 0:
             raise DataValidationError(msg=f'型号 {model} 部件 {part} 的累计运行时间为0')
+                        # 获取完整的BOM树（包括所有父级节点）
+        ebom_data = await get_ebom_tree_with_parents(db, model, part)
+        if not ebom_data:
+            raise errors.DataValidationError(
+                msg=f"指数分布拟合时，型号{model}的零部件{part}的BOM信息不存在"
+            )
+
+        # 获取bl_quantity（在转换为EbomParam之前计算，因为需要层级信息）
+        total_bl_quantity = convert_to_total_quantity(ebom_data, part)
+        t = t * total_bl_quantity
         # 2. 按照故障数量划分计算指数分布
         if len(failures) > 0:
             # 2.1 存在故障，计算指数分布公式:λ = n / T
             lambda_ = len(failures) / t
+            distribution_lambda = Exponential_Distribution(Lambda=lambda_).Lambda
+            return distribution_lambda
         else:
             # 2.2 不存在故障，计算指数分布公式:λ = t/-ln(1/e)
             lambda_ = -(math.log(1 / math.e)) / t
-        distribution_lambda = Exponential_Distribution(Lambda=lambda_).Lambda
-        return distribution_lambda
+            distribution_lambda = Exponential_Distribution(Lambda=lambda_).Lambda
+            return distribution_lambda
+            # return None
 
     @staticmethod
     async def create(*, obj: CreateFitPartInParam) -> None:
@@ -131,7 +148,9 @@ class PartFitService:
                     )
                     await fit_part_dao.creates(db, distribution_params)
                 except FailureCheckError:
-                    lambda_ = await PartFitService.none_tag_fit(db, model, part)
+                    lambda_ = await PartFitService.none_tag_fit(db, model, part,input_date)
+                    if lambda_ is None:
+                        return
                     distribution_param = convert_to_part_exponential_distribution_params(
                         model, part, input_date, method, is_user_input, lambda_
                     )

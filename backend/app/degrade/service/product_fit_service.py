@@ -57,6 +57,7 @@ class ProductFitService:
 
         # 4、计算失效阈值对应的运行时间以及置信区间
         x_smooth = np.linspace(min(x_peaks), 40, 1000)
+        # x_smooth = np.linspace(1, 40, 1000)
         y_smooth = best_fit_model['func'](x_smooth)
         y_upper_smooth = y_smooth + ci
         y_lower_smooth = y_smooth - ci

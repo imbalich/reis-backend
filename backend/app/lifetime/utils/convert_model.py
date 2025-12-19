@@ -64,7 +64,12 @@ def convert_to_equal_lifetime_params_with_classification(
     返回三条记录（每个分类一条）
     """
     group_id = uuid4_str()
-    time_point = results.get('D',results.get('B', results.get('C', results.get('A', {})))).get('time_point')
+    # 获取 time_point，优先从 D/B/C/A 中获取
+    time_point_dict = results.get('D') or results.get('B') or results.get('C') or results.get('A') or {}
+    time_point = time_point_dict.get('time_point') if isinstance(time_point_dict, dict) else None
+    
+    if time_point is None:
+        raise ValueError(f"无法从results中获取time_point，results结构: {results}")
 
     distribution_params = []
 

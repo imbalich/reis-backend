@@ -180,21 +180,21 @@ class ScienceWarehouseServiceChange:
             f"[科学库存计算] 库房{warehouse_code}备品{spare_part_code}，开始计算，共{len(model_failure_spare_mappings)}个故障件映射"
         )
         for model_failure_spare_mapping in model_failure_spare_mappings:
-            product_count = 0  # 需要被管理的产品数量
-            products = []  # 需要被管理的产品列表
+
             model = model_failure_spare_mapping["product_model"]
             part = model_failure_spare_mapping["original_part_code"]
 
+            products_set = set()
+
             for allotment in allotments:
-                # 4.1 获取指定二级配属下的所有产品编号
-                products = await ScienceWarehouseServiceChange.get_products_by_allotment_two_and_model(
+                allotment_products = await ScienceWarehouseServiceChange.get_products_by_allotment_two_and_model(
                     allotment, model
                 )
-                if products is None or len(products) == 0:
-                    continue
-                product_count += len(products)
-                products.extend(products)
+                if allotment_products:
+                    products_set.update(allotment_products)
             # 4.2 计算一种故障总计有多少需要被这个库房管理
+            products = list(products_set)
+            product_count = len(products)
             model_failure_spare_mapping["product_count"] = product_count
             model_failure_spare_mapping["products"] = products
             log.info(
@@ -219,9 +219,9 @@ class ScienceWarehouseServiceChange:
             if not products or len(products) == 0:
                 log.warning(
                     f"[科学库存计算] 型号{model}故障件{part}在库房{warehouse_code}下没有产品，"
-                    f"设置max_failure_count=1（默认值）"
+                    f"设置max_failure_count=0（没有产品则无故障）"
                 )
-                model_failure_spare_mapping["max_failure_count"] = 1
+                model_failure_spare_mapping["max_failure_count"] = 0
                 continue
 
             # 计算每个型号+故障件在过去x天内的故障次数最大值
@@ -257,13 +257,7 @@ class ScienceWarehouseServiceChange:
 
                 start_date += timedelta(days=gap)
 
-            # 最少也得1个备件
-            if max_failure_count < 1:
-                max_failure_count = 1
-                log.debug(
-                    f"[科学库存计算] 型号{model}故障件{part}最大故障次数为0，设置为默认值1"
-                )
-
+            # 保持实际计算结果，不强制设为1（如果历史数据中确实没有故障，则为0）
             model_failure_spare_mapping["max_failure_count"] = max_failure_count
             log.info(
                 f"[科学库存计算] 型号{model}故障件{part}最大滚动故障次数计算完成，"
@@ -333,23 +327,35 @@ class ScienceWarehouseServiceChange:
             model = model_failure_spare_mapping["product_model"]
             part = model_failure_spare_mapping["original_part_code"]
 
-            # 累加最大故障次数
-            if "max_failure_count" in model_failure_spare_mapping:
-                max_failure_count = model_failure_spare_mapping["max_failure_count"]
-                total_max_failure_count += max_failure_count
-                max_failure_count_details.append(f"{model}+{part}:{max_failure_count}")
+            # 累加最大故障次数（只累加有产品的映射，没有产品的映射不参与累加）
+            if model_failure_spare_mapping.get("product_count", 0) > 0:
+                if "max_failure_count" in model_failure_spare_mapping:
+                    max_failure_count = model_failure_spare_mapping["max_failure_count"]
+                    total_max_failure_count += max_failure_count
+                    max_failure_count_details.append(
+                        f"{model}+{part}:{max_failure_count}"
+                    )
+                else:
+                    log.warning(
+                        f"[科学库存计算] 型号{model}故障件{part}缺少max_failure_count字段，跳过累加"
+                    )
+                    max_failure_count_details.append(f"{model}+{part}:缺失")
             else:
-                log.warning(
-                    f"[科学库存计算] 型号{model}故障件{part}缺少max_failure_count字段，跳过累加"
+                # 没有产品的映射，max_failure_count应该是0，但不参与累加（因为该映射已被跳过）
+                max_failure_count = model_failure_spare_mapping.get(
+                    "max_failure_count", 0
                 )
-                max_failure_count_details.append(f"{model}+{part}:缺失")
+                max_failure_count_details.append(
+                    f"{model}+{part}:{max_failure_count}(无产品，不累加)"
+                )
 
             # 累加备件量
             if "quantity" in model_failure_spare_mapping:
                 quantity = model_failure_spare_mapping["quantity"]
                 if quantity is not None:
-                    total_quantity += quantity
-                    quantity_details.append(f"{model}+{part}:{quantity:.4f}")
+                    ceil_quantity = math.ceil(quantity)
+                    total_quantity += ceil_quantity
+                    quantity_details.append(f"{model}+{part}:{quantity:.4f}(ceil={ceil_quantity})")
                 else:
                     quantity_details.append(f"{model}+{part}:None")
             else:
@@ -668,7 +674,8 @@ class ScienceWarehouseServiceChange:
 
         log.info(
             f"[备件量计算] 型号{product_model}开始计算，产品数量={len(products)}，"
-            f"input_date={input_date}，time_interval_days={time_interval_days}"
+            f"input_date={input_date}，time_interval_days={time_interval_days}，"
+            f"产品编号列表={products}"
         )
 
         async with async_db_session() as db:
@@ -697,15 +704,18 @@ class ScienceWarehouseServiceChange:
                             despatch.life_cycle_time
                         )
 
+            found_products = list(product_despatch_map.keys())
             log.info(
-                f"[备件量计算] 型号{product_model}从发运表获取到{len(product_despatch_map)}个产品的发运日期"
+                f"[备件量计算] 型号{product_model}从发运表获取到{len(product_despatch_map)}个产品的发运日期，"
+                f"找到的产品编号列表={found_products}"
             )
 
             # 3. 对于发运表中没有的产品，批量查询故障表获取 manufacturing_date
             missing_products = [p for p in products if p not in product_despatch_map]
             if missing_products:
                 log.info(
-                    f"[备件量计算] 型号{product_model}有{len(missing_products)}个产品在发运表中未找到，尝试从故障表获取manufacturing_date"
+                    f"[备件量计算] 型号{product_model}有{len(missing_products)}个产品在发运表中未找到，"
+                    f"未找到的产品编号列表={missing_products}，尝试从故障表获取manufacturing_date"
                 )
                 # 批量查询故障表：根据 product_model 和 product_number 列表查询
                 # 查询每个产品编号最早的 manufacturing_date
@@ -746,8 +756,10 @@ class ScienceWarehouseServiceChange:
                                 product_despatch_map[failure.product_number] = (
                                     failure.manufacturing_date
                                 )
+                found_from_failure = list(seen_products)
                 log.info(
-                    f"[备件量计算] 型号{product_model}从故障表获取到{len(seen_products)}个产品的manufacturing_date"
+                    f"[备件量计算] 型号{product_model}从故障表获取到{len(seen_products)}个产品的manufacturing_date，"
+                    f"从故障表找到的产品编号列表={found_from_failure}"
                 )
 
             # 统计找不到发运日期的产品数量
@@ -757,7 +769,7 @@ class ScienceWarehouseServiceChange:
             if products_without_despatch:
                 log.warning(
                     f"[备件量计算] 型号{product_model}有{len(products_without_despatch)}个产品找不到发运日期，"
-                    f"示例: {products_without_despatch[:5]}"
+                    f"找不到发运日期的产品编号列表={products_without_despatch}"
                 )
 
             # 4. 计算每个产品的备件量（CDF差值）

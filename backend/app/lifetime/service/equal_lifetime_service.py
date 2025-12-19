@@ -300,11 +300,14 @@ class EqualLifetimeService:
             if parts:
                 # 找到 parts 完全匹配的 group
                 for group_id, group_results in groups.items():
-                    # group_results 中每条记录的 parts 字段是重复的（存储相同 parts JSON）
-                    db_parts_str = group_results[0].parts
-                    db_parts = json.loads(db_parts_str) if isinstance(db_parts_str, str) else db_parts_str
-                    if sorted(db_parts) == sorted(parts):
-                        return group_results
+                    # 计算该 group 中所有 category 的 parts 并集
+                    all_parts_in_group = set()
+                    for rec in group_results:
+                        db_parts_str = rec.parts
+                        db_parts = json.loads(db_parts_str) if isinstance(db_parts_str, str) else db_parts_str
+                        all_parts_in_group.update(db_parts)
+                        if sorted(db_parts) == sorted(parts) or sorted(all_parts_in_group) == sorted(parts):
+                            return group_results
                 return []
             else:
                 # parts 未提供：返回最新创建的 group（models 已按 created_time 排序）

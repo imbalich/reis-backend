@@ -40,15 +40,22 @@ async def get_all_warehouse_spare_pairs():
 async def main():
     """主函数"""
     
-    # warehouse_spare_pairs = [
-    #     ("GA06", "CNR0000021939"),
-    #     ("GB11", "CNR0000021939"),
-    #     ("GC04", "CNR0000021939"),
-    # ]
+    warehouse_spare_pairs = [
+        ("GE01", "M000001529569"),
+        ("GE12", "M000001529569"),
+        ("GK16", "M000001529569"),
+        ("GK23", "M000001529569"),
+        # ("GO01", "Z500000188290"),
+        # ("GQ36", "Z500000188290"),
+        # ("GQ07", "Z500000079912"),
+        # ("GQ09", "Z500000079912"),
+        # ("GQ29", "Z500000079912"),
+        
+    ]
     # 从库房备品表中获取所有库房-备件组合
-    print("正在从库房备品表中获取所有库房-备件组合...")
-    warehouse_spare_pairs = await get_all_warehouse_spare_pairs()
-    print(f"共找到 {len(warehouse_spare_pairs)} 个库房-备件组合")
+    # print("正在从库房备品表中获取所有库房-备件组合...")
+    # warehouse_spare_pairs = await get_all_warehouse_spare_pairs()
+    # print(f"共找到 {len(warehouse_spare_pairs)} 个库房-备件组合")
 
     if not warehouse_spare_pairs:
         print("警告：未找到任何库房-备件组合，请检查数据库")
@@ -56,9 +63,9 @@ async def main():
 
     result = await ScienceWarehouseServiceChange.batch_warehouse_spare_calculate(
         time_interval_days=180,
-        input_date="2025-12-01",
+        input_date="2025-01-01",
         warehouse_spare_pairs=warehouse_spare_pairs,
-        save_to_db=True,
+        save_to_db=False,
     )
 
     print("=" * 80)

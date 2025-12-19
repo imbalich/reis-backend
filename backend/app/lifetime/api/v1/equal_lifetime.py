@@ -58,6 +58,14 @@ async def  get_equal_lifetime_result(
     获取单个产品型号的拟合结果
     """
     results = await equal_lifetime_service.get_optimize_result(model, parts,target_sf,step_start,step_end)
+    # 如果结果为 None，返回空对象而不是 null，避免前端无法处理
+    if results is None:
+        return response_base.success(data={
+            "result": [],
+            "equal_lifetime_points": {},
+            "img_original_result": None,
+            "img_optimize_result": None,
+        })
     return response_base.success(data=results)
 
 

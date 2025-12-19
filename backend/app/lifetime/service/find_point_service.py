@@ -16,6 +16,7 @@ from backend.app.lcc.service.cycle_life_service import cycle_life_service
 from backend.app.calcu.service.reliability_index_service import reliability_index_service
 from backend.app.datamanage.crud.crud_replace import replace_dao
 from backend.database.db import async_db_session
+from backend.common.exception.errors import DataValidationError
 class FindPointService:
 
     @staticmethod
@@ -248,6 +249,11 @@ class FindPointService:
         sf_list = []
         # result = await repair_interval_dao.get_repair_parts_with_names_only_by_model(db, model)
         repair_year = [float(t[0]) for t in repair_result if t[1] == 'C6' or t[1] == '首轮五级修'or t[1] == 'D6']
+        if not repair_year:
+            raise DataValidationError(
+                msg=f"型号{model}的repair_result中未找到'C6'、'首轮五级修'或'D6'修程记录，无法计算time_point。"
+                f"当前repair_result: {repair_result}"
+            )
         time_point = year_worktimes * repair_year[0] # 总时间范围
         replace_parts =[]
 

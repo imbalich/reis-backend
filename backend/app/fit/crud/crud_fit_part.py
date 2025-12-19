@@ -273,6 +273,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             select(distinct(self.model.part))
             .where(
                 self.model.model == model,
+                self.model.source == 0,
             )
         )
         result = await db.execute(stmt)

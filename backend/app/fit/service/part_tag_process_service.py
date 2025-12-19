@@ -188,6 +188,10 @@ class PartTagProcessService(TagProcessService):
             # 如果 manufacturing_date 为 None，跳过这条记录
             if failure.manufacturing_date is None:
                 continue
+            if failure.product_number in container["part_container"]:
+                # 如果 manufacturing_date 小于 container["part_container"][failure.product_number]["despatch_date"]，更新 container["part_container"][failure.product_number]["despatch_date"]
+                if failure.manufacturing_date < container["part_container"][failure.product_number]["despatch_date"]:
+                    container["part_container"][failure.product_number]["despatch_date"] = failure.manufacturing_date
             if failure.product_number not in container["part_container"]:
                 # 向container内追加
                 product = {

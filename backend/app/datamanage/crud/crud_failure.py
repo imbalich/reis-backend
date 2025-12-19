@@ -8,6 +8,7 @@
 @Date    ：2024/12/26 16:51
 """
 
+from datetime import date
 from typing import Any, List, Sequence, TypeVar
 
 from sqlalchemy import Row, Select, desc, distinct, func, or_, select
@@ -216,17 +217,20 @@ class CRUDFailure(CRUDPlus[T]):
         return stmt
 
     async def get_by_model_and_part(
-        self, db: AsyncSession, model: str, part: str
+        self, db: AsyncSession, model: str, part: str,input_date: date = None
     ) -> Sequence[FailureModel]:
         """
         查询单型号单零部件故障信息:做检测用，不用考虑是否新造
         :param db: 数据库会话
         :param model: 产品型号
         :param part: 零部件
+        :param input_date: 计算截止日
         :return: 故障列表
         """
         stmt = select(self.model).order_by(self.model.discovery_date)
         where_list = []
+        if input_date:
+            where_list.append(self.model.discovery_date <= input_date.strftime("%Y-%m-%d"))
         where_list.append(self.model.product_model == model)
         where_list.append(self.model.fault_material_code == part)
         where_list.append(self.model.is_zero_distance == 0)

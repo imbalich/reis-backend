@@ -75,12 +75,14 @@ class DataCheckUtils:
             return False
 
     @staticmethod
-    async def total_run_time(db: AsyncSession, model: str) -> float:
+    async def total_run_time(db: AsyncSession, model: str,input_date: date = None) -> float:
         despatchs = await despatch_dao.get_despatchs_by_model(db, model)
         product = await product_dao.get_by_model(db, model)
         if despatchs:
-            # 当前日期
-            now = date.today()
+            if input_date:
+                now = input_date
+            else:
+                now = date.today()
             total_hours = 0
             for despatch in despatchs:
                 dispatch_date = despatch.life_cycle_time

@@ -32225,3 +32225,339 @@ AttributeError: 'NoneType' object has no attribute 'PDF'
 2025-11-29 19:37:24,957 - _granian.workers - INFO - Started worker-1 runtime-1
 2025-12-04 17:32:13,803 - _granian.workers - INFO - Started worker-1
 2025-12-04 17:32:13,805 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-10 14:51:15,698 - _granian.workers - INFO - Started worker-1
+2025-12-10 14:51:15,830 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 08:49:35,863 - _granian.workers - INFO - Started worker-1
+2025-12-11 08:49:36,079 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 15:30:27,587 - _granian.workers - INFO - Started worker-1
+2025-12-11 15:30:27,588 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 15:45:54,844 - _granian.workers - INFO - Started worker-1
+2025-12-11 15:45:54,863 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 15:47:54,770 - _granian.workers - INFO - Started worker-1
+2025-12-11 15:47:54,771 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 15:51:07,927 - _granian.workers - INFO - Started worker-1
+2025-12-11 15:51:07,927 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 15:51:14,767 - _granian.workers - INFO - Started worker-1
+2025-12-11 15:51:14,768 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 16:04:27,363 - _granian.workers - INFO - Started worker-1
+2025-12-11 16:04:27,363 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 16:04:35,529 - _granian.workers - INFO - Started worker-1
+2025-12-11 16:04:35,529 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 16:09:31,290 - _granian.workers - INFO - Started worker-1
+2025-12-11 16:09:31,290 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 17:00:25,091 - _granian.workers - INFO - Started worker-1
+2025-12-11 17:00:25,091 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-11 18:01:29,696 - _granian.workers - INFO - Started worker-1
+2025-12-11 18:01:29,697 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-12 11:39:07,785 - _granian.workers - INFO - Started worker-1
+2025-12-12 11:39:07,785 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-12 11:47:15,138 - _granian.workers - INFO - Started worker-1
+2025-12-12 11:47:15,138 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-12 11:47:40,373 - _granian.workers - INFO - Started worker-1
+2025-12-12 11:47:40,374 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-12 14:51:44,225 - _granian.workers - INFO - Started worker-1
+2025-12-12 14:51:44,226 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-12 14:52:02,793 - _granian.workers - INFO - Started worker-1
+2025-12-12 14:52:02,794 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-12 14:53:30,624 - _granian.workers - INFO - Started worker-1
+2025-12-12 14:53:30,625 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-15 09:40:27,827 - _granian.workers - INFO - Started worker-1
+2025-12-15 09:40:27,845 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-15 10:44:01,681 - _granian.workers - INFO - Stopping worker-1
+2025-12-15 10:44:01,769 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2025-12-15 10:50:57,261 - _granian.workers - INFO - Started worker-1
+2025-12-15 10:50:57,314 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-15 11:42:23,310 - _granian.workers - INFO - Started worker-1
+2025-12-15 11:42:23,310 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-15 16:11:43,218 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2025-12-15 16:11:43,573 - _granian.workers - INFO - Stopping worker-1
+2025-12-15 17:43:12,799 - _granian.workers - INFO - Started worker-1
+2025-12-15 17:43:12,841 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-16 11:43:20,339 - _granian.asgi.io - INFO - ASGI transport error: SendError { .. }
+2025-12-16 11:43:44,117 - _granian.asgi.io - INFO - ASGI transport error: SendError { .. }
+2025-12-16 18:03:58,291 - _granian.workers - INFO - Started worker-1
+2025-12-16 18:03:58,418 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-16 18:16:32,853 - _granian.workers - INFO - Started worker-1
+2025-12-16 18:16:32,854 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-16 18:17:03,200 - _granian.workers - INFO - Started worker-1
+2025-12-16 18:17:03,201 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-16 18:19:20,638 - _granian.workers - INFO - Started worker-1
+2025-12-16 18:19:20,639 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-16 18:27:08,018 - _granian.workers - INFO - Started worker-1
+2025-12-16 18:27:08,018 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-16 18:52:04,957 - _granian.workers - INFO - Started worker-1
+2025-12-16 18:52:04,957 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-17 17:53:03,744 - _granian.workers - INFO - Started worker-1
+2025-12-17 17:53:03,756 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-17 18:40:40,659 - _granian.asgi.io - INFO - ASGI transport error: SendError { .. }
+2025-12-17 18:41:00,852 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2025-12-17 18:41:00,894 - _granian.workers - INFO - Stopping worker-1
+2025-12-17 18:42:38,977 - _granian.workers - INFO - Started worker-1
+2025-12-17 18:42:38,978 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-18 14:30:18,184 - _granian.workers - INFO - Started worker-1
+2025-12-18 14:30:18,184 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-18 19:32:13,215 - _granian.workers - INFO - Started worker-1
+2025-12-18 19:32:13,215 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 08:34:26,989 - _granian.utils - ERROR - Application callable raised an exception
+Traceback (most recent call last):
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\granian\_futures.py", line 15, in future_watcher
+    await inner(watcher.scope, watcher.proto)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\asgi_correlation_id\middleware.py", line 90, in __call__
+    await self.app(scope, receive, handle_outgoing_request)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\access_middleware.py", line 34, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\i18n_middleware.py", line 29, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\authentication.py", line 48, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\state_middleware.py", line 32, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 116, in dispatch
+    raise error from None
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 53, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\lifetime\api\v1\equal_lifetime.py", line 60, in get_equal_lifetime_result
+    results = await equal_lifetime_service.get_optimize_result(model, parts,target_sf,step_start,step_end)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\lifetime\service\equal_lifetime_service.py", line 406, in get_optimize_result
+    group_records = await EqualLifetimeService._get_group_by_model_and_parts(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\lifetime\service\equal_lifetime_service.py", line 291, in _get_group_by_model_and_parts
+    models = await equal_lifetime_dao.get_by_model(db, model, target_sf, step_start, step_end, is_all_parts)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\lifetime\crud\crud_lifetime.py", line 57, in get_by_model
+    result = await db.execute(stmt)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 463, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 201, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\connectors\asyncio.py", line 192, in execute
+    self._adapt_connection._handle_exception(error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\dialects\mysql\asyncmy.py", line 88, in _handle_exception
+    raise error
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\connectors\asyncio.py", line 190, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\sqlalchemy\connectors\asyncio.py", line 213, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncmy\\cursors.pyx", line 179, in execute
+  File "asyncmy\\cursors.pyx", line 364, in _query
+  File "asyncmy\\connection.pyx", line 496, in query
+  File "asyncmy\\connection.pyx", line 684, in _read_query_result
+  File "asyncmy\\connection.pyx", line 1071, in read
+  File "asyncmy\\connection.pyx", line 646, in read_packet
+  File "asyncmy\\protocol.pyx", line 190, in asyncmy.protocol.MysqlPacket.raise_for_error
+  File "asyncmy\\protocol.pyx", line 194, in asyncmy.protocol.MysqlPacket.raise_for_error
+  File "asyncmy\\errors.pyx", line 128, in asyncmy.errors.raise_mysql_exception
+  File "asyncmy\\errors.pyx", line 137, in asyncmy.errors.raise_mysql_exception
+OperationalError: (asyncmy.errors.OperationalError) (1054, "Unknown column 'equal_lifetime.category' in 'field list'")
+[SQL: SELECT equal_lifetime.id, equal_lifetime.group_id, equal_lifetime.model, equal_lifetime.parts, equal_lifetime.category, equal_lifetime.target_sf, equal_lifetime.step_start, equal_lifetime.step_end, equal_lifetime.time_point, equal_lifetime.sf_at_time_point, equal_lifetime.reason, equal_lifetime.equal_lifetime_t_year, equal_lifetime.equal_lifetime_t, equal_lifetime.equal_lifetime_sf, equal_lifetime.is_all_parts, equal_lifetime.status, equal_lifetime.part_count, equal_lifetime.created_time 
+FROM equal_lifetime 
+WHERE equal_lifetime.model = %s AND equal_lifetime.is_all_parts = false AND equal_lifetime.target_sf BETWEEN %s AND %s AND equal_lifetime.step_start BETWEEN %s AND %s AND equal_lifetime.step_end BETWEEN %s AND %s ORDER BY equal_lifetime.created_time DESC]
+[parameters: ('YJ170A', 0.9499989999999999, 0.950001, 0.9499989999999999, 0.950001, 0.989999, 0.990001)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-12-19 08:56:16,302 - _granian.workers - INFO - Stopping worker-1
+2025-12-19 08:56:16,384 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2025-12-19 08:57:06,133 - _granian.workers - INFO - Started worker-1
+2025-12-19 08:57:06,134 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 09:01:38,308 - _granian.workers - INFO - Started worker-1
+2025-12-19 09:01:38,309 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 09:01:48,744 - _granian.workers - INFO - Started worker-1
+2025-12-19 09:01:48,744 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 09:02:10,127 - _granian.workers - INFO - Started worker-1
+2025-12-19 09:02:10,127 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 09:02:20,888 - _granian.workers - INFO - Started worker-1
+2025-12-19 09:02:20,889 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 09:03:29,222 - _granian.workers - INFO - Started worker-1
+2025-12-19 09:03:29,223 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 09:03:37,559 - _granian.workers - INFO - Started worker-1
+2025-12-19 09:03:37,560 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 09:32:17,205 - _granian.workers - INFO - Started worker-1
+2025-12-19 09:32:17,206 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 09:40:28,478 - _granian.workers - INFO - Started worker-1
+2025-12-19 09:40:28,478 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 10:30:20,625 - _granian.workers - INFO - Started worker-1
+2025-12-19 10:30:20,625 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 10:30:35,480 - _granian.workers - INFO - Started worker-1
+2025-12-19 10:30:35,481 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 10:38:26,452 - _granian.workers - INFO - Stopping worker-1
+2025-12-19 10:38:26,622 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2025-12-19 10:39:07,858 - _granian.workers - INFO - Started worker-1
+2025-12-19 10:39:07,859 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:11:57,033 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:11:57,033 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:11:59,934 - _granian.asgi.io - INFO - ASGI transport error: SendError { .. }
+2025-12-19 11:36:07,801 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:36:07,802 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:38:26,920 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:38:26,920 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:38:49,248 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:38:49,248 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:39:30,618 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:39:30,619 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:40:48,355 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:40:48,355 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:42:46,421 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:42:46,421 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:42:58,665 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:42:58,665 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:43:27,405 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:43:27,406 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:46:38,448 - _granian.workers - INFO - Stopping worker-1
+2025-12-19 11:46:38,484 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2025-12-19 11:46:49,857 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:46:49,858 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:49:27,967 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:49:27,968 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 11:49:46,378 - _granian.workers - INFO - Started worker-1
+2025-12-19 11:49:46,379 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 12:01:41,948 - _granian.workers - INFO - Started worker-1
+2025-12-19 12:01:41,948 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 12:02:08,526 - _granian.workers - INFO - Started worker-1
+2025-12-19 12:02:08,527 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 17:12:38,888 - _granian.workers - INFO - Started worker-1
+2025-12-19 17:12:38,929 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 17:21:40,683 - _granian.workers - INFO - Started worker-1
+2025-12-19 17:21:40,683 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 17:22:05,157 - _granian.workers - INFO - Started worker-1
+2025-12-19 17:22:05,157 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 17:22:29,966 - _granian.workers - INFO - Started worker-1
+2025-12-19 17:22:29,966 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 18:34:30,998 - _granian.workers - INFO - Started worker-1
+2025-12-19 18:34:31,081 - _granian.workers - INFO - Started worker-1 runtime-1
+2025-12-19 18:36:05,556 - _granian.workers - INFO - Stopping worker-1
+2025-12-19 18:36:06,090 - _granian.workers - INFO - Stopping worker-1 runtime-1
