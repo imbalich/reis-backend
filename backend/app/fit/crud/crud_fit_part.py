@@ -151,6 +151,68 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         result = await db.execute(stmt)
         return result.scalars().all()
 
+    async def get_by_model_and_part_ignore_source(
+        self,
+        db: AsyncSession,
+        model: str,
+        part: str,
+        input_date: date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        check: FitCheckType = FitCheckType.BIC,
+    ) -> Sequence[FitPart]:
+        """
+        根据型号和零部件查询拟合信息（忽略 source 字段，查询所有 source 值）
+        查询最新的拟合信息,以一组的形式出现
+
+        :param db: 数据库会话
+        :param model: 型号
+        :param part: 零部件物料编码
+        :param input_date: 输入日期
+        :param method: 拟合方法
+        :param check: 拟合优度检验
+        :return: 符合条件的最新拟合信息列表
+        """
+        # 定义排序列
+        order_column = case(
+            (
+                literal(FitCheckType.Log.value) == literal(check),
+                self.model.log_likelihood,
+            ),
+            (literal(FitCheckType.AICc.value) == literal(check), self.model.aicc),
+            (literal(FitCheckType.BIC.value) == literal(check), self.model.bic),
+            (literal(FitCheckType.AD.value) == literal(check), self.model.ad),
+        )
+
+        # 基本查询条件（不包含 source）
+        base_conditions = [
+            self.model.model == model,
+            self.model.part == part,
+            self.model.method == method,
+        ]
+
+        # 如果提供了 input_date，添加到查询条件中
+        if input_date:
+            base_conditions.append(self.model.input_date == input_date)
+
+        # 子查询：获取最新的group_id
+        latest_group_subquery = (
+            select(self.model.group_id)
+            .where(and_(*base_conditions))
+            .order_by(desc(self.model.created_time))
+            .limit(1)
+            .scalar_subquery()
+        )
+
+        # 主查询：获取最新group的所有记录并排序
+        stmt = (
+            select(self.model)
+            .where(and_(*base_conditions, self.model.group_id == latest_group_subquery))
+            .order_by(asc(order_column))
+        )
+
+        result = await db.execute(stmt)
+        return result.scalars().all()
+
     async def get_by_model_and_part_and_distribution(
         self,
         db: AsyncSession,
@@ -227,8 +289,10 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         )
         result = await db.execute(stmt)
         return result.scalars().all()
-    
-    async def get_all_parts_for_opt(self, db: AsyncSession, model: str) -> Sequence[str]:
+
+    async def get_all_parts_for_opt(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[str]:
         """
         获取所有零部件:获取所有能够计算opt的零部件
         """
@@ -237,48 +301,42 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         )
         result = await db.execute(stmt)
         return result.scalars().all()
-    
-    async def get_parts_for_opt_by_model(self, db: AsyncSession, model: str) -> Sequence[str]:
+
+    async def get_parts_for_opt_by_model(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[str]:
         """
         获取指定型号下所有能够计算opt的零部件物料编码
         """
-        stmt = (
-            select(distinct(self.model.part))
-            .where(
-                self.model.model == model,
-                self.model.distribution == 'Weibull_2P'
-            )
+        stmt = select(distinct(self.model.part)).where(
+            self.model.model == model, self.model.distribution == "Weibull_2P"
         )
         result = await db.execute(stmt)
         return result.scalars().all()
-    
-    async def get_parts_for_lifetime_by_model(self, db: AsyncSession, model: str) -> Sequence[str]:
+
+    async def get_parts_for_lifetime_by_model(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[str]:
         """
         获取指定型号下所有能够计算等寿命设计的零部件物料编码
         """
-        stmt = (
-            select(distinct(self.model.part))
-            .where(
-                self.model.model == model
-            )
-        )
+        stmt = select(distinct(self.model.part)).where(self.model.model == model)
         result = await db.execute(stmt)
         return result.scalars().all()
-    
-    async def get_parts_for_lifetime_by_model1(self, db: AsyncSession, model: str) -> Sequence[str]:
+
+    async def get_parts_for_lifetime_by_model1(
+        self, db: AsyncSession, model: str
+    ) -> Sequence[str]:
         """
         获取指定型号下所有能够计算等寿命设计的零部件物料编码
         """
-        stmt = (
-            select(distinct(self.model.part))
-            .where(
-                self.model.model == model,
-                self.model.source == 0,
-            )
+        stmt = select(distinct(self.model.part)).where(
+            self.model.model == model,
+            self.model.source == 0,
         )
         result = await db.execute(stmt)
         return result.scalars().all()
-    
+
     async def get_distinct_column_values(
         self, db: AsyncSession, column_name: str
     ) -> Sequence[Any]:

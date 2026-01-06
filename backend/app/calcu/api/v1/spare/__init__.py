@@ -12,8 +12,10 @@ from fastapi import APIRouter
 
 from backend.app.calcu.api.v1.spare.predict_part import router as part_router
 from backend.app.calcu.api.v1.spare.predict_product import router as product_router
+from backend.app.calcu.api.v1.spare.statistics import router as statistics_router
 
 router = APIRouter(prefix='/spare')
 
 router.include_router(product_router, prefix='/product', tags=['产品级备件量预测'])
 router.include_router(part_router, prefix='/part', tags=['部件级备件量预测'])
+router.include_router(statistics_router, prefix='/statistics', tags=['备件统计'])

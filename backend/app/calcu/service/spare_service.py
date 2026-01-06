@@ -70,8 +70,13 @@ class SpareService:
             if key not in despatch_map or start_tag < despatch_map[key]:
                 despatch_map[key] = start_tag
 
-        # 第二步：对每个 key（整机或“产品+虚拟件”组合）计算 CDF 差值并累加
+        # 第二步：对每个 key（整机或"产品+虚拟件"组合）计算 CDF 差值并累加
         for key, despatch_date in despatch_map.items():
+            # 检查发运日期是否晚于计算日期，如果是则跳过该产品
+            if (start_date - despatch_date).days < 0 or (end_date - despatch_date).days < 0:
+                # 发运日期晚于计算日期，跳过该产品
+                continue
+            
             xvals = [
                 (start_date - despatch_date).days
                 * product_data.year_days
