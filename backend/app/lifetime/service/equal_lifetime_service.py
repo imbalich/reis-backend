@@ -298,7 +298,7 @@ class EqualLifetimeService:
                 groups.setdefault(item.group_id, []).append(item)
 
             if parts:
-                # 找到 parts 完全匹配的 group
+                # 找到 parts 完全匹配的 group（支持匹配单个 category 或整个 group 的并集）
                 for group_id, group_results in groups.items():
                     # 计算该 group 中所有 category 的 parts 并集
                     all_parts_in_group = set()
@@ -505,8 +505,7 @@ class EqualLifetimeService:
                             'need_optimization': False,
                             'category': 'A',
                             'original_equal_t_year': original_equal_t_year,
-                            'equal_lifetime_t_year': original_equal_t_year,
-                            
+                            'equal_lifetime_t_year': '---',
                         }
             section_end = time.time()
             print(f"[4] 参数处理完成: {section_end - section_start:.3f}秒")
@@ -525,7 +524,7 @@ class EqualLifetimeService:
                         if part in result_dict:
                             rr = result_dict[part]
                             rr['category'] = category_label
-                            rr['equal_lifetime_t_year'] = equal_lifetime_t_year + '大修'
+                            rr['equal_lifetime_t_year'] = equal_lifetime_t_year + '大修' if equal_lifetime_t_year != '偶换' else '---'
                             rr['original_equal_t_year'] = major_part + '大修' if major_part else '偶换维护'
                         return result_dict
 
@@ -648,8 +647,9 @@ class EqualLifetimeService:
                     if part in result_dict:
                         rr = result_dict[part]
                         rr['category'] = 'D'
-                        rr['equal_lifetime_t_year'] = replace_level + "必换"
+                        # rr['equal_lifetime_t_year'] = replace_level + "必换"
                         rr['original_equal_t_year'] = replace_level + "必换"
+                        rr['equal_lifetime_t_year'] = "---"
                     return result_dict
 
                 equal_t_d = int(rec_d.equal_lifetime_t) if rec_d.equal_lifetime_t else None

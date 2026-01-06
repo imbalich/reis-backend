@@ -138,6 +138,25 @@ class CRUDDespatch(CRUDPlus[Despatch]):
         result = await db.execute(stmt)
         models = result.scalars().all()
         return models
+    
+    async def get_life_cycle_time_by_model(
+        self, db: AsyncSession, model: str
+    ) -> list:
+        """
+        获取指定型号的repair_level为'新造'的life_cycle_time列表
+        :param db: 数据库会话
+        :param model: 产品型号
+        :return: life_cycle_time列表
+        """
+        stmt = select(self.model.life_cycle_time)
+        where_list = []
+        where_list.append(self.model.model == model)
+        where_list.append(self.model.repair_level == "新造")
+        if where_list:
+            stmt = stmt.where(*where_list)
+        result = await db.execute(stmt)
+        models = result.scalars().all()
+        return models
 
 
 despatch_dao: CRUDDespatch = CRUDDespatch(Despatch)

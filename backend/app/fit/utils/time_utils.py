@@ -29,6 +29,22 @@ class DateUtils:
         else:
             t = diff * day * hour / 365
         return round(t, 2)
+    
+    @staticmethod
+    def run_time_no_diff_is_fu(diff: int, day: int, hour: int) -> float:
+        """
+        计算运行时间
+
+        :param diff: 时间差（单位：天）
+        :param day: 天数
+        :param hour: 小时数
+        :return: 计算后的运行时间（单位：小时）
+        """
+        if diff <= 0:
+            t = 0
+        else:
+            t = diff * day * hour / 365
+        return round(t, 2)
 
     @staticmethod
     def validate_and_parse_date(input_date: str | date | None) -> date:
