@@ -108,6 +108,31 @@ class DataCheckUtils:
             if bom_data:
                 return True
             return False
+        
+
+    @staticmethod
+    async def total_run_time_by_input_time(db: AsyncSession, model: str, input_time1:date,input_time2:date) -> list[float]:
+        despatchs = await despatch_dao.get_despatchs_by_model(db, model)
+        product = await product_dao.get_by_model(db, model)
+        input_time1 = dateutils.validate_and_parse_date(input_time1)
+        input_time2 = dateutils.validate_and_parse_date(input_time2)
+        hours1 = []
+        hours2 = []
+        for despatch in despatchs:
+            dispatch_date = despatch.life_cycle_time
+            if isinstance(dispatch_date, str):
+                dispatch_date = dateutils.validate_and_parse_date(dispatch_date)
+            # print(input_time1)
+            # 计算日期差
+            date_diff1 = (input_time1 - dispatch_date).days
+            date_diff2 = (input_time2 - dispatch_date).days
+            hour1 = dateutils.run_time_no_diff_is_fu(date_diff1, product.year_days, product.avg_worktime)
+            hour2 = dateutils.run_time_no_diff_is_fu(date_diff2, product.year_days, product.avg_worktime)
+            if hour1 != 0:
+                hours1.append(hour1)
+            if hour2 != 0:
+                hours2.append(hour2)
+        return hours1,hours2
 
 
 datacheckutils: DataCheckUtils = DataCheckUtils()

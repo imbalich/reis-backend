@@ -141,3 +141,19 @@ async def part_get_best_fit(
         model, part, input_date, method, check, source
     )
     return response_base.success(data=results)
+
+
+@router.get("/fit/equivalent_lamda", summary="部件级别:获取单个型号+部件的等效故障率结果")
+async def part_get_equivalent_lamda(
+    model: str = Query(..., description="产品型号"),
+    part: str = Query(..., description="零部件名称"),
+    input_time1: str = Query(..., description="输入日期1"),
+    input_time2: str = Query(..., description="输入日期2"),
+):
+    """
+    获取单个产品型号的最优拟合结果
+    """
+    results = await part_fit_service.get_equivalent_lamda(
+        model, part, input_time1,input_time2
+    )
+    return response_base.success(data=results)

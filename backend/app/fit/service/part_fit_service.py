@@ -32,6 +32,7 @@ from backend.app.fit.utils.time_utils import dateutils
 from backend.common.exception import errors
 from backend.common.exception.errors import DataValidationError, FailureCheckError
 from backend.database.db import async_db_session
+from backend.app.calcu.service.reliability_index_service import reliability_index_service
 
 
 class PartFitService:
@@ -204,6 +205,25 @@ class PartFitService:
             if not results:
                 return None
             return results[0]
+        
+
+    @staticmethod
+    async def get_equivalent_lamda(
+        model: str,
+        part: str,
+        input_time1: date, 
+        input_time2: date,
+    ):
+        async with async_db_session() as db:
+            # res = await despatch_dao.get_life_cycle_time_by_model(db, model)
+            t1_list1,t2_list1 = await datacheckutils.total_run_time_by_input_time(db, model, input_time1,input_time2)
+            t1_list2 = [x + 1 for x in t1_list1]
+            t2_list2 = [x + 1 for x in t2_list1]
+            best_distribution = await reliability_index_service._get_best_distribution(model, part)
+            cumulative_sum1 = (sum((best_distribution.CDF(t2) - best_distribution.CDF(t1)) for t1, t2 in zip(t1_list1, t1_list2))/len(t1_list1))*1000000
+            cumulative_sum2 = (sum((best_distribution.CDF(t2) - best_distribution.CDF(t1)) for t1, t2 in zip(t2_list1, t2_list2))/len(t2_list1))*1000000
+            rate = round(((cumulative_sum2-cumulative_sum1)/cumulative_sum1)*100,2)
+            return round(cumulative_sum1,4),round(cumulative_sum2,4),rate
 
 
 part_fit_service: PartFitService = PartFitService()
