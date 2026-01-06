@@ -32561,3 +32561,7 @@ WHERE equal_lifetime.model = %s AND equal_lifetime.is_all_parts = false AND equa
 2025-12-19 18:34:31,081 - _granian.workers - INFO - Started worker-1 runtime-1
 2025-12-19 18:36:05,556 - _granian.workers - INFO - Stopping worker-1
 2025-12-19 18:36:06,090 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2026-01-06 15:34:34,302 - _granian.workers - INFO - Started worker-1
+2026-01-06 15:34:34,345 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-06 15:43:29,317 - _granian.workers - INFO - Started worker-1
+2026-01-06 15:43:29,318 - _granian.workers - INFO - Started worker-1 runtime-1

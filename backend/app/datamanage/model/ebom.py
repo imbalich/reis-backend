@@ -11,15 +11,16 @@
 from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from backend.common.model import DataClassBase
+from backend.common.model import DataClassBase, id_key
 
 
 class Ebom(DataClassBase):
     """dm_ebom 表"""
 
     __tablename__ = 'dm_ebom'
-
-    id: Mapped[str] = mapped_column(String(100), primary_key=True, index=True, comment='主键id')
+    
+    pk: Mapped[id_key] = mapped_column(init=False, nullable=False, comment='主键id')
+    id: Mapped[str] = mapped_column(String(100), nullable=True, comment='自身节点')
     partid: Mapped[str] = mapped_column(String(100), nullable=True, comment='父节点')
     level1: Mapped[str] = mapped_column(String(10), nullable=True, comment='层级序号')
     sync_time: Mapped[str] = mapped_column(String(100), nullable=True, comment='数据解析入库时间')
