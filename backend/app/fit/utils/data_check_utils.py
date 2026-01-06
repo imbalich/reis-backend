@@ -124,8 +124,8 @@ class DataCheckUtils:
                 dispatch_date = dateutils.validate_and_parse_date(dispatch_date)
             # print(input_time1)
             # 计算日期差
-            date_diff1 = (input_time1 - dispatch_date).days
-            date_diff2 = (input_time2 - dispatch_date).days
+            date_diff1 = (input_time1 - dispatch_date).days-90
+            date_diff2 = (input_time2 - dispatch_date).days-90
             hour1 = dateutils.run_time_no_diff_is_fu(date_diff1, product.year_days, product.avg_worktime)
             hour2 = dateutils.run_time_no_diff_is_fu(date_diff2, product.year_days, product.avg_worktime)
             if hour1 != 0:
