@@ -24,7 +24,8 @@ class DespatchParam(SchemaBase):
     identifier: str = Field(..., description='产品编号')
     repair_level: str = Field(..., description='修理级别')
     life_cycle_time: date = Field(..., description='出厂日期')
-    repair_level_num: int = Field(..., description='修级序号')
+    # repair_level_num: int = Field(..., description='修级序号')
+    repair_level_num: Optional[int] = Field(..., description='修级序号')
 
     @field_validator('life_cycle_time', mode='before')
     @classmethod
@@ -112,7 +113,7 @@ class ProductParam(SchemaBase):
     sub_saet: str = Field(..., description='产品系列')
     model: str = Field(..., description='产品型号')
     avg_worktime: int = Field(..., description='日均运行时长（天运行小时）')
-    avg_speed: float = Field(..., description='运行时速')
+    avg_speed: Optional[float] = Field(..., description='运行时速')  # 拟合过程不需要运行时速检查
     year_days: int = Field(..., description='年运行天数')
     repair_priod: Optional[str] = Field(default=None, description='维修周期')
     repair_times: Optional[int] = Field(default=None, description='修级间隔天数')

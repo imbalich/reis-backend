@@ -92,6 +92,10 @@ class PartStrategyService:
                 product_data = convert_to_pydantic_model(
                     await product_dao.get_by_model(db, model), ProductParam
                 )
+                if product_data.repair_times is None or product_data.repair_times == 0:
+                    raise errors.DataValidationError(
+                        msg=f"型号{model}的产品信息中repair_times为0或不存在"
+                    )
                 # 获取完整的BOM树（包括所有父级节点）
                 ebom_data = await get_ebom_tree_with_parents(db, model, part)
                 if not ebom_data:

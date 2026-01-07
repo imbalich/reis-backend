@@ -447,9 +447,10 @@ def convert_to_total_quantity(ebom_data: list, part: str = None) -> int:
         while True:
             # 获取父节点ID
             partid = getattr(current_item, "partid", None)
+            level1 = getattr(current_item, "level1", 0)
 
             # 如果没有父节点（顶层），或者partid为空/None，停止
-            if not partid or partid == "":
+            if not partid or partid == "" or level1 == 0:
                 break
 
             # 防止循环引用
