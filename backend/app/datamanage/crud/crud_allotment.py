@@ -82,6 +82,8 @@ class CRUDAllotment(CRUDPlus[Allotment]):
         if not product_numbers:
             return []
 
+        # 直接查询（当前数据量：标签最多5000个产品编号，配属最多2000个）
+        # 如果将来数据量增大，可考虑分批处理
         stmt = select(self.model).where(self.model.product_number.in_(product_numbers))
         result = await db.execute(stmt)
         return result.scalars().all()
@@ -99,7 +101,6 @@ class CRUDAllotment(CRUDPlus[Allotment]):
         result = await db.execute(stmt)
         return result.scalars().all()
 
-    
     async def get_by_allotment_two_and_model(
         self, db: AsyncSession, allotment_two: str, model: str
     ) -> Sequence[Allotment]:
@@ -110,7 +111,9 @@ class CRUDAllotment(CRUDPlus[Allotment]):
         :param model: 产品型号
         :return: 配属信息列表
         """
-        stmt = select(self.model).where(self.model.allotment_two == allotment_two, self.model.product_model == model)
+        stmt = select(self.model).where(
+            self.model.allotment_two == allotment_two, self.model.product_model == model
+        )
         result = await db.execute(stmt)
         return result.scalars().all()
 

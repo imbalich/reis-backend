@@ -32565,3 +32565,104 @@ WHERE equal_lifetime.model = %s AND equal_lifetime.is_all_parts = false AND equa
 2026-01-06 15:34:34,345 - _granian.workers - INFO - Started worker-1 runtime-1
 2026-01-06 15:43:29,317 - _granian.workers - INFO - Started worker-1
 2026-01-06 15:43:29,318 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 17:52:27,058 - _granian.workers - INFO - Started worker-1
+2026-01-07 17:52:27,121 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:18:24,874 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:18:24,875 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:26:01,608 - _granian.workers - INFO - Stopping worker-1
+2026-01-07 18:26:01,635 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2026-01-07 18:32:54,289 - celery.utils.dispatch.signal - ERROR - Signal handler <promise@0x1c8037ad770 --> <bound method Celery._autodiscover_tasks of <Celery fba_celery at 0x1c8002f8050>>> raised: NameError("name 'Float' is not defined")
+Traceback (most recent call last):
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\celery\utils\dispatch\signal.py", line 280, in send
+    response = receiver(signal=self, sender=sender, **named)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\vine\promises.py", line 161, in __call__
+    return self.throw()
+           ^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\vine\promises.py", line 158, in __call__
+    retval = fun(*final_args, **final_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\celery\app\base.py", line 787, in _autodiscover_tasks
+    return self._autodiscover_tasks_from_names(packages, related_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\celery\app\base.py", line 792, in _autodiscover_tasks_from_names
+    return self.loader.autodiscover_tasks(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\celery\loaders\base.py", line 220, in autodiscover_tasks
+    mod.__name__ for mod in autodiscover_tasks(packages or (),
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\celery\loaders\base.py", line 246, in autodiscover_tasks
+    return [find_related_module(pkg, related_name) for pkg in packages]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\celery\loaders\base.py", line 270, in find_related_module
+    return importlib.import_module(module_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\PYTHON312\Lib\importlib\__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "F:\Program\MyProjects\reis-backend\backend\app\task\tasks\spare_statistics_task\tasks.py", line 20, in <module>
+    from backend.app.calcu.crud.crud_spare_statistics_result import (
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\crud\crud_spare_statistics_result.py", line 18, in <module>
+    from backend.app.calcu.model.spare_statistics_result import SpareStatisticsResult
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\model\spare_statistics_result.py", line 19, in <module>
+    class SpareStatisticsResult(Base):
+  File "F:\Program\MyProjects\reis-backend\backend\app\calcu\model\spare_statistics_result.py", line 65, in SpareStatisticsResult
+    Float, nullable=True, default=None, comment="预计备件数量（精确小数）"
+    ^^^^^
+NameError: name 'Float' is not defined. Did you mean: 'float'?
+2026-01-07 18:34:51,611 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:34:51,622 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:37:06,532 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:37:06,532 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:37:16,264 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:37:16,264 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:39:45,820 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:39:45,821 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:44:46,962 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:44:46,962 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:44:56,227 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:44:56,228 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:45:56,922 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:45:56,922 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-07 18:46:01,948 - _granian.workers - INFO - Stopping worker-1
+2026-01-07 18:46:24,139 - _granian.workers - INFO - Started worker-1
+2026-01-07 18:46:24,140 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-08 08:32:31,001 - asyncio - ERROR - Exception in callback _ProactorBasePipeTransport._call_connection_lost(None)
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost(None)>
+Traceback (most recent call last):
+  File "D:\PYTHON312\Lib\asyncio\events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "D:\PYTHON312\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。
+2026-01-08 19:26:40,871 - _granian.workers - INFO - Started worker-1
+2026-01-08 19:26:40,893 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 10:14:42,661 - _granian.workers - INFO - Stopping worker-1
+2026-01-09 10:14:42,760 - _granian.workers - INFO - Stopping worker-1 runtime-1
+2026-01-09 11:22:05,619 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:22:06,965 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:46:11,964 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:46:11,965 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:46:20,187 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:46:20,188 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:46:31,457 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:46:31,457 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:50:18,573 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:50:18,573 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:50:47,785 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:50:47,787 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:51:19,134 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:51:19,135 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:53:26,056 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:53:26,056 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:53:37,630 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:53:37,631 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:53:53,368 - _granian.workers - INFO - Started worker-1
+2026-01-09 11:53:53,369 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-01-09 11:54:28,708 - _granian.asgi.io - INFO - ASGI transport error: SendError { .. }

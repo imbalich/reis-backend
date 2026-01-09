@@ -9,6 +9,7 @@
 @Desc    : 备件统计后台任务
 """
 
+import math
 import time
 from datetime import date, datetime
 from typing import List, Tuple
@@ -165,14 +166,20 @@ async def spare_prediction_batch_task(
                             f"分布类型:{actual_distribution_type}"
                         )
 
-                    # 4. 使用最优分布计算备件数量
-                    predicted_spare_num = await spare_service.get_spare_num(
-                        tags=tags,
-                        start_date=start_date_obj,
-                        end_date=end_date_obj,
-                        product_data=product_data,
-                        distribution=best_distribution,
+                    # 4. 使用最优分布计算备件数量（计算精确小数结果）
+                    predicted_spare_num = (
+                        await spare_service.get_spare_num_float_by_allotment(
+                            db=db,
+                            tags=tags,
+                            start_date=start_date_obj,
+                            end_date=end_date_obj,
+                            input_date=input_date_obj,
+                            product_data=product_data,
+                            distribution=best_distribution,
+                        )
                     )
+                    # 从小数结果计算取整后的整数结果
+                    predicted_spare_num_int = math.ceil(predicted_spare_num)
 
                     # 5. 立即保存计算结果到数据库（逐条保存）
                     # 注意：part_name 不在预测任务中设置，使用 init=False，由实际故障数量任务填充
@@ -184,7 +191,8 @@ async def spare_prediction_batch_task(
                         "input_date": input_date_obj,
                         "start_date": start_date_obj,
                         "end_date": end_date_obj,
-                        "predicted_spare_num": predicted_spare_num,
+                        "predicted_spare_num": predicted_spare_num,  # 精确小数结果
+                        "predicted_spare_num_int": predicted_spare_num_int,  # 取整整数结果
                         "actual_failure_num": None,
                         "distribution_type": actual_distribution_type,  # 使用实际拟合得到的最优分布类型
                         "method": method or FitMethodType.MLE.value,
@@ -218,7 +226,8 @@ async def spare_prediction_batch_task(
                         "input_date": input_date_obj,
                         "start_date": start_date_obj,
                         "end_date": end_date_obj,
-                        "predicted_spare_num": None,
+                        "predicted_spare_num": None,  # 精确小数结果
+                        "predicted_spare_num_int": None,  # 取整整数结果
                         "actual_failure_num": None,
                         "distribution_type": distribution_type,
                         "method": method or FitMethodType.MLE.value,
@@ -252,7 +261,8 @@ async def spare_prediction_batch_task(
                         "input_date": input_date_obj,
                         "start_date": start_date_obj,
                         "end_date": end_date_obj,
-                        "predicted_spare_num": None,
+                        "predicted_spare_num": None,  # 精确小数结果
+                        "predicted_spare_num_int": None,  # 取整整数结果
                         "actual_failure_num": None,
                         "distribution_type": distribution_type,
                         "method": method or FitMethodType.MLE.value,

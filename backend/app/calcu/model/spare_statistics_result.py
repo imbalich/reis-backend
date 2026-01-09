@@ -10,7 +10,7 @@
 """
 
 from datetime import date, datetime
-from sqlalchemy import Date, String, Integer, Text, DateTime, Index
+from sqlalchemy import Date, String, Integer, Float, Numeric, Text, DateTime, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import Base, id_key
@@ -53,7 +53,7 @@ class SpareStatisticsResult(Base):
     end_date: Mapped[date] = mapped_column(
         Date, nullable=False, index=True, comment="计算结束日期"
     )
-    
+
     # 可选字段（有默认值，必须放在必填字段之后）
     # 注意：part_name 使用 init=False，因为预测任务不需要设置，只在故障统计任务中设置
     part_name: Mapped[str | None] = mapped_column(
@@ -61,8 +61,14 @@ class SpareStatisticsResult(Base):
     )
 
     # 计算结果字段（可选字段，有默认值）
-    predicted_spare_num: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, default=None, comment="预计备件数量"
+    predicted_spare_num: Mapped[float | None] = mapped_column(
+        Numeric(precision=15, scale=8),
+        nullable=True,
+        default=None,
+        comment="预计备件数量（精确小数）",
+    )
+    predicted_spare_num_int: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=None, comment="预计备件数量（取整整数）"
     )
     actual_failure_num: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=None, comment="实际故障数量"
