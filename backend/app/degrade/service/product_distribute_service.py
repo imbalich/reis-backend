@@ -56,8 +56,9 @@ class ProductDistributeService:
             #     )
 
             # 2、获取年运行小时并计算x_peaks
-            if product_model == "测试":
+            if product_model == "测试" or product_model == "测试负值":
                 repair_worktimes = 13140
+                year_worktimes = 5600
             else:
                 repair_worktimes, year_worktimes = (
                     await ProductDistributeService.repair_interval_times(product_model)
@@ -76,21 +77,37 @@ class ProductDistributeService:
             y_peaks = []
             for category in stage_columns:
                 data = np.array(basic_data[category].dropna().values, dtype=float)
-
-                # 过滤掉零值和负值（Fit_Everything要求所有值必须大于0）
-                data = data[data > 0]
-
+                # print("data", data)
+                
                 # 检查过滤后的数据是否足够
                 if len(data) == 0:
                     raise DataValidationError(
                         msg=f"检修阶段 {category} 的有效数据为空（所有值都小于等于0），无法进行分布拟合"
                     )
+                # --- 新增逻辑：检查是否为单一重复数值 ---
+                unique_vals = np.unique(data)
+                if len(unique_vals) == 1:
+                    # 如果数据全部相同，峰值直接就是这个唯一值，无需拟合
+                    peak_y = unique_vals[0]
+                    y_peaks.append(float(peak_y))
+                    continue
+
+                # 针对数据中的负值
+                min_val = np.min(data)
+                offset = max(-min_val + 1,0)
+                # print("offset", offset)
+                data = data + offset  # 所有数据转为正值
+                # print("data_positive", data)
+                # # 过滤掉零值和负值（Fit_Everything要求所有值必须大于0）
+                # data = data[data > 0]
+
                 if len(data) < 2:
                     raise DataValidationError(
                         msg=f"检修阶段 {category} 的有效数据不足（只有{len(data)}个有效值，至少需要2个），无法进行分布拟合"
                     )
 
                 y = np.linspace(min(data), max(data), 200)
+                # print("y", y)
                 try:
                     fit = Fit_Everything(
                         failures=data,
@@ -112,8 +129,12 @@ class ProductDistributeService:
                         method="MLE",
                     )
                     distribution = fit.best_distribution
+                    # print("distribution", distribution)
                     pdf_values = distribution.PDF(y, show_plot=False)
                     peak_y = y[np.argmax(pdf_values)]
+                    # print("peak_y", peak_y)
+                    peak_y = peak_y - offset  # 还原
+                    # print("peak_y_restored", peak_y)
                     y_peaks.append(peak_y.tolist())
                 except ValueError as e:
                     if "greater than zero" in str(e):

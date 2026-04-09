@@ -34,6 +34,7 @@ class ProductFitService:
 
         # 1、获取峰值点列表
         peaks_time = await ProductDistributeService.get_product_distribute(product_model, check_bezier)
+        # print("峰值点列表:",peaks_time)
         curret_value = await  ProductFitService.get_current_check_value(product_model, product_no)
 
         # 2、函数拟合并寻找最优模型
@@ -43,7 +44,9 @@ class ProductFitService:
         y_peaks = peaks_time['y_peaks']
         year_worktimes = peaks_time['year_worktimes']
         fits = fit_functions(x_peaks, y_peaks)
-        best_fit_model = await ProductFitService.get_best_fit_model(fits)
+        all_negative = np.all(np.array(y_peaks) < 0)
+        # print("是否为负数:",all_negative)
+        best_fit_model = await ProductFitService.get_best_fit_model(fits,all_negative=all_negative)
 
         # 3、计算置信区间（假设残差服从正态分布），后端仅计算置信宽度，供前端计算置信区间
         results = []
@@ -86,6 +89,7 @@ class ProductFitService:
             'product_model': product_model,
             'check_bezier': check_bezier,
             'product_no': product_no,
+            'all_negative': bool(all_negative),
             'x_peaks': x_peaks,
             'y_peaks':y_peaks,
             'name': best_fit_model['name'],
@@ -111,49 +115,86 @@ class ProductFitService:
             return current_value
 
 
+    # @staticmethod
+    # async def get_best_fit_model(fits,all_negative=False):
+    #     """
+    #     从拟合结果中选出单调且mse最小的函数
+    #     :param fits: 拟合结果字典
+    #     :return: 最优拟合函数信息字典
+    #     """
+    #     best_fit = None
+    #     min_mse = float('inf')
+        
+    #     # 减少测试点数量，提高性能
+    #     x_test = np.linspace(0, 50, 100) 
+        
+    #     # 首先按MSE排序，优先检查MSE较小的模型
+    #     sorted_fits = sorted(
+    #         [(name, info) for name, info in fits.items() if info is not None and 'func' in info and 'mse' in info],
+    #         key=lambda x: x[1]['mse']
+    #     )
+        
+    #     # 检查前3个MSE最小的模型是否单调
+    #     for fit_name, fit_info in sorted_fits[:3]:
+    #         try:
+    #             y_test = fit_info['func'](x_test)
+    #             print("测试模型:", fit_name)
+    #             print("检查模型:", y_test)
+    #             if all_negative and np.max(y_test) > 0:
+    #                 continue
+    #             if is_monotonic(fit_info['func'], x_test):
+    #                 # 找到第一个单调的模型就返回
+    #                 return fit_info
+    #         except Exception:
+    #             continue
+        
+    #     # 如果前3个都不单调，再检查其他模型
+    #     for fit_name, fit_info in sorted_fits[3:]:
+    #         try:
+    #             y_test = fit_info['func'](x_test)
+    #             if all_negative and np.max(y_test) > 0:
+    #                 continue
+    #             if is_monotonic(fit_info['func'], x_test):
+    #                 if fit_info['mse'] < min_mse:
+    #                     min_mse = fit_info['mse']
+    #                     best_fit = fit_info
+    #         except Exception:
+    #             continue
+
+    #     # 如果没有找到单调模型，返回MSE最小的模型
+    #     if best_fit is None and sorted_fits:
+    #         best_fit = sorted_fits[0][1]
+            
+    #     return best_fit
+
     @staticmethod
-    async def get_best_fit_model(fits):
-        """
-        从拟合结果中选出单调且mse最小的函数
-        :param fits: 拟合结果字典
-        :return: 最优拟合函数信息字典
-        """
-        best_fit = None
-        min_mse = float('inf')
+    async def get_best_fit_model(fits, all_negative=False):
+        valid_fits = []
+        # 测试一段较长的时间跨度，确保远期不越界
+        x_future_test = np.linspace(0, 100, 100) 
         
-        # 减少测试点数量，提高性能
-        x_test = np.linspace(0, 50, 100) 
-        
-        # 首先按MSE排序，优先检查MSE较小的模型
-        sorted_fits = sorted(
-            [(name, info) for name, info in fits.items() if info is not None and 'func' in info and 'mse' in info],
-            key=lambda x: x[1]['mse']
-        )
-        
-        # 检查前3个MSE最小的模型是否单调
-        for fit_name, fit_info in sorted_fits[:3]:
+        for name, info in fits.items():
+            if info is None: continue
             try:
-                if is_monotonic(fit_info['func'], x_test):
-                    # 找到第一个单调的模型就返回
-                    return fit_info
-            except Exception:
-                continue
-        
-        # 如果前3个都不单调，再检查其他模型
-        for fit_name, fit_info in sorted_fits[3:]:
-            try:
-                if is_monotonic(fit_info['func'], x_test):
-                    if fit_info['mse'] < min_mse:
-                        min_mse = fit_info['mse']
-                        best_fit = fit_info
-            except Exception:
+                y_future = info['func'](x_future_test)
+                
+                # 核心约束：如果是负值模式，预测值绝不能超过 0
+                # if all_negative and np.any(y_future > 0.001):
+                #     continue 
+                
+                # 核心约束：必须满足单调性
+                if is_monotonic(info['func'], x_future_test):
+                    valid_fits.append(info)
+            except:
                 continue
 
-        # 如果没有找到单调模型，返回MSE最小的模型
-        if best_fit is None and sorted_fits:
-            best_fit = sorted_fits[0][1]
-            
-        return best_fit
+        if valid_fits:
+            # 返回满足约束且 MSE 最小的模型
+            return min(valid_fits, key=lambda x: x['mse'])
+        
+        # 兜底：如果都越界了，返回 MSE 最小的原始模型
+        sorted_fits = [v for v in fits.values() if v is not None]
+        return min(sorted_fits, key=lambda x: x['mse']) if sorted_fits else None
     
     @staticmethod
     async def find_failure_threshold_x(x_smooth, y_smooth, y_upper_smooth, y_lower_smooth, failure_value,year_worktimes):
