@@ -27,6 +27,9 @@ class Failure(DataClassBase):
     report_id: Mapped[str] = mapped_column(String(128), nullable=True, comment='报告编号')
     product_number: Mapped[str] = mapped_column(String(128), nullable=True, comment='产品编号', name='product_no')
     product_model: Mapped[str] = mapped_column(String(128), nullable=True, comment='产品型号')
+    product_config_code: Mapped[str] = mapped_column(
+        String(64), nullable=True, comment='产品配置码'
+    )
     product_lifetime_stage: Mapped[str] = mapped_column(
         String(128), nullable=True, comment='修造级别', name='repair_level'
     )
