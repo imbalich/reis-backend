@@ -27,6 +27,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         part: str,
         input_date: date = None,
         method: FitMethodType = FitMethodType.MLE,
+        product_config_code: str | None = None,
     ) -> FitPart | None:
         """
         获取单零部件最后的一条分布信息
@@ -46,6 +47,8 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             .where(self.model.method == method)
             .order_by(desc(self.model.created_time))
         )
+        if product_config_code is not None:
+            stmt = stmt.where(self.model.product_config_code == product_config_code)
         where_list = []
         if input_date:
             where_list.append(self.model.input_date == input_date)
@@ -54,7 +57,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         result = await db.execute(stmt)
         return result.scalars().first()
 
-    async def get_by_model(self, db: AsyncSession, model: str) -> Sequence[str]:
+    async def get_by_model(self, db: AsyncSession, model: str, product_config_code: str | None = None) -> Sequence[str]:
         """
         根据型号查询所有零部件
         :param db:
@@ -64,6 +67,8 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         stmt = select(distinct(self.model.part))
         where_list = []
         where_list.append(self.model.model == model)
+        if product_config_code is not None:
+            where_list.append(self.model.product_config_code == product_config_code)
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
@@ -96,6 +101,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
+        product_config_code: str | None = None,
     ) -> Sequence[FitPart]:
         """
         根据型号和零部件查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -127,6 +133,8 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             self.model.method == method,
             self.model.source == source,
         ]
+        if product_config_code is not None:
+            base_conditions.append(self.model.product_config_code == product_config_code)
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:
@@ -159,6 +167,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         input_date: date = None,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
+        product_config_code: str | None = None,
     ) -> Sequence[FitPart]:
         """
         根据型号和零部件查询拟合信息（忽略 source 字段，查询所有 source 值）
@@ -189,6 +198,8 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             self.model.part == part,
             self.model.method == method,
         ]
+        if product_config_code is not None:
+            base_conditions.append(self.model.product_config_code == product_config_code)
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:
@@ -223,6 +234,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
+        product_config_code: str | None = None,
     ) -> FitPart:
         """
         根据型号和零部件查询拟合信息:查询最新的拟合信息,只选取一个
@@ -256,6 +268,8 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             self.model.method == method,
             self.model.source == source,
         ]
+        if product_config_code is not None:
+            base_conditions.append(self.model.product_config_code == product_config_code)
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:

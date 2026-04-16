@@ -21,7 +21,12 @@ from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 
 class CRUDFitProduct(CRUDPlus[FitProduct]):
     async def get_last(
-        self, db: AsyncSession, model: str, input_date: date = None, method: FitMethodType = FitMethodType.MLE
+        self,
+        db: AsyncSession,
+        model: str,
+        input_date: date = None,
+        method: FitMethodType = FitMethodType.MLE,
+        product_config_code: str | None = None,
     ) -> FitProduct | None:
         """
         获取单条型号最后的一条分布信息
@@ -39,6 +44,8 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
             .where(self.model.method == method)
             .order_by(desc(self.model.created_time))
         )
+        if product_config_code is not None:
+            stmt = stmt.where(self.model.product_config_code == product_config_code)
         where_list = []
         if input_date:
             where_list.append(self.model.input_date == input_date)
@@ -70,6 +77,7 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
+        product_config_code: str | None = None,
     ) -> Sequence[FitProduct]:
         """
         根据型号查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -92,6 +100,8 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
 
         # 基本查询条件
         base_conditions = [self.model.model == model, self.model.method == method, self.model.source == source]
+        if product_config_code is not None:
+            base_conditions.append(self.model.product_config_code == product_config_code)
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:
@@ -125,6 +135,7 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
+        product_config_code: str | None = None,
     ) -> FitProduct:
         """
         根据型号和分布查询拟合信息:查询最新的拟合信息,只选取一个
@@ -153,6 +164,8 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
             self.model.method == method,
             self.model.source == source,
         ]
+        if product_config_code is not None:
+            base_conditions.append(self.model.product_config_code == product_config_code)
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:

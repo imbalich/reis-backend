@@ -5,7 +5,7 @@
 @File    : fit_product.py
 @IDE     : PyCharm
 @Author  : imbalich
-@Time    : 2025/3/3 上午11:35
+@Time    : 2025/3/3
 """
 
 from datetime import date
@@ -18,7 +18,7 @@ from backend.utils.timezone import timezone
 
 
 class FitProduct(DataClassBase):
-    """产品级别拟合结果"""
+    """Product-level fit result."""
 
     __tablename__ = 'fit_product'
 
@@ -47,6 +47,9 @@ class FitProduct(DataClassBase):
     bic: Mapped[float | None] = mapped_column(comment='bic')
     ad: Mapped[float | None] = mapped_column(comment='ad')
     optimizer: Mapped[str | None] = mapped_column(String(30), comment='optimizer')
+    product_config_code: Mapped[str | None] = mapped_column(
+        String(64), index=True, default=None, nullable=True, comment='派生码'
+    )
 
     source: Mapped[bool] = mapped_column(Integer, default=False, comment='数据来源,0为系统生成,1为用户输入')
     created_time: Mapped[date] = mapped_column(

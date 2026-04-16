@@ -5,7 +5,7 @@
 @File    : fit_param.py
 @IDE     : PyCharm
 @Author  : imbalich
-@Time    : 2025/2/28 下午3:49
+@Time    : 2025/2/28 涓嬪崍3:49
 """
 
 from datetime import date
@@ -19,49 +19,45 @@ from backend.common.schema import SchemaBase
 class FitMethodType(StrEnum):
     """拟合方法"""
 
-    MLE = 'MLE'  # 极大似然估计
-    LS = 'LS'  # 最小二乘估计
-    RRX = 'RRX'  # x轴回归
-    RRY = 'RRY'  # y轴回归
+    MLE = "MLE"
+    LS = "LS"
+    RRX = "RRX"
+    RRY = "RRY"
 
 
 class FitCheckType(StrEnum):
-    # 拟合优度检验方法
-    BIC = 'BIC'
-    AICc = 'AICc'
-    AD = 'AD'
-    Log = 'Log-likelihood'
+    BIC = "BIC"
+    AICc = "AICc"
+    AD = "AD"
+    Log = "Log-likelihood"
 
 
 class CreateFitProductInParam(SchemaBase):
-    # 创建产品级别拟合信息入参
     model: str
+    product_config_code: str
     input_date: str | None = None
     method: FitMethodType = FitMethodType.MLE
 
 
 class CreateFitPartInParam(SchemaBase):
-    # 创建产品级别拟合信息入参
     model: str
+    product_config_code: str
     part: str
     input_date: str | None = None
     method: FitMethodType | None = FitMethodType.MLE
 
 
 class CreateFitAllProductInParam(SchemaBase):
-    # 创建多型号产品级别拟合信息入参
     input_date: str | None = None
     method: FitMethodType = FitMethodType.MLE
 
 
 class CreateFitAllPartInParam(SchemaBase):
-    # 创建多型号零部件级别拟合信息入参
     input_date: str | None = None
     method: FitMethodType = FitMethodType.MLE
 
 
 class CreateFitModelAllPartInParam(SchemaBase):
-    # 创建单型号全零部件级别拟合信息入参
     model: str
     input_date: str | None = None
     method: FitMethodType = FitMethodType.MLE
@@ -72,6 +68,7 @@ class CreateProductDistributionParam(SchemaBase):
 
     group_id: str
     model: str
+    product_config_code: str | None = None
     input_date: date
     method: FitMethodType
 
@@ -87,7 +84,7 @@ class CreateProductDistributionParam(SchemaBase):
     ds: float | None = None
     mu: float | None = None
     sigma: float | None = None
-    lambda_: float | None = None  # lambda
+    lambda_: float | None = None
     log_likelihood: float | None = None
     aicc: float | None = None
     bic: float | None = None
@@ -102,6 +99,7 @@ class CreatePartDistributionParam(SchemaBase):
 
     group_id: str
     model: str
+    product_config_code: str | None = None
     part: str
     input_date: date
     method: FitMethodType
@@ -118,7 +116,7 @@ class CreatePartDistributionParam(SchemaBase):
     ds: float | None = None
     mu: float | None = None
     sigma: float | None = None
-    lambda_: float | None = None  # lambda
+    lambda_: float | None = None
     log_likelihood: float | None = None
     aicc: float | None = None
     bic: float | None = None
