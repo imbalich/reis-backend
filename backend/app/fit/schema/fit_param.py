@@ -59,6 +59,7 @@ class CreateFitAllPartInParam(SchemaBase):
 
 class CreateFitModelAllPartInParam(SchemaBase):
     model: str
+    product_config_code: str | None = None
     input_date: str | None = None
     method: FitMethodType = FitMethodType.MLE
 

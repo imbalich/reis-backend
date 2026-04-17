@@ -50,6 +50,8 @@ async def calculate_science_warehouse_requirements(
         task = science_warehouse_calculation_task.delay(
             time_interval_days=request.time_interval_days,
             input_date=request.input_date.isoformat() if request.input_date else None,
+            product_model=request.product_model,
+            product_config_code=request.product_config_code,
         )
 
         return response_base.success(
@@ -79,6 +81,8 @@ async def calculate_science_warehouse_requirements_v2(
         task = science_warehouse_calculation_v2_task.delay(
             time_interval_days=request.time_interval_days,
             input_date=request.input_date.isoformat() if request.input_date else None,
+            product_model=request.product_model,
+            product_config_code=request.product_config_code,
         )
 
         return response_base.success(
@@ -238,6 +242,8 @@ async def get_calculation_methods() -> ResponseModel:
 async def get_pagination_science_warehouse_results(
     db: CurrentSession,
     calculation_id: Annotated[str | None, Query()] = None,
+    product_model: Annotated[str | None, Query()] = None,
+    product_config_code: Annotated[str | None, Query()] = None,
     warehouse_code: Annotated[str | None, Query()] = None,
     spare_part_code: Annotated[str | None, Query()] = None,
     calculation_method: Annotated[str | None, Query()] = None,
@@ -257,6 +263,8 @@ async def get_pagination_science_warehouse_results(
     try:
         science_warehouse_select = await science_warehouse_service.get_select(
             calculation_id=calculation_id,
+            product_model=product_model,
+            product_config_code=product_config_code,
             warehouse_code=warehouse_code,
             spare_part_code=spare_part_code,
             calculation_method=calculation_method,

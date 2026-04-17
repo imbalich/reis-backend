@@ -95,3 +95,4 @@ class Failure(DataClassBase):
     loss_accounting: Mapped[str] = mapped_column(String(128), nullable=True, comment='损失核算')
     is_zero_distance: Mapped[int] = mapped_column(nullable=True, comment='是否为零公里 1:是,0:否', name='is_zero')
     is_company: Mapped[int] = mapped_column(nullable=True, comment='是否为永济公司产品 1:是,0:否', name='is_company')
+    is_warranty_fault:  Mapped[str] = mapped_column(String(64),nullable=True, comment='是否保内故障', name='is_warranty_fault')

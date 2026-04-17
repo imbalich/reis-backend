@@ -32666,3 +32666,148 @@ ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有�
 2026-01-09 11:53:53,368 - _granian.workers - INFO - Started worker-1
 2026-01-09 11:53:53,369 - _granian.workers - INFO - Started worker-1 runtime-1
 2026-01-09 11:54:28,708 - _granian.asgi.io - INFO - ASGI transport error: SendError { .. }
+2026-04-17 19:36:38,246 - _granian.workers - INFO - Started worker-1
+2026-04-17 19:36:38,897 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-04-17 19:40:01,998 - _granian.utils - ERROR - Application callable raised an exception
+Traceback (most recent call last):
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\granian\_futures.py", line 15, in future_watcher
+    await inner(watcher.scope, watcher.proto)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\asgi_correlation_id\middleware.py", line 90, in __call__
+    await self.app(scope, receive, handle_outgoing_request)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\access_middleware.py", line 34, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\i18n_middleware.py", line 29, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\authentication.py", line 48, in __call__
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\state_middleware.py", line 32, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "D:\PYTHON312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 116, in dispatch
+    raise error from None
+  File "F:\Program\MyProjects\reis-backend\backend\middleware\opera_log_middleware.py", line 53, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\starlette\routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\fastapi\routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\fit\api\v1\fit_product.py", line 45, in product_create_fit
+    await product_fit_service.create(obj=obj)
+  File "F:\Program\MyProjects\reis-backend\backend\app\fit\service\product_fit_service.py", line 164, in create
+    await ProductFitService._perform_and_save_fit(
+  File "F:\Program\MyProjects\reis-backend\backend\app\fit\service\product_fit_service.py", line 213, in _perform_and_save_fit
+    fit = await ProductFitService.tag_fit(tags, method)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\backend\app\fit\service\product_fit_service.py", line 93, in tag_fit
+    return Fit_Everything(
+           ^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\reliability\Fitters.py", line 223, in __init__
+    inputs = fitters_input_checking(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "F:\Program\MyProjects\reis-backend\.venv\Lib\site-packages\reliability\Utils.py", line 1646, in __init__
+    elif min(all_data) < 0:
+         ^^^^^^^^^^^^^
+ValueError: min() iterable argument is empty
+2026-04-17 19:44:29,855 - _granian.workers - INFO - Started worker-1
+2026-04-17 19:44:29,855 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-04-17 19:54:30,674 - _granian.workers - INFO - Started worker-1
+2026-04-17 19:54:30,674 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-04-17 19:55:09,320 - _granian.workers - INFO - Started worker-1
+2026-04-17 19:55:09,321 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-04-17 20:26:25,468 - _granian.workers - INFO - Started worker-1
+2026-04-17 20:26:25,468 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-04-17 20:35:40,887 - _granian.workers - INFO - Started worker-1
+2026-04-17 20:35:40,888 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-04-17 21:24:32,551 - _granian.workers - INFO - Started worker-1
+2026-04-17 21:24:32,552 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-04-17 21:32:05,522 - _granian.workers - INFO - Started worker-1
+2026-04-17 21:32:05,523 - _granian.workers - INFO - Started worker-1 runtime-1
+2026-04-17 21:34:12,068 - _granian.workers - INFO - Stopping worker-1

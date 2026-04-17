@@ -43,6 +43,7 @@ class FailureSchemaBase(SchemaBase):
     first_fault_type: Optional[str] = Field(None, description='first fault type')
     fault_part_name_old: Optional[str] = Field(None, description='legacy fault part name')
     is_zero_distance: Optional[int] = Field(None, description='zero distance flag')
+    is_warranty_fault: Optional[str] = Field(None, description='is warranty fault')
 
 
 class CreateFailureParam(FailureSchemaBase):
@@ -62,6 +63,7 @@ class GetFailureParam(SchemaBase):
     discovery_date: Optional[str] = Field(None, description='discovery date')
     is_zero_distance: Optional[int] = Field(None, description='zero distance flag')
     product_lifetime_stage: Optional[str] = Field(None, description='product lifetime stage')
+    is_warranty_fault: Optional[str] = Field(None, description='is warranty fault')
 
 
 class GetFailureDetails(GetFailureParam):

@@ -13,7 +13,6 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from backend.app.calcu.schema.distribute_param import DistributeType
-from backend.app.calcu.service.distribute_service import distribute_service
 from backend.app.calcu.service.spare_service import spare_service
 from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 from backend.common.response.response_schema import response_base
@@ -21,17 +20,25 @@ from backend.common.response.response_schema import response_base
 router = APIRouter()
 
 
-@router.get('/predict', summary='整机级别:预测')
+@router.get("/predict", summary="产品级别: 预测")
 async def product_spare_predict(
-    model: str = Query(..., description='产品型号'),
-    distribution: Annotated[DistributeType | None, Query(description='分布类型')] = None,
-    method: Annotated[FitMethodType | None, Query(description='拟合方法')] = FitMethodType.MLE,
-    check: Annotated[FitCheckType | None, Query(description='拟合优度检验')] = FitCheckType.BIC,
-    input_date: Annotated[str | None, Query(description='计算截止日期')] = None,
-    start_date: Annotated[str | None, Query(description='计算起始日期')] = None,
-    end_date: Annotated[str | None, Query(description='计算截止日期')] = None,
+    model: str = Query(..., description="产品型号"),
+    product_config_code: Annotated[str | None, Query(description="派生码")] = None,
+    distribution: Annotated[DistributeType | None, Query(description="分布类型")] = None,
+    method: Annotated[FitMethodType | None, Query(description="拟合方法")] = FitMethodType.MLE,
+    check: Annotated[FitCheckType | None, Query(description="拟合优度检验")] = FitCheckType.BIC,
+    input_date: Annotated[str | None, Query(description="计算截止日期")] = None,
+    start_date: Annotated[str | None, Query(description="计算起始日期")] = None,
+    end_date: Annotated[str | None, Query(description="计算结束日期")] = None,
 ):
     spare_num = await spare_service.get_product_spare_num(
-        model, distribution, method, check, input_date, start_date, end_date
+        model=model,
+        product_config_code=product_config_code,
+        distribution_type=distribution,
+        method=method,
+        check=check,
+        input_date=input_date,
+        start_date=start_date,
+        end_date=end_date,
     )
     return response_base.success(data=spare_num)

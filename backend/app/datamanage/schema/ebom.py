@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-@Project ：fastapi-base-backend
-@File    ：ebom.py
-@IDE     ：PyCharm
-@Author  ：imbalich
-@Date    ：2025/1/13 14:56
+@Project : fastapi-base-backend
+@File    : ebom.py
 """
 
 from typing import Optional
@@ -16,19 +13,19 @@ from backend.common.schema import SchemaBase
 
 
 class EbomSchemaBase(SchemaBase):
-    id: Optional[str] = Field(None, description='主键id')
-    partid: Optional[str] = Field(None, description='父节点')
-    level1: Optional[str] = Field(None, description='层级序号')
-    sync_time: Optional[str] = Field(None, description='数据解析入库时间')
-    prd_no: Optional[str] = Field(None, description='产品型号')
-    prd_code:Optional[str] = Field(None, description='产品配置码Header')
-    prd_name: Optional[str] = Field(None, description='产品名称')
-    prd_level: Optional[str] = Field(None, description='修造级别')
-    prd_vision: Optional[str] = Field(None, description='产品总成版本号')
-    y8_matbnum1: Optional[str] = Field(None, description='零部件物料编码')
-    y8_matname: Optional[str] = Field(None, description='零部件名称')
-    bl_quantity: Optional[str] = Field(None, description='物料总数量')
-    state_now: Optional[str] = Field(None, description='当前是否启用，1启用；0未启用,默认为1')
+    id: Optional[str] = Field(None, description='primary key id')
+    partid: Optional[str] = Field(None, description='parent node id')
+    level1: Optional[str] = Field(None, description='level number')
+    sync_time: Optional[str] = Field(None, description='sync time')
+    prd_no: Optional[str] = Field(None, description='product model')
+    product_config_code: Optional[str] = Field(None, description='product config code')
+    prd_name: Optional[str] = Field(None, description='product name')
+    prd_level: Optional[str] = Field(None, description='product level')
+    prd_vision: Optional[str] = Field(None, description='product version')
+    y8_matbnum1: Optional[str] = Field(None, description='part code')
+    y8_matname: Optional[str] = Field(None, description='part name')
+    bl_quantity: Optional[str] = Field(None, description='quantity')
+    state_now: Optional[str] = Field(None, description='enabled flag')
 
 
 class CreateEbomParam(EbomSchemaBase):
@@ -38,28 +35,28 @@ class CreateEbomParam(EbomSchemaBase):
 class GetEbomParam(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(..., description='主键id')  # 主键保持必填
-    partid: Optional[str] = Field(None, description='父节点')  # 改为可选（顶层节点没有父节点）
-    level1: Optional[str] = Field(None, description='层级序号')  # 改为可选 + str类型
-    prd_no: Optional[str] = Field(None, description='产品型号')  # 改为可选
+    id: str = Field(..., description='primary key id')
+    partid: Optional[str] = Field(None, description='parent node id')
+    level1: Optional[str] = Field(None, description='level number')
+    prd_no: Optional[str] = Field(None, description='product model')
+    product_config_code: Optional[str] = Field(None, description='product config code')
 
 
 class GetEbomDetails(GetEbomParam):
     model_config = ConfigDict(from_attributes=True)
 
-    sync_time: Optional[str] = Field(None, description='数据解析入库时间')
-    prd_code:Optional[str] = Field(None, description='产品配置码Header')
-    prd_name: Optional[str] = Field(None, description='产品名称')
-    prd_level: Optional[str] = Field(None, description='修造级别')
-    prd_vision: Optional[str] = Field(None, description='产品总成版本号')
-    y8_matbnum1: Optional[str] = Field(None, description='零部件物料编码')
-    y8_matname: Optional[str] = Field(None, description='零部件名称')
-    bl_quantity: Optional[str] = Field(None, description='物料总数量')
-    state_now: Optional[str] = Field(None, description='当前是否启用，1启用；0未启用,默认为1')
+    sync_time: Optional[str] = Field(None, description='sync time')
+    prd_name: Optional[str] = Field(None, description='product name')
+    prd_level: Optional[str] = Field(None, description='product level')
+    prd_vision: Optional[str] = Field(None, description='product version')
+    y8_matbnum1: Optional[str] = Field(None, description='part code')
+    y8_matname: Optional[str] = Field(None, description='part name')
+    bl_quantity: Optional[str] = Field(None, description='quantity')
+    state_now: Optional[str] = Field(None, description='enabled flag')
 
 
 class GetEbomListResponse(SchemaBase):
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[GetEbomDetails] = Field(default_factory=list, description='查询结果列表')
-    total: int = Field(default=0, ge=0, description='总记录数')
+    items: list[GetEbomDetails] = Field(default_factory=list, description='query result list')
+    total: int = Field(default=0, ge=0, description='total count')

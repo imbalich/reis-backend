@@ -26,6 +26,9 @@ class Repair(DataClassBase):
     id_repair: Mapped[int] = mapped_column(Integer, nullable=True, comment='修级顺序')
     repair_levels: Mapped[str] = mapped_column(String(255), nullable=True, comment='造修阶段')
     model: Mapped[str] = mapped_column(String(255), nullable=True, comment='产品型号')
+    product_config_code: Mapped[str] = mapped_column(
+        String(64), nullable=True, comment='产品配置码'
+    )
     creator: Mapped[str] = mapped_column(String(255), nullable=True, comment='创建人')
     create_time: Mapped[date] = mapped_column(Date, nullable=True, comment='创建时间')
     state_now: Mapped[bool] = mapped_column(

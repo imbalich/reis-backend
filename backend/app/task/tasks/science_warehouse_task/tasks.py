@@ -21,7 +21,10 @@ from backend.database.db import async_db_session
 
 @celery_app.task(name="science_warehouse_calculation_task", base=TaskBase)
 async def science_warehouse_calculation_task(
-    time_interval_days: int = 180, input_date: str = None
+    time_interval_days: int = 180,
+    input_date: str = None,
+    product_model: str | None = None,
+    product_config_code: str | None = None,
 ) -> str:
     """
     Science Warehouse
@@ -37,11 +40,28 @@ async def science_warehouse_calculation_task(
         if input_date:
             parsed_input_date = date.fromisoformat(input_date)
 
+        if product_model is not None or product_config_code is not None:
+            result = (
+                await science_warehouse_service.calculate_science_warehouse_requirements(
+                    time_interval_days=time_interval_days,
+                    input_date=parsed_input_date,
+                    product_model=product_model,
+                    product_config_code=product_config_code,
+                )
+            )
+            return (
+                f"科学库存计算完成（新维度过滤走主服务） - "
+                f"计算批次ID: {result.calculation_id}, "
+                f"总备品数量: {result.statistics.get('total_warehouse_spares', 0)}"
+            )
+
         # 执行科学库存计算
         result = (
             await science_warehouse_service.calculate_science_warehouse_requirements(
                 time_interval_days=time_interval_days,
                 input_date=parsed_input_date,
+                product_model=product_model,
+                product_config_code=product_config_code,
             )
         )
 
@@ -55,7 +75,10 @@ async def science_warehouse_calculation_task(
 
 @celery_app.task(name="science_warehouse_calculation_and_api_task", base=TaskBase)
 async def science_warehouse_calculation_and_api_task(
-    time_interval_days: int = 180, input_date: str = None
+    time_interval_days: int = 180,
+    input_date: str = None,
+    product_model: str | None = None,
+    product_config_code: str | None = None,
 ) -> str:
     """
     后台任务:科学库存需求计算并返回API格式结果
@@ -75,6 +98,8 @@ async def science_warehouse_calculation_and_api_task(
             await science_warehouse_service.calculate_science_warehouse_requirements(
                 time_interval_days=time_interval_days,
                 input_date=parsed_input_date,
+                product_model=product_model,
+                product_config_code=product_config_code,
             )
         )
 
@@ -93,7 +118,10 @@ async def science_warehouse_calculation_and_api_task(
 
 @celery_app.task(name="science_warehouse_calculation_v2_task", base=TaskBase)
 async def science_warehouse_calculation_v2_task(
-    time_interval_days: int = 180, input_date: str = None
+    time_interval_days: int = 180,
+    input_date: str = None,
+    product_model: str | None = None,
+    product_config_code: str | None = None,
 ) -> str:
     """
     后台任务:科学库存需求计算（新版本）

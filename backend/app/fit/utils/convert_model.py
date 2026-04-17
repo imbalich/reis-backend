@@ -67,6 +67,7 @@ def convert_dict_to_pydantic_model(value: dict, model: Type[T]) -> T:
 def convert_to_product_distribution_params(
     fit_results: pd.DataFrame,
     model: str,
+    product_config_code: str | None,
     input_date: date,
     method: FitMethodType,
     source: bool,
@@ -78,6 +79,7 @@ def convert_to_product_distribution_params(
         param = CreateProductDistributionParam(
             group_id=group_id,
             model=model,
+            product_config_code=product_config_code,
             input_date=input_date,  # 注意：这里移除了 .today()
             method=method,
             distribution=row["Distribution"],
@@ -167,6 +169,7 @@ def convert_to_product_distribution_params(
 def convert_to_part_distribution_params(
     fit_results: pd.DataFrame,
     model: str,
+    product_config_code: str | None,
     part: str,
     input_date: date,
     method: FitMethodType,
@@ -179,6 +182,7 @@ def convert_to_part_distribution_params(
         param = CreatePartDistributionParam(
             group_id=group_id,
             model=model,
+            product_config_code=product_config_code,
             part=part,
             input_date=input_date,  # 注意：这里移除了 .today()
             method=method,
@@ -267,12 +271,18 @@ def convert_to_part_distribution_params(
 
 
 def convert_to_product_exponential_distribution_params(
-    model: str, input_date: date, method: FitMethodType, source: bool, lambda_: float
+    model: str,
+    product_config_code: str | None,
+    input_date: date,
+    method: FitMethodType,
+    source: bool,
+    lambda_: float,
 ) -> CreateProductDistributionParam:
     group_id = uuid4_str()
     param = CreateProductDistributionParam(
         group_id=group_id,
         model=model,
+        product_config_code=product_config_code,
         input_date=input_date,  # 注意：这里移除了 .today()
         method=method,
         distribution="Exponential_1P",
@@ -300,6 +310,7 @@ def convert_to_product_exponential_distribution_params(
 
 def convert_to_part_exponential_distribution_params(
     model: str,
+    product_config_code: str | None,
     part: str,
     input_date: date,
     method: FitMethodType,
@@ -310,6 +321,7 @@ def convert_to_part_exponential_distribution_params(
     param = CreatePartDistributionParam(
         group_id=group_id,
         model=model,
+        product_config_code=product_config_code,
         part=part,
         input_date=input_date,  # 注意：这里移除了 .today()
         method=method,
@@ -337,7 +349,10 @@ def convert_to_part_exponential_distribution_params(
 
 
 async def get_ebom_tree_with_parents(
-    db: AsyncSession, model: str, part: str
+    db: AsyncSession,
+    model: str,
+    product_config_code: str | None,
+    part: str,
 ) -> list[Ebom]:
     """
     递归获取完整的BOM树（包括所有父级节点）
@@ -348,7 +363,12 @@ async def get_ebom_tree_with_parents(
     :return: 完整的BOM数据列表（包括当前节点和所有父级节点）
     """
     # 1. 查询当前零部件的数据
-    current_items = await ebom_dao.get_by_model_and_part(db, model, part)
+    current_items = await ebom_dao.get_by_model_and_part(
+        db,
+        model,
+        product_config_code,
+        part,
+    )
     if not current_items:
         return []
 
