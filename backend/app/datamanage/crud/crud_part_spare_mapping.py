@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from typing import List, Sequence, Any
+from typing import Any, List, Sequence
 
-from sqlalchemy import Select, delete, select, func, text
+from sqlalchemy import Select, delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -10,7 +10,7 @@ from backend.app.datamanage.model.part_spare_mapping import PartSpareMapping
 
 
 class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
-    """部件与备品对应关系数据库操作类"""
+    """CRUD for part/spare mapping records."""
 
     async def get_select(
         self,
@@ -21,17 +21,7 @@ class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
         spare_part_name: str | None = None,
         spare_part_code: str | None = None,
     ) -> Select:
-        """
-        获取部件与备品对应关系查询语句
-
-        :param product_model: 产品型号
-        :param derived_code: 派生码
-        :param original_part_name: 零部件名称（原装）
-        :param original_part_code: 零部件物料编码（原装）
-        :param spare_part_name: 零部件名称（备品）
-        :param spare_part_code: 零部件物料编码（备品）
-        :return: 查询语句
-        """
+        """Build a filtered select statement for mapping lookup."""
         query = select(self.model)
         if product_model:
             query = query.where(self.model.product_model.like(f"%{product_model}%"))
@@ -53,11 +43,7 @@ class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
         return query
 
     async def clear_all(self, db: AsyncSession) -> None:
-        """
-        清空所有部件与备品对应关系数据
-
-        :param db: 数据库会话
-        """
+        """Clear all mapping rows."""
         await db.execute(delete(PartSpareMapping))
         await db.execute(text("ALTER TABLE dm_part_spare_mapping AUTO_INCREMENT = 1"))
         await db.commit()
@@ -65,13 +51,7 @@ class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
     async def bulk_create(
         self, db: AsyncSession, mapping_data: List[dict[str, Any]]
     ) -> List[PartSpareMapping]:
-        """
-        批量创建部件与备品对应关系
-
-        :param db: 数据库会话
-        :param mapping_data: 部件与备品对应关系数据列表
-        :return: 创建的部件与备品对应关系列表
-        """
+        """Create mapping rows in bulk."""
         mappings = [PartSpareMapping(**data) for data in mapping_data]
         db.add_all(mappings)
         await db.commit()
@@ -82,28 +62,22 @@ class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
     async def get_by_spare_part_code(
         self, db: AsyncSession, spare_part_code: str
     ) -> Sequence[PartSpareMapping]:
-        """
-        根据备品编码获取映射关系
-        :param db: 数据库会话
-        :param spare_part_code: 备品编码
-        :return: 映射关系列表
-        """
+        """Get mappings by spare part code."""
         stmt = select(self.model).where(self.model.spare_part_code == spare_part_code)
         result = await db.execute(stmt)
         return result.scalars().all()
 
     async def get_by_original_part_code(
-        self, db: AsyncSession, product_model: str, original_part_code: str
+        self,
+        db: AsyncSession,
+        product_model: str,
+        product_config_code: str,
+        original_part_code: str,
     ) -> PartSpareMapping:
-        """
-        根据产品型号和原装部件编码获取映射关系
-        :param db: 数据库会话
-        :param product_model: 产品型号
-        :param original_part_code: 原装部件编码
-        :return: 映射关系
-        """
+        """Get a mapping by product model, product config code, and original part code."""
         stmt = select(self.model).where(
             self.model.product_model == product_model,
+            self.model.product_config_code == product_config_code,
             self.model.original_part_code == original_part_code,
         )
         result = await db.execute(stmt)

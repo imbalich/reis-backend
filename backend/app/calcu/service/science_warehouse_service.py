@@ -1,8 +1,7 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# 科学库存服务,支援国铁售后需求
-import math
+# 绉戝搴撳瓨鏈嶅姟,鏀彺鍥介搧鍞悗闇€姹?import math
 import json
 import time
 from collections import defaultdict
@@ -27,7 +26,7 @@ from backend.app.calcu.crud.crud_science_warehouse_result import (
 )
 from typing import Sequence
 
-# 统计表相关逻辑已移除，不再导入
+# 缁熻琛ㄧ浉鍏抽€昏緫宸茬Щ闄わ紝涓嶅啀瀵煎叆
 # from backend.app.calcu.crud.crud_science_warehouse_statistics import (
 #     science_warehouse_statistics_dao,
 # )
@@ -40,21 +39,20 @@ from backend.utils.snowflake import snowflake
 
 def parse_discovery_date(discovery_date_str: str) -> Optional[date]:
     """
-    解析故障发现日期字符串为date对象
+    瑙ｆ瀽鏁呴殰鍙戠幇鏃ユ湡瀛楃涓蹭负date瀵硅薄
 
-    :param discovery_date_str: 日期字符串
-    :return: 解析后的date对象，解析失败返回None
+    :param discovery_date_str: 鏃ユ湡瀛楃涓?    :return: 瑙ｆ瀽鍚庣殑date瀵硅薄锛岃В鏋愬け璐ヨ繑鍥濶one
     """
     if not discovery_date_str or not isinstance(discovery_date_str, str):
         return None
 
-    # 去除前后空格
+    # 鍘婚櫎鍓嶅悗绌烘牸
     discovery_date_str = discovery_date_str.strip()
 
     if not discovery_date_str:
         return None
 
-    # 尝试多种日期格式
+    # 灏濊瘯澶氱鏃ユ湡鏍煎紡
     date_formats = [
         "%Y-%m-%d",  # 2023-12-25
         "%Y/%m/%d",  # 2023/12/25
@@ -72,8 +70,7 @@ def parse_discovery_date(discovery_date_str: str) -> Optional[date]:
         except ValueError:
             continue
 
-    # 如果所有格式都失败，尝试pandas的自动解析
-    try:
+    # 濡傛灉鎵€鏈夋牸寮忛兘澶辫触锛屽皾璇昿andas鐨勮嚜鍔ㄨВ鏋?    try:
         import pandas as pd
 
         parsed_datetime = pd.to_datetime(discovery_date_str)
@@ -86,11 +83,9 @@ def parse_discovery_date(discovery_date_str: str) -> Optional[date]:
 
 def is_failure_date_valid(failure_date_str: str, cutoff_date: date) -> bool:
     """
-    检查故障日期是否在截止日期之前或等于截止日期
-
-    :param failure_date_str: 故障日期字符串
-    :param cutoff_date: 截止日期
-    :return: 是否有效
+    妫€鏌ユ晠闅滄棩鏈熸槸鍚﹀湪鎴鏃ユ湡涔嬪墠鎴栫瓑浜庢埅姝㈡棩鏈?
+    :param failure_date_str: 鏁呴殰鏃ユ湡瀛楃涓?    :param cutoff_date: 鎴鏃ユ湡
+    :return: 鏄惁鏈夋晥
     """
     parsed_date = parse_discovery_date(failure_date_str)
     if parsed_date is None:
@@ -108,38 +103,34 @@ class ScienceWarehouseService:
         product_config_code: str | None = None,
     ) -> "ScienceWarehouseCalculationResponse":
         """
-        科学库存需求计算主流程
+        绉戝搴撳瓨闇€姹傝绠椾富娴佺▼
 
-        :param time_interval_days: 需求预测时间间隔（天数）,默认180天
-        :param input_date: 计算截止日期（用于拟合）
-        :return: 计算结果和统计信息
-        """
+        :param time_interval_days: 闇€姹傞娴嬫椂闂撮棿闅旓紙澶╂暟锛?榛樿180澶?        :param input_date: 璁＄畻鎴鏃ユ湡锛堢敤浜庢嫙鍚堬級
+        :return: 璁＄畻缁撴灉鍜岀粺璁′俊鎭?        """
         start_time = time.time()
 
         if not input_date:
             input_date = date.today()
 
-        # 1. 获取所有库房备品清单
-        warehouse_spares = await ScienceWarehouseService.get_all_warehouse_spare_list()
+        # 1. 鑾峰彇鎵€鏈夊簱鎴垮鍝佹竻鍗?        warehouse_spares = await ScienceWarehouseService.get_all_warehouse_spare_list()
 
-        # 统计总备品数量
-        total_spares = sum(len(spares) for spares in warehouse_spares.values())
+        # 缁熻鎬诲鍝佹暟閲?        total_spares = sum(len(spares) for spares in warehouse_spares.values())
 
-        # 2. 初始化结果和统计
+        # 2. 鍒濆鍖栫粨鏋滃拰缁熻
         results = {}
         statistics = {
             "total_warehouse_spares": 0,
             "calculated_spares": 0,
             "default_spares": 0,
-            "insufficient_failure_data_spares": 0,  # 新增：故障数据不足的备品数量
-            "exponential_fit_success_spares": 0,  # 新增：指数分布拟合成功的备品数量
-            "exponential_fit_fail_spares": 0,  # 新增：指数分布拟合失败的备品数量
+            "insufficient_failure_data_spares": 0,  # 鏂板锛氭晠闅滄暟鎹笉瓒崇殑澶囧搧鏁伴噺
+            "exponential_fit_success_spares": 0,  # 鏂板锛氭寚鏁板垎甯冩嫙鍚堟垚鍔熺殑澶囧搧鏁伴噺
+            "exponential_fit_fail_spares": 0,  # 鏂板锛氭寚鏁板垎甯冩嫙鍚堝け璐ョ殑澶囧搧鏁伴噺
             "skipped_failures": [],
             "mapping_errors": [],
             "maintenance_responsibility_analysis": {},
         }
 
-        # 3. 按库房-备品维度计算
+        # 3. 鎸夊簱鎴?澶囧搧缁村害璁＄畻
         calculation_start = time.time()
         processed_warehouses = 0
         processed_spares = 0
@@ -159,8 +150,7 @@ class ScienceWarehouseService:
                 processed_spares += 1
                 statistics["total_warehouse_spares"] += 1
 
-                # 计算该库房该备品的需求
-                spare_start = time.time()
+                # 璁＄畻璇ュ簱鎴胯澶囧搧鐨勯渶姹?                spare_start = time.time()
                 requirement_result = await ScienceWarehouseService.calculate_spare_requirement_with_coverage(
                     warehouse_code,
                     spare_part,
@@ -172,7 +162,7 @@ class ScienceWarehouseService:
                 spare_duration = time.time() - spare_start
 
                 if requirement_result["calculated"]:
-                    # 检查是否使用了指数分布拟合
+                    # 妫€鏌ユ槸鍚︿娇鐢ㄤ簡鎸囨暟鍒嗗竷鎷熷悎
                     maintenance_analysis = requirement_result.get(
                         "maintenance_analysis", {}
                     )
@@ -181,12 +171,11 @@ class ScienceWarehouseService:
                     )
 
                     if exponential_success > 0:
-                        # 使用了指数分布拟合
-                        calculation_method = "exponential_fit"
-                        confidence = 0.5  # 指数分布拟合的置信度较低
+                        # 浣跨敤浜嗘寚鏁板垎甯冩嫙鍚?                        calculation_method = "exponential_fit"
+                        confidence = 0.5  # 鎸囨暟鍒嗗竷鎷熷悎鐨勭疆淇″害杈冧綆
                         statistics["exponential_fit_success_spares"] += 1
                     else:
-                        # 使用正常拟合
+                        # 浣跨敤姝ｅ父鎷熷悎
                         calculation_method = "fitted"
                         confidence = requirement_result.get("confidence", 0.8)
                         statistics["calculated_spares"] += 1
@@ -201,8 +190,7 @@ class ScienceWarehouseService:
                         "calculated"
                     ] += 1
                 elif requirement_result.get("insufficient_failure_data", False):
-                    # 检查是否尝试了指数分布拟合但失败
-                    maintenance_analysis = requirement_result.get(
+                    # 妫€鏌ユ槸鍚﹀皾璇曚簡鎸囨暟鍒嗗竷鎷熷悎浣嗗け璐?                    maintenance_analysis = requirement_result.get(
                         "maintenance_analysis", {}
                     )
                     exponential_fail = maintenance_analysis.get(
@@ -210,11 +198,10 @@ class ScienceWarehouseService:
                     )
 
                     if exponential_fail > 0:
-                        # 指数分布拟合失败，使用默认数量
-                        calculation_method = "exponential_fit_failed"
+                        # 鎸囨暟鍒嗗竷鎷熷悎澶辫触锛屼娇鐢ㄩ粯璁ゆ暟閲?                        calculation_method = "exponential_fit_failed"
                         statistics["exponential_fit_fail_spares"] += 1
                     else:
-                        # 直接使用默认数量（没有尝试指数分布拟合）
+                        # 鐩存帴浣跨敤榛樿鏁伴噺锛堟病鏈夊皾璇曟寚鏁板垎甯冩嫙鍚堬級
                         calculation_method = "insufficient_data"
                         statistics["insufficient_failure_data_spares"] += 1
 
@@ -228,7 +215,7 @@ class ScienceWarehouseService:
                         "default"
                     ] += 1
                 else:
-                    # 其他原因使用默认数量
+                    # 鍏朵粬鍘熷洜浣跨敤榛樿鏁伴噺
                     results[warehouse_code][spare_part["part_code"]] = {
                         "part_name": spare_part["part_name"],
                         "required_quantity": spare_part["default_quantity"],
@@ -240,16 +227,14 @@ class ScienceWarehouseService:
                         "default"
                     ] += 1
 
-                # 只记录错误数量，不保存详细错误信息（减少内存使用）
-                statistics["skipped_failures"].extend(
+                # 鍙褰曢敊璇暟閲忥紝涓嶄繚瀛樿缁嗛敊璇俊鎭紙鍑忓皯鍐呭瓨浣跨敤锛?                statistics["skipped_failures"].extend(
                     requirement_result.get("skipped_failures", [])
                 )
                 statistics["mapping_errors"].extend(
                     requirement_result.get("mapping_errors", [])
                 )
 
-                # 简化维护责任分析统计
-                if requirement_result.get("maintenance_analysis"):
+                # 绠€鍖栫淮鎶よ矗浠诲垎鏋愮粺璁?                if requirement_result.get("maintenance_analysis"):
                     maintenance_analysis = requirement_result["maintenance_analysis"]
                     statistics["maintenance_responsibility_analysis"][warehouse_code][
                         "responsible_products"
@@ -260,10 +245,10 @@ class ScienceWarehouseService:
 
         calculation_duration = time.time() - calculation_start
 
-        # 4. 生成计算批次ID
+        # 4. 鐢熸垚璁＄畻鎵规ID
         calculation_id = f"SW_{snowflake.generate()}"
 
-        # 5. 保存计算结果到数据库
+        # 5. 淇濆瓨璁＄畻缁撴灉鍒版暟鎹簱
         await ScienceWarehouseService.save_calculation_results(
             calculation_id,
             results,
@@ -274,8 +259,7 @@ class ScienceWarehouseService:
             product_config_code=product_config_code,
         )
 
-        # 导入Schema类
-        from backend.app.calcu.schema.science_warehouse import (
+        # 瀵煎叆Schema绫?        from backend.app.calcu.schema.science_warehouse import (
             ScienceWarehouseCalculationResponse,
         )
 
@@ -312,16 +296,13 @@ class ScienceWarehouseService:
     @staticmethod
     async def get_all_warehouse_spare_list() -> Dict[str, List[Dict[str, Any]]]:
         """
-        获取所有库房备品清单
-
-        :return: 按库房分组的备品清单 {库房编码: [备品信息列表]}
+        鑾峰彇鎵€鏈夊簱鎴垮鍝佹竻鍗?
+        :return: 鎸夊簱鎴垮垎缁勭殑澶囧搧娓呭崟 {搴撴埧缂栫爜: [澶囧搧淇℃伅鍒楄〃]}
         """
         async with async_db_session() as db:
-            # 获取所有库房备品清单
-            warehouse_inventories = await warehouse_inventory_dao.get_all(db)
+            # 鑾峰彇鎵€鏈夊簱鎴垮鍝佹竻鍗?            warehouse_inventories = await warehouse_inventory_dao.get_all(db)
 
-            # 按库房分组
-            warehouse_spares = defaultdict(list)
+            # 鎸夊簱鎴垮垎缁?            warehouse_spares = defaultdict(list)
             for inventory in warehouse_inventories:
                 warehouse_spares[inventory.warehouse_code].append(
                     {
@@ -343,8 +324,7 @@ class ScienceWarehouseService:
         product_config_code: str | None = None,
     ) -> Dict[str, Any]:
         """
-        计算单个库房单个备品的需求数量（考虑库房-路局-产品关系）
-        """
+        璁＄畻鍗曚釜搴撴埧鍗曚釜澶囧搧鐨勯渶姹傛暟閲忥紙鑰冭檻搴撴埧-璺眬-浜у搧鍏崇郴锛?        """
 
         result = {
             "calculated": False,
@@ -355,8 +335,7 @@ class ScienceWarehouseService:
         }
 
         try:
-            # 1. 获取库房支持的二级配属（路局）
-            warehouse_allotments = (
+            # 1. 鑾峰彇搴撴埧鏀寔鐨勪簩绾ч厤灞烇紙璺眬锛?            warehouse_allotments = (
                 await ScienceWarehouseService.get_warehouse_allotments(warehouse_code)
             )
 
@@ -365,12 +344,12 @@ class ScienceWarehouseService:
                     {
                         "type": "no_warehouse_allotments",
                         "warehouse_code": warehouse_code,
-                        "message": f"库房 {warehouse_code} 未找到支持的二级配属",
+                        "message": f"搴撴埧 {warehouse_code} 鏈壘鍒版敮鎸佺殑浜岀骇閰嶅睘",
                     }
                 )
                 return result
 
-            # 2. 获取使用此备品的产品型号（通过映射表）
+            # 2. 鑾峰彇浣跨敤姝ゅ鍝佺殑浜у搧鍨嬪彿锛堥€氳繃鏄犲皠琛級
             related_models = await ScienceWarehouseService.get_models_using_spare(
                 spare_part["part_code"]
             )
@@ -382,20 +361,19 @@ class ScienceWarehouseService:
                     {
                         "type": "no_related_models",
                         "spare_part_code": spare_part["part_code"],
-                        "message": f"备品 {spare_part['part_code']} 未找到相关产品型号",
+                        "message": f"澶囧搧 {spare_part['part_code']} 鏈壘鍒扮浉鍏充骇鍝佸瀷鍙?,
                     }
                 )
                 return result
 
-            # 3. 获取运行在库房覆盖路局上且型号匹配的产品编号（优化版本）
-            filtered_products = []
+            # 3. 鑾峰彇杩愯鍦ㄥ簱鎴胯鐩栬矾灞€涓婁笖鍨嬪彿鍖归厤鐨勪骇鍝佺紪鍙凤紙浼樺寲鐗堟湰锛?            filtered_products = []
             for allotment_two in warehouse_allotments:
                 products_in_allotment = await ScienceWarehouseService.get_products_by_allotment_two_and_models(
                     allotment_two, related_models
                 )
                 filtered_products.extend(products_in_allotment)
 
-            # 去重
+            # 鍘婚噸
             filtered_products = list(set(filtered_products))
 
             if not filtered_products:
@@ -404,13 +382,12 @@ class ScienceWarehouseService:
                         "type": "no_relevant_products",
                         "spare_part_code": spare_part["part_code"],
                         "warehouse_code": warehouse_code,
-                        "message": f"备品 {spare_part['part_code']} 在库房 {warehouse_code} 覆盖的路局上无相关产品",
+                        "message": f"澶囧搧 {spare_part['part_code']} 鍦ㄥ簱鎴?{warehouse_code} 瑕嗙洊鐨勮矾灞€涓婃棤鐩稿叧浜у搧",
                     }
                 )
                 return result
 
-            # 5. 获取相关产品的故障数据
-            all_failures = []
+            # 5. 鑾峰彇鐩稿叧浜у搧鐨勬晠闅滄暟鎹?            all_failures = []
             skipped_failures = []
 
             for product_number in filtered_products:
@@ -420,7 +397,7 @@ class ScienceWarehouseService:
                     )
                 )
 
-                # 过滤时间范围
+                # 杩囨护鏃堕棿鑼冨洿
                 time_filtered_failures = []
                 date_parse_errors = []
 
@@ -428,8 +405,7 @@ class ScienceWarehouseService:
                     if is_failure_date_valid(f.discovery_date, input_date):
                         time_filtered_failures.append(f)
                     else:
-                        # 记录日期解析失败的情况
-                        parsed_date = parse_discovery_date(f.discovery_date)
+                        # 璁板綍鏃ユ湡瑙ｆ瀽澶辫触鐨勬儏鍐?                        parsed_date = parse_discovery_date(f.discovery_date)
                         if parsed_date is None:
                             date_parse_errors.append(
                                 {
@@ -440,8 +416,7 @@ class ScienceWarehouseService:
                                 }
                             )
                         else:
-                            # 日期格式正确但超出时间范围
-                            date_parse_errors.append(
+                            # 鏃ユ湡鏍煎紡姝ｇ‘浣嗚秴鍑烘椂闂磋寖鍥?                            date_parse_errors.append(
                                 {
                                     "failure_id": f.id,
                                     "product_number": f.product_number,
@@ -452,13 +427,12 @@ class ScienceWarehouseService:
                                 }
                             )
 
-                # 记录时间过滤结果
+                # 璁板綍鏃堕棿杩囨护缁撴灉
 
-                # 将日期解析错误添加到跳过的故障中
+                # 灏嗘棩鏈熻В鏋愰敊璇坊鍔犲埌璺宠繃鐨勬晠闅滀腑
                 skipped_failures.extend(date_parse_errors)
 
-                # 检查故障部件是否能映射到目标备品
-                for failure in time_filtered_failures:
+                # 妫€鏌ユ晠闅滈儴浠舵槸鍚﹁兘鏄犲皠鍒扮洰鏍囧鍝?                for failure in time_filtered_failures:
                     if product_model is not None and failure.product_model != product_model:
                         continue
                     if (
@@ -495,12 +469,12 @@ class ScienceWarehouseService:
                         "type": "no_relevant_failures",
                         "spare_part_code": spare_part["part_code"],
                         "warehouse_code": warehouse_code,
-                        "message": f"备品 {spare_part['part_code']} 在库房 {warehouse_code} 未找到相关故障数据",
+                        "message": f"澶囧搧 {spare_part['part_code']} 鍦ㄥ簱鎴?{warehouse_code} 鏈壘鍒扮浉鍏虫晠闅滄暟鎹?,
                     }
                 )
                 return result
 
-            # 6. 进行寿命拟合和备件量计算
+            # 6. 杩涜瀵垮懡鎷熷悎鍜屽浠堕噺璁＄畻
             calculation_result = (
                 await ScienceWarehouseService.perform_spare_calculation_with_fit(
                     all_failures,
@@ -512,8 +486,7 @@ class ScienceWarehouseService:
             )
 
             if calculation_result["success"]:
-                # 检查是否有故障数据不足的情况
-                maintenance_analysis = calculation_result.get(
+                # 妫€鏌ユ槸鍚︽湁鏁呴殰鏁版嵁涓嶈冻鐨勬儏鍐?                maintenance_analysis = calculation_result.get(
                     "maintenance_analysis", {}
                 )
                 if (
@@ -537,7 +510,7 @@ class ScienceWarehouseService:
                         "type": "calculation_failed",
                         "spare_part_code": spare_part["part_code"],
                         "warehouse_code": warehouse_code,
-                        "error": calculation_result.get("error", "未知错误"),
+                        "error": calculation_result.get("error", "鏈煡閿欒"),
                     }
                 )
 
@@ -562,16 +535,14 @@ class ScienceWarehouseService:
         spare_part_code: str,
     ) -> Dict[str, Any]:
         """
-        基于故障数据进行寿命拟合和备件量计算（考虑库房维护责任）
-        """
+        鍩轰簬鏁呴殰鏁版嵁杩涜瀵垮懡鎷熷悎鍜屽浠堕噺璁＄畻锛堣€冭檻搴撴埧缁存姢璐ｄ换锛?        """
 
         try:
-            # 1. 按产品型号+派生码+零部件编码分组故障数据
-            failures_by_model_part = ScienceWarehouseService.group_failures_by_dimension(
+            # 1. 鎸変骇鍝佸瀷鍙?娲剧敓鐮?闆堕儴浠剁紪鐮佸垎缁勬晠闅滄暟鎹?            failures_by_model_part = ScienceWarehouseService.group_failures_by_dimension(
                 failures
             )
 
-            # 2. 对每个型号+零部件组合进行备件量计算
+            # 2. 瀵规瘡涓瀷鍙?闆堕儴浠剁粍鍚堣繘琛屽浠堕噺璁＄畻
             total_requirement = 0.0
             responsible_products = 0
             non_responsible_products = 0
@@ -580,13 +551,13 @@ class ScienceWarehouseService:
             exponential_fit_fail_count = 0
 
             for model_part_key, model_part_failures in failures_by_model_part.items():
-                # 解析型号、派生码和零部件编码
+                # 瑙ｆ瀽鍨嬪彿銆佹淳鐢熺爜鍜岄浂閮ㄤ欢缂栫爜
                 product_model, product_config_code, part_code = model_part_key.split("_", 2)
 
-                # 检查故障数量是否足够（需要 > 4 个）
+                # 妫€鏌ユ晠闅滄暟閲忔槸鍚﹁冻澶燂紙闇€瑕?> 4 涓級
                 if len(model_part_failures) <= 4:
 
-                    # 尝试使用指数分布拟合
+                    # 灏濊瘯浣跨敤鎸囨暟鍒嗗竷鎷熷悎
                     try:
                         model_part_spare_quantity = await ScienceWarehouseService.exponential_fit_for_insufficient_data(
                             model_part_failures,
@@ -598,23 +569,21 @@ class ScienceWarehouseService:
                         )
 
                         if model_part_spare_quantity > 0:
-                            # 指数分布拟合成功
+                            # 鎸囨暟鍒嗗竷鎷熷悎鎴愬姛
                             total_requirement += model_part_spare_quantity
                             responsible_products += len(
                                 set([f.product_number for f in model_part_failures])
                             )
                             exponential_fit_success_count += 1
                         else:
-                            # 指数分布拟合失败，使用默认值
-                            insufficient_failure_data_combinations += 1
+                            # 鎸囨暟鍒嗗竷鎷熷悎澶辫触锛屼娇鐢ㄩ粯璁ゅ€?                            insufficient_failure_data_combinations += 1
                             non_responsible_products += len(
                                 set([f.product_number for f in model_part_failures])
                             )
                             exponential_fit_fail_count += 1
 
                     except Exception as e:
-                        # 指数分布拟合异常，使用默认值
-                        insufficient_failure_data_combinations += 1
+                        # 鎸囨暟鍒嗗竷鎷熷悎寮傚父锛屼娇鐢ㄩ粯璁ゅ€?                        insufficient_failure_data_combinations += 1
                         non_responsible_products += len(
                             set([f.product_number for f in model_part_failures])
                         )
@@ -622,12 +591,11 @@ class ScienceWarehouseService:
 
                     continue
 
-                # 获取该型号+零部件的所有产品编号
-                product_numbers = list(
+                # 鑾峰彇璇ュ瀷鍙?闆堕儴浠剁殑鎵€鏈変骇鍝佺紪鍙?                product_numbers = list(
                     set([f.product_number for f in model_part_failures])
                 )
 
-                # 使用已过滤的故障数据进行打标处理
+                # 浣跨敤宸茶繃婊ょ殑鏁呴殰鏁版嵁杩涜鎵撴爣澶勭悊
                 tags = await part_strategy_service.part_tag_process_with_failures(
                     product_model,
                     part_code,
@@ -636,14 +604,12 @@ class ScienceWarehouseService:
                     product_config_code=product_config_code,
                 )
 
-                # 进行拟合
+                # 杩涜鎷熷悎
                 fit_result = await part_fit_service.tag_fit(tags)
 
-                # 获取最佳分布
-                best_distribution = fit_result.best_distribution
+                # 鑾峰彇鏈€浣冲垎甯?                best_distribution = fit_result.best_distribution
 
-                # 计算该型号+零部件的备件量
-                model_part_spare_quantity = (
+                # 璁＄畻璇ュ瀷鍙?闆堕儴浠剁殑澶囦欢閲?                model_part_spare_quantity = (
                     await ScienceWarehouseService.calculate_spare_quantity_by_interval(
                         best_distribution,
                         time_interval_days,
@@ -652,8 +618,7 @@ class ScienceWarehouseService:
                     )
                 )
 
-                # 检查每个产品是否由该库房负责维护
-                for product_number in product_numbers:
+                # 妫€鏌ユ瘡涓骇鍝佹槸鍚︾敱璇ュ簱鎴胯礋璐ｇ淮鎶?                for product_number in product_numbers:
                     maintenance_responsibility = (
                         await ScienceWarehouseService.check_maintenance_responsibility(
                             product_number, warehouse_code, spare_part_code
@@ -661,16 +626,14 @@ class ScienceWarehouseService:
                     )
 
                     if maintenance_responsibility["responsible"]:
-                        # 该库房负责维护，计入总需求
-                        total_requirement += model_part_spare_quantity
+                        # 璇ュ簱鎴胯礋璐ｇ淮鎶わ紝璁″叆鎬婚渶姹?                        total_requirement += model_part_spare_quantity
                         responsible_products += 1
                     else:
-                        # 该库房不负责维护，不计入总需求
-                        non_responsible_products += 1
+                        # 璇ュ簱鎴夸笉璐熻矗缁存姢锛屼笉璁″叆鎬婚渶姹?                        non_responsible_products += 1
 
             return {
                 "success": True,
-                "quantity": max(1, math.ceil(total_requirement)),  # 向上取整且最小为1
+                "quantity": max(1, math.ceil(total_requirement)),  # 鍚戜笂鍙栨暣涓旀渶灏忎负1
                 "confidence": 0.8,
                 "maintenance_analysis": {
                     "total_model_part_combinations": len(failures_by_model_part),
@@ -693,19 +656,18 @@ class ScienceWarehouseService:
         input_date: date,
     ) -> float:
         """
-        基于时间间隔计算备件量（CDF差值计算）
-        参考 spare_service.py 中的计算逻辑
+        鍩轰簬鏃堕棿闂撮殧璁＄畻澶囦欢閲忥紙CDF宸€艰绠楋級
+        鍙傝€?spare_service.py 涓殑璁＄畻閫昏緫
         """
 
         try:
-            # 1. 获取产品信息（从第一个故障记录中获取产品型号）
-            if not product_failures:
+            # 1. 鑾峰彇浜у搧淇℃伅锛堜粠绗竴涓晠闅滆褰曚腑鑾峰彇浜у搧鍨嬪彿锛?            if not product_failures:
                 return 0.0
 
             product_model = product_failures[0].product_model
             product_config_code = getattr(product_failures[0], "product_config_code", None)
 
-            # 2. 获取产品运行参数
+            # 2. 鑾峰彇浜у搧杩愯鍙傛暟
             async with async_db_session() as db:
                 from backend.app.fit.schema.base_param import ProductParam
                 from backend.app.fit.utils.convert_model import (
@@ -720,24 +682,22 @@ class ScienceWarehouseService:
                     ProductParam,
                 )
 
-            # 3. 计算每个产品的备件量
+            # 3. 璁＄畻姣忎釜浜у搧鐨勫浠堕噺
             result = 0.0
             product_list = {}
 
-            # 4. 从 despatch 数据中获取产品发运日期信息
-            # 获取所有产品编号
-            product_numbers = list(set([f.product_number for f in product_failures]))
+            # 4. 浠?despatch 鏁版嵁涓幏鍙栦骇鍝佸彂杩愭棩鏈熶俊鎭?            # 鑾峰彇鎵€鏈変骇鍝佺紪鍙?            product_numbers = list(set([f.product_number for f in product_failures]))
 
-            # 从 despatch 表中获取发运日期
+            # 浠?despatch 琛ㄤ腑鑾峰彇鍙戣繍鏃ユ湡
             async with async_db_session() as db:
                 from backend.app.datamanage.crud.crud_despatch import despatch_dao
 
-                # 获取所有相关的 despatch 数据
+                # 鑾峰彇鎵€鏈夌浉鍏崇殑 despatch 鏁版嵁
                 despatch_data = await despatch_dao.select_models(
-                    db, identifier__in=product_numbers, repair_level__eq="新造"
+                    db, identifier__in=product_numbers, repair_level__eq="鏂伴€?
                 )
 
-                # 构建产品编号到发运日期的映射
+                # 鏋勫缓浜у搧缂栧彿鍒板彂杩愭棩鏈熺殑鏄犲皠
                 product_despatch_map = {}
                 for despatch in despatch_data:
                     if despatch.identifier and despatch.life_cycle_time:
@@ -745,15 +705,13 @@ class ScienceWarehouseService:
                             despatch.life_cycle_time
                         )
 
-                # 为每个产品编号设置发运日期
-                for product_number in product_numbers:
+                # 涓烘瘡涓骇鍝佺紪鍙疯缃彂杩愭棩鏈?                for product_number in product_numbers:
                     if product_number not in product_list:
                         despatch_date = product_despatch_map.get(product_number)
                         if despatch_date:
                             product_list[product_number] = {"despatch": despatch_date}
                         else:
-                            # 如果没有找到发运日期，使用故障发现日期作为近似
-                            # 这种情况应该记录警告
+                            # 濡傛灉娌℃湁鎵惧埌鍙戣繍鏃ユ湡锛屼娇鐢ㄦ晠闅滃彂鐜版棩鏈熶綔涓鸿繎浼?                            # 杩欑鎯呭喌搴旇璁板綍璀﹀憡
                             first_failure = next(
                                 (
                                     f
@@ -777,17 +735,15 @@ class ScienceWarehouseService:
                             else:
                                 product_list[product_number] = {"despatch": input_date}
 
-            # 5. 计算每个产品的备件量
+            # 5. 璁＄畻姣忎釜浜у搧鐨勫浠堕噺
             for product_number, product_info in product_list.items():
-                # 获取发运日期（已经是 date 对象）
-                despatch_date = product_info["despatch"]
+                # 鑾峰彇鍙戣繍鏃ユ湡锛堝凡缁忔槸 date 瀵硅薄锛?                despatch_date = product_info["despatch"]
 
-                # 计算时间间隔
+                # 璁＄畻鏃堕棿闂撮殧
                 start_date = input_date
                 end_date = input_date + timedelta(days=time_interval_days)
 
-                # 转换为运行时间（参考 spare_service.py 的逻辑）
-                xvals = [
+                # 杞崲涓鸿繍琛屾椂闂达紙鍙傝€?spare_service.py 鐨勯€昏緫锛?                xvals = [
                     (start_date - despatch_date).days
                     * product_data.year_days
                     * product_data.avg_worktime
@@ -798,19 +754,17 @@ class ScienceWarehouseService:
                     / 365,
                 ]
 
-                # 确保运行时间为正数
-                xvals = [max(0, x) for x in xvals]
+                # 纭繚杩愯鏃堕棿涓烘鏁?                xvals = [max(0, x) for x in xvals]
 
-                # 计算CDF差值
-                yvals = best_distribution.CDF(xvals=xvals, show_plot=False)
+                # 璁＄畻CDF宸€?                yvals = best_distribution.CDF(xvals=xvals, show_plot=False)
                 calcu = yvals[1] - yvals[0]
 
-                result += max(0.0, calcu)  # 确保不为负数
+                result += max(0.0, calcu)  # 纭繚涓嶄负璐熸暟
 
             return result
 
         except Exception as e:
-            # 如果计算失败，返回0
+            # 濡傛灉璁＄畻澶辫触锛岃繑鍥?
             return 0.0
 
     @staticmethod
@@ -818,43 +772,39 @@ class ScienceWarehouseService:
         product_number: str, warehouse_code: str, spare_part_code: str
     ) -> Dict[str, Any]:
         """
-        检查该库房是否负责维护指定产品的指定备品
-        """
+        妫€鏌ヨ搴撴埧鏄惁璐熻矗缁存姢鎸囧畾浜у搧鐨勬寚瀹氬鍝?        """
 
         try:
-            # 1. 获取产品的配属信息
-            allotment = await ScienceWarehouseService.get_allotment_by_product_number(
+            # 1. 鑾峰彇浜у搧鐨勯厤灞炰俊鎭?            allotment = await ScienceWarehouseService.get_allotment_by_product_number(
                 product_number
             )
             if not allotment:
                 return {
                     "responsible": False,
-                    "reason": f"产品编号 {product_number} 未找到配属信息",
+                    "reason": f"浜у搧缂栧彿 {product_number} 鏈壘鍒伴厤灞炰俊鎭?,
                 }
 
-            # 2. 检查库房是否支持该产品的二级配属
-            warehouse_allotments = (
+            # 2. 妫€鏌ュ簱鎴挎槸鍚︽敮鎸佽浜у搧鐨勪簩绾ч厤灞?            warehouse_allotments = (
                 await ScienceWarehouseService.get_warehouse_allotments(warehouse_code)
             )
             if allotment.allotment_two not in warehouse_allotments:
                 return {
                     "responsible": False,
-                    "reason": f"库房 {warehouse_code} 不支持产品 {product_number} 的二级配属 {allotment.allotment_two}",
+                    "reason": f"搴撴埧 {warehouse_code} 涓嶆敮鎸佷骇鍝?{product_number} 鐨勪簩绾ч厤灞?{allotment.allotment_two}",
                 }
 
-            # 3. 检查库房备品清单中是否包含该备品
-            warehouse_spare = await ScienceWarehouseService.get_warehouse_spare(
+            # 3. 妫€鏌ュ簱鎴垮鍝佹竻鍗曚腑鏄惁鍖呭惈璇ュ鍝?            warehouse_spare = await ScienceWarehouseService.get_warehouse_spare(
                 warehouse_code, spare_part_code
             )
             if not warehouse_spare:
                 return {
                     "responsible": False,
-                    "reason": f"库房 {warehouse_code} 的备品清单中不包含备品 {spare_part_code}",
+                    "reason": f"搴撴埧 {warehouse_code} 鐨勫鍝佹竻鍗曚腑涓嶅寘鍚鍝?{spare_part_code}",
                 }
 
             return {
                 "responsible": True,
-                "reason": f"库房 {warehouse_code} 负责维护产品 {product_number} 的备品 {spare_part_code}",
+                "reason": f"搴撴埧 {warehouse_code} 璐熻矗缁存姢浜у搧 {product_number} 鐨勫鍝?{spare_part_code}",
                 "allotment_info": {
                     "allotment_two": allotment.allotment_two,
                     "product_model": allotment.product_model,
@@ -862,17 +812,16 @@ class ScienceWarehouseService:
             }
 
         except Exception as e:
-            return {"responsible": False, "reason": f"检查维护责任时发生错误: {str(e)}"}
+            return {"responsible": False, "reason": f"妫€鏌ョ淮鎶よ矗浠绘椂鍙戠敓閿欒: {str(e)}"}
 
-    # 辅助方法
+    # 杈呭姪鏂规硶
     @staticmethod
     async def get_warehouse_allotments(warehouse_code: str) -> List[str]:
-        """获取库房支持的二级配属列表"""
+        """鑾峰彇搴撴埧鏀寔鐨勪簩绾ч厤灞炲垪琛?""
         async with async_db_session() as db:
             warehouses = await warehouse_dao.get_by_code(db, warehouse_code)
             if warehouses:
-                # 收集所有库房的二级配属，去重
-                allotments = set()
+                # 鏀堕泦鎵€鏈夊簱鎴跨殑浜岀骇閰嶅睘锛屽幓閲?                allotments = set()
                 for w in warehouses:
                     if w.allotment_two:
                         allotments.add(w.allotment_two)
@@ -881,7 +830,7 @@ class ScienceWarehouseService:
 
     @staticmethod
     async def get_models_using_spare(spare_part_code: str) -> List[str]:
-        """获取使用指定备品的产品型号列表"""
+        """鑾峰彇浣跨敤鎸囧畾澶囧搧鐨勪骇鍝佸瀷鍙峰垪琛?""
         async with async_db_session() as db:
             mappings = await part_spare_mapping_dao.get_by_spare_part_code(
                 db, spare_part_code
@@ -890,7 +839,7 @@ class ScienceWarehouseService:
 
     @staticmethod
     async def get_products_by_allotment_two(allotment_two: str) -> List[str]:
-        """获取指定二级配属下的所有产品编号"""
+        """鑾峰彇鎸囧畾浜岀骇閰嶅睘涓嬬殑鎵€鏈変骇鍝佺紪鍙?""
         async with async_db_session() as db:
             allotments = await allotment_dao.get_by_allotment_two(db, allotment_two)
             return [a.product_number for a in allotments]
@@ -899,7 +848,7 @@ class ScienceWarehouseService:
     async def get_products_by_allotment_two_and_models(
         allotment_two: str, target_models: List[str]
     ) -> List[str]:
-        """获取指定二级配属下且型号在目标列表中的产品编号（优化版本）"""
+        """鑾峰彇鎸囧畾浜岀骇閰嶅睘涓嬩笖鍨嬪彿鍦ㄧ洰鏍囧垪琛ㄤ腑鐨勪骇鍝佺紪鍙凤紙浼樺寲鐗堟湰锛?""
         async with async_db_session() as db:
             allotments = await allotment_dao.get_by_allotment_two_and_models(
                 db, allotment_two, target_models
@@ -908,7 +857,7 @@ class ScienceWarehouseService:
 
     @staticmethod
     async def get_model_by_product_number(product_number: str) -> str:
-        """根据产品编号获取产品型号"""
+        """鏍规嵁浜у搧缂栧彿鑾峰彇浜у搧鍨嬪彿"""
         async with async_db_session() as db:
             allotment = await allotment_dao.get_by_product_number(db, product_number)
             return allotment.product_model if allotment else None
@@ -917,32 +866,29 @@ class ScienceWarehouseService:
     async def calculate_total_run_time_for_products(
         product_numbers: List[str], product_model: str, product_config_code: str | None = None
     ) -> float:
-        """计算特定产品编号列表的总运行时间"""
+        """璁＄畻鐗瑰畾浜у搧缂栧彿鍒楄〃鐨勬€昏繍琛屾椂闂?""
         async with async_db_session() as db:
-            # 获取产品运行参数
+            # 鑾峰彇浜у搧杩愯鍙傛暟
             product = await product_dao.get_by_model(
                 db, product_model, product_config_code=product_config_code
             )
             if not product:
                 return 0.0
 
-            # 获取这些产品编号的发运数据
-            despatchs = await despatch_dao.select_models(
-                db, identifier__in=product_numbers, repair_level__eq="新造"
+            # 鑾峰彇杩欎簺浜у搧缂栧彿鐨勫彂杩愭暟鎹?            despatchs = await despatch_dao.select_models(
+                db, identifier__in=product_numbers, repair_level__eq="鏂伴€?
             )
 
             if not despatchs:
                 return 0.0
 
-            # 计算总运行时间
-            now = date.today()
+            # 璁＄畻鎬昏繍琛屾椂闂?            now = date.today()
             total_hours = 0
             for despatch in despatchs:
                 dispatch_date = despatch.life_cycle_time
                 if isinstance(dispatch_date, str):
                     dispatch_date = dateutils.validate_and_parse_date(dispatch_date)
-                # 计算日期差
-                date_diff = (now - dispatch_date).days
+                # 璁＄畻鏃ユ湡宸?                date_diff = (now - dispatch_date).days
                 hours = dateutils.run_time(
                     date_diff, product.year_days, product.avg_worktime
                 )
@@ -960,15 +906,13 @@ class ScienceWarehouseService:
         input_date: date,
     ) -> float:
         """
-        当故障数据不足4个时，使用指数分布拟合计算备件量
-        参考 part_fit_service.py 中的 none_tag_fit 方法
+        褰撴晠闅滄暟鎹笉瓒?涓椂锛屼娇鐢ㄦ寚鏁板垎甯冩嫙鍚堣绠楀浠堕噺
+        鍙傝€?part_fit_service.py 涓殑 none_tag_fit 鏂规硶
         """
         try:
-            # 获取该型号+零部件的所有产品编号
-            product_numbers = list(set([f.product_number for f in model_part_failures]))
+            # 鑾峰彇璇ュ瀷鍙?闆堕儴浠剁殑鎵€鏈変骇鍝佺紪鍙?            product_numbers = list(set([f.product_number for f in model_part_failures]))
 
-            # 计算这些产品的总运行时间
-            total_run_time = (
+            # 璁＄畻杩欎簺浜у搧鐨勬€昏繍琛屾椂闂?            total_run_time = (
                 await ScienceWarehouseService.calculate_total_run_time_for_products(
                     product_numbers, product_model, product_config_code
                 )
@@ -977,19 +921,18 @@ class ScienceWarehouseService:
             if total_run_time == 0:
                 return 0.0
 
-            # 计算故障数量
+            # 璁＄畻鏁呴殰鏁伴噺
             failure_count = len(model_part_failures)
 
-            # 计算指数分布的lambda参数
+            # 璁＄畻鎸囨暟鍒嗗竷鐨刲ambda鍙傛暟
             if failure_count > 0:
-                # 存在故障，计算指数分布公式: λ = n / T
+                # 瀛樺湪鏁呴殰锛岃绠楁寚鏁板垎甯冨叕寮? 位 = n / T
                 lambda_param = failure_count / total_run_time
             else:
-                # 不存在故障，计算指数分布公式: λ = t/-ln(1/e)
+                # 涓嶅瓨鍦ㄦ晠闅滐紝璁＄畻鎸囨暟鍒嗗竷鍏紡: 位 = t/-ln(1/e)
                 lambda_param = -(math.log(1 / math.e)) / total_run_time
 
-            # 计算备件量（使用指数分布的CDF）
-            # 获取产品运行参数用于时间转换
+            # 璁＄畻澶囦欢閲忥紙浣跨敤鎸囨暟鍒嗗竷鐨凜DF锛?            # 鑾峰彇浜у搧杩愯鍙傛暟鐢ㄤ簬鏃堕棿杞崲
             async with async_db_session() as db:
                 product = await product_dao.get_by_model(
                     db, product_model, product_config_code=product_config_code
@@ -997,18 +940,14 @@ class ScienceWarehouseService:
                 if not product:
                     return 0.0
 
-                # 计算时间间隔的运行时间
-                start_date = input_date
+                # 璁＄畻鏃堕棿闂撮殧鐨勮繍琛屾椂闂?                start_date = input_date
                 end_date = input_date + timedelta(days=time_interval_days)
 
-                # 转换为运行时间
-                start_run_time = 0  # 从当前时间开始
-                end_run_time = (
+                # 杞崲涓鸿繍琛屾椂闂?                start_run_time = 0  # 浠庡綋鍓嶆椂闂村紑濮?                end_run_time = (
                     time_interval_days * product.year_days * product.avg_worktime / 365
                 )
 
-                # 计算指数分布的CDF差值
-                # P(X <= end) - P(X <= start)
+                # 璁＄畻鎸囨暟鍒嗗竷鐨凜DF宸€?                # P(X <= end) - P(X <= start)
                 cdf_end = 1 - math.exp(-lambda_param * end_run_time)
                 cdf_start = 1 - math.exp(-lambda_param * start_run_time)
                 spare_quantity = cdf_end - cdf_start
@@ -1020,27 +959,31 @@ class ScienceWarehouseService:
 
     @staticmethod
     async def get_failures_by_product_number(product_number: str) -> List:
-        """根据产品编号获取故障数据"""
+        """鏍规嵁浜у搧缂栧彿鑾峰彇鏁呴殰鏁版嵁"""
         async with async_db_session() as db:
             return await failure_dao.get_by_product_number(db, product_number)
 
     @staticmethod
-    async def get_part_spare_mapping(product_model: str, original_part_code: str):
-        """获取部件与备品映射关系"""
+    async def get_part_spare_mapping(
+        product_model: str,
+        product_config_code: str,
+        original_part_code: str,
+    ):
+        """鑾峰彇閮ㄤ欢涓庡鍝佹槧灏勫叧绯?""
         async with async_db_session() as db:
             return await part_spare_mapping_dao.get_by_original_part_code(
-                db, product_model, original_part_code
+                db, product_model, product_config_code, original_part_code
             )
 
     @staticmethod
     async def get_allotment_by_product_number(product_number: str):
-        """根据产品编号获取配属信息"""
+        """鏍规嵁浜у搧缂栧彿鑾峰彇閰嶅睘淇℃伅"""
         async with async_db_session() as db:
             return await allotment_dao.get_by_product_number(db, product_number)
 
     @staticmethod
     async def get_warehouse_spare(warehouse_code: str, spare_part_code: str):
-        """获取库房备品信息"""
+        """鑾峰彇搴撴埧澶囧搧淇℃伅"""
         async with async_db_session() as db:
             return await warehouse_inventory_dao.get_by_warehouse_and_part(
                 db, warehouse_code, spare_part_code
@@ -1057,22 +1000,21 @@ class ScienceWarehouseService:
         product_config_code: str | None = None,
     ):
         """
-        保存计算结果到数据库
+        淇濆瓨璁＄畻缁撴灉鍒版暟鎹簱
         """
         async with async_db_session() as db:
-            # 1. 清空该批次的历史数据
+            # 1. 娓呯┖璇ユ壒娆＄殑鍘嗗彶鏁版嵁
             await science_warehouse_result_dao.clear_by_calculation_id(
                 db, calculation_id
             )
-            # 统计表相关逻辑已移除
-            # await science_warehouse_statistics_dao.clear_by_calculation_id(
+            # 缁熻琛ㄧ浉鍏抽€昏緫宸茬Щ闄?            # await science_warehouse_statistics_dao.clear_by_calculation_id(
             #     db, calculation_id
             # )
 
-            # 2. 准备结果数据
+            # 2. 鍑嗗缁撴灉鏁版嵁
             result_data = []
             for warehouse_code, spare_parts in results.items():
-                # 获取库房名称
+                # 鑾峰彇搴撴埧鍚嶇О
                 warehouse_name = await ScienceWarehouseService.get_warehouse_name(
                     warehouse_code
                 )
@@ -1093,57 +1035,54 @@ class ScienceWarehouseService:
                             "input_date": input_date,
                             "created_time": date.today(),
                             "confidence": spare_info["confidence"],
-                            "max_failure_count": 0,  # 旧版本服务不计算此字段，设为0
+                            "max_failure_count": 0,  # 鏃х増鏈湇鍔′笉璁＄畻姝ゅ瓧娈碉紝璁句负0
                         }
                     )
 
-            # 3. 批量保存结果数据
+            # 3. 鎵归噺淇濆瓨缁撴灉鏁版嵁
             if result_data:
                 await science_warehouse_result_dao.bulk_create(db, result_data)
 
-            # 统计表相关逻辑已移除，只保留核心计算结果
-            # # 4. 保存统计信息
+            # 缁熻琛ㄧ浉鍏抽€昏緫宸茬Щ闄わ紝鍙繚鐣欐牳蹇冭绠楃粨鏋?            # # 4. 淇濆瓨缁熻淇℃伅
             # from backend.app.calcu.model.science_warehouse_statistics import (
             #     ScienceWarehouseStatistics,
             # )
-            # ... (统计表创建逻辑已注释)
+            # ... (缁熻琛ㄥ垱寤洪€昏緫宸叉敞閲?
 
     @staticmethod
     async def get_warehouse_name(warehouse_code: str) -> str:
-        """获取库房名称"""
+        """鑾峰彇搴撴埧鍚嶇О"""
         async with async_db_session() as db:
             warehouses = await warehouse_dao.get_by_code(db, warehouse_code)
             if warehouses:
-                # 如果有多个库房，返回第一个的名称
+                # 濡傛灉鏈夊涓簱鎴匡紝杩斿洖绗竴涓殑鍚嶇О
                 return warehouses[0].name
             return None
 
     @staticmethod
     async def convert_to_api_format(results: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
-        将内部计算结果转换为API输出格式
+        灏嗗唴閮ㄨ绠楃粨鏋滆浆鎹负API杈撳嚭鏍煎紡
 
-        :param results: 内部计算结果
-        :return: API格式的数据列表
-        """
+        :param results: 鍐呴儴璁＄畻缁撴灉
+        :return: API鏍煎紡鐨勬暟鎹垪琛?        """
         api_data = []
 
         for warehouse_code, spare_parts in results.items():
-            # 获取库房名称
+            # 鑾峰彇搴撴埧鍚嶇О
             warehouse_name = await ScienceWarehouseService.get_warehouse_name(
                 warehouse_code
             )
 
             for spare_part_code, spare_info in spare_parts.items():
-                # 根据你的API格式要求
+                # 鏍规嵁浣犵殑API鏍煎紡瑕佹眰
                 api_item = {
-                    "factor": "G002",  # 工厂编码固定为G002
-                    "code": warehouse_code,  # 库房编码作为code
+                    "factor": "G002",  # 宸ュ巶缂栫爜鍥哄畾涓篏002
+                    "code": warehouse_code,  # 搴撴埧缂栫爜浣滀负code
                     "warehouse": warehouse_name
-                    or warehouse_code,  # 库房名称，如果没有则使用编码
-                    "part": spare_part_code,  # 备品编码作为part
-                    "number": spare_info["required_quantity"],  # 需求数量
-                }
+                    or warehouse_code,  # 搴撴埧鍚嶇О锛屽鏋滄病鏈夊垯浣跨敤缂栫爜
+                    "part": spare_part_code,  # 澶囧搧缂栫爜浣滀负part
+                    "number": spare_info["required_quantity"],  # 闇€姹傛暟閲?                }
                 api_data.append(api_item)
 
         return api_data
@@ -1153,22 +1092,20 @@ class ScienceWarehouseService:
         calculation_id: str,
     ) -> "ScienceWarehouseDetailsResponse":
         """
-        根据计算批次ID获取详细计算结果（包含统计信息）
+        鏍规嵁璁＄畻鎵规ID鑾峰彇璇︾粏璁＄畻缁撴灉锛堝寘鍚粺璁′俊鎭級
         """
         async with async_db_session() as db:
-            # 获取结果数据
+            # 鑾峰彇缁撴灉鏁版嵁
             results = await science_warehouse_result_dao.select_models(
                 db, calculation_id__eq=calculation_id
             )
 
-            # 统计表相关逻辑已移除
-            # statistics = await science_warehouse_statistics_dao.select_model(
+            # 缁熻琛ㄧ浉鍏抽€昏緫宸茬Щ闄?            # statistics = await science_warehouse_statistics_dao.select_model(
             #     db, calculation_id__eq=calculation_id
             # )
             statistics = None
 
-            # 转换为内部格式
-            results_dict = {}
+            # 杞崲涓哄唴閮ㄦ牸寮?            results_dict = {}
             for result in results:
                 if result.warehouse_code not in results_dict:
                     results_dict[result.warehouse_code] = {}
@@ -1181,15 +1118,14 @@ class ScienceWarehouseService:
                     "max_failure_count": getattr(result, "max_failure_count", 0),
                 }
 
-            # 导入Schema类
-            from backend.app.calcu.schema.science_warehouse import (
+            # 瀵煎叆Schema绫?            from backend.app.calcu.schema.science_warehouse import (
                 ScienceWarehouseDetailsResponse,
             )
 
             return ScienceWarehouseDetailsResponse(
                 calculation_id=calculation_id,
                 results=results_dict,
-                statistics={},  # 统计表已移除，返回空字典
+                statistics={},  # 缁熻琛ㄥ凡绉婚櫎锛岃繑鍥炵┖瀛楀吀
             )
 
     @staticmethod
@@ -1197,13 +1133,11 @@ class ScienceWarehouseService:
         calculation_id: str,
     ) -> List[Dict[str, Any]]:
         """
-        根据计算批次ID获取API格式的计算结果
-
-        :param calculation_id: 计算批次ID
-        :return: API格式的数据列表
-        """
+        鏍规嵁璁＄畻鎵规ID鑾峰彇API鏍煎紡鐨勮绠楃粨鏋?
+        :param calculation_id: 璁＄畻鎵规ID
+        :return: API鏍煎紡鐨勬暟鎹垪琛?        """
         async with async_db_session() as db:
-            # 获取结果数据
+            # 鑾峰彇缁撴灉鏁版嵁
             results = await science_warehouse_result_dao.select_models(
                 db, calculation_id__eq=calculation_id
             )
@@ -1211,8 +1145,7 @@ class ScienceWarehouseService:
             if not results:
                 return []
 
-            # 转换为内部格式
-            results_dict = {}
+            # 杞崲涓哄唴閮ㄦ牸寮?            results_dict = {}
             for result in results:
                 if result.warehouse_code not in results_dict:
                     results_dict[result.warehouse_code] = {}
@@ -1224,20 +1157,20 @@ class ScienceWarehouseService:
                     "confidence": result.confidence,
                 }
 
-            # 转换为API格式
+            # 杞崲涓篈PI鏍煎紡
             api_data = await ScienceWarehouseService.convert_to_api_format(results_dict)
             return api_data
 
     @staticmethod
     async def get_latest_calculation_results() -> List[Dict[str, Any]]:
         """
-        获取最新一批次的计算结果，用于前端展示
+        鑾峰彇鏈€鏂颁竴鎵规鐨勮绠楃粨鏋滐紝鐢ㄤ簬鍓嶇灞曠ず
 
-        :return: 最新批次的计算结果列表
+        :return: 鏈€鏂版壒娆＄殑璁＄畻缁撴灉鍒楄〃
         """
         async with async_db_session() as db:
-            # 统计表已移除，改为从结果表获取最新的calculation_id
-            # 1. 获取最新的结果记录（按自增ID倒序，确保唯一性）
+            # 缁熻琛ㄥ凡绉婚櫎锛屾敼涓轰粠缁撴灉琛ㄨ幏鍙栨渶鏂扮殑calculation_id
+            # 1. 鑾峰彇鏈€鏂扮殑缁撴灉璁板綍锛堟寜鑷ID鍊掑簭锛岀‘淇濆敮涓€鎬э級
             latest_result = await science_warehouse_result_dao.select_model(
                 db, order_by="id", desc=True
             )
@@ -1245,7 +1178,7 @@ class ScienceWarehouseService:
             if not latest_result:
                 return []
 
-            # 2. 根据最新结果记录的calculation_id获取结果数据
+            # 2. 鏍规嵁鏈€鏂扮粨鏋滆褰曠殑calculation_id鑾峰彇缁撴灉鏁版嵁
             return await ScienceWarehouseService.get_calculation_results_for_api(
                 latest_result.calculation_id
             )
@@ -1253,13 +1186,13 @@ class ScienceWarehouseService:
     @staticmethod
     async def get_latest_calculation_results_detailed() -> List[Dict[str, Any]]:
         """
-        获取最新一批次的详细计算结果，包含更多字段信息
+        鑾峰彇鏈€鏂颁竴鎵规鐨勮缁嗚绠楃粨鏋滐紝鍖呭惈鏇村瀛楁淇℃伅
 
-        :return: 最新批次的详细计算结果列表
+        :return: 鏈€鏂版壒娆＄殑璇︾粏璁＄畻缁撴灉鍒楄〃
         """
         async with async_db_session() as db:
-            # 统计表已移除，改为从结果表获取最新的calculation_id
-            # 1. 获取最新的结果记录（按自增ID倒序，确保唯一性）
+            # 缁熻琛ㄥ凡绉婚櫎锛屾敼涓轰粠缁撴灉琛ㄨ幏鍙栨渶鏂扮殑calculation_id
+            # 1. 鑾峰彇鏈€鏂扮殑缁撴灉璁板綍锛堟寜鑷ID鍊掑簭锛岀‘淇濆敮涓€鎬э級
             latest_result = await science_warehouse_result_dao.select_model(
                 db, order_by="id", desc=True
             )
@@ -1267,16 +1200,14 @@ class ScienceWarehouseService:
             if not latest_result:
                 return []
 
-            # 2. 获取详细的结果数据
-            results = await science_warehouse_result_dao.select_models(
+            # 2. 鑾峰彇璇︾粏鐨勭粨鏋滄暟鎹?            results = await science_warehouse_result_dao.select_models(
                 db, calculation_id__eq=latest_result.calculation_id
             )
 
             if not results:
                 return []
 
-            # 3. 转换为详细格式
-            detailed_results = []
+            # 3. 杞崲涓鸿缁嗘牸寮?            detailed_results = []
             for result in results:
                 detailed_item = {
                     "calculation_id": result.calculation_id,
@@ -1313,14 +1244,13 @@ class ScienceWarehouseService:
         time_range: Optional[list[str]] = None,
     ):
         """
-        获取科学库存计算结果的查询条件
-
-        :param calculation_id: 计算批次ID（支持模糊匹配）
-        :param warehouse_code: 库房编码（精确匹配）
-        :param spare_part_code: 备品编码（精确匹配）
-        :param calculation_method: 计算方法（精确匹配）
-        :param time_range: 创建时间范围 [开始日期, 结束日期]
-        :return: 查询条件
+        鑾峰彇绉戝搴撳瓨璁＄畻缁撴灉鐨勬煡璇㈡潯浠?
+        :param calculation_id: 璁＄畻鎵规ID锛堟敮鎸佹ā绯婂尮閰嶏級
+        :param warehouse_code: 搴撴埧缂栫爜锛堢簿纭尮閰嶏級
+        :param spare_part_code: 澶囧搧缂栫爜锛堢簿纭尮閰嶏級
+        :param calculation_method: 璁＄畻鏂规硶锛堢簿纭尮閰嶏級
+        :param time_range: 鍒涘缓鏃堕棿鑼冨洿 [寮€濮嬫棩鏈? 缁撴潫鏃ユ湡]
+        :return: 鏌ヨ鏉′欢
         """
         from sqlalchemy import and_, or_, select
         from backend.app.calcu.model.science_warehouse_result import (
@@ -1329,12 +1259,12 @@ class ScienceWarehouseService:
 
         conditions = []
 
-        # 固定条件：required_quantity必须大于0
+        # 鍥哄畾鏉′欢锛歳equired_quantity蹇呴』澶т簬0
         conditions.append(ScienceWarehouseResult.required_quantity > 0)
         conditions.append(ScienceWarehouseResult.required_quantity >= ScienceWarehouseResult.max_failure_count)
 
         if calculation_id:
-            # 计算批次ID支持模糊匹配（因为用户手动输入）
+            # 璁＄畻鎵规ID鏀寔妯＄硦鍖归厤锛堝洜涓虹敤鎴锋墜鍔ㄨ緭鍏ワ級
             conditions.append(
                 ScienceWarehouseResult.calculation_id.like(f"%{calculation_id}%")
             )
@@ -1348,16 +1278,13 @@ class ScienceWarehouseService:
             )
 
         if warehouse_code:
-            # 库房编码精确匹配（下拉框选择）
-            conditions.append(ScienceWarehouseResult.warehouse_code == warehouse_code)
+            # 搴撴埧缂栫爜绮剧‘鍖归厤锛堜笅鎷夋閫夋嫨锛?            conditions.append(ScienceWarehouseResult.warehouse_code == warehouse_code)
 
         if spare_part_code:
-            # 备品编码精确匹配（下拉框选择）
-            conditions.append(ScienceWarehouseResult.spare_part_code == spare_part_code)
+            # 澶囧搧缂栫爜绮剧‘鍖归厤锛堜笅鎷夋閫夋嫨锛?            conditions.append(ScienceWarehouseResult.spare_part_code == spare_part_code)
 
         if calculation_method:
-            # 计算方法精确匹配（下拉框选择）
-            conditions.append(
+            # 璁＄畻鏂规硶绮剧‘鍖归厤锛堜笅鎷夋閫夋嫨锛?            conditions.append(
                 ScienceWarehouseResult.calculation_method == calculation_method
             )
 
@@ -1377,10 +1304,9 @@ class ScienceWarehouseService:
     @staticmethod
     async def get_warehouse_code_name_pairs() -> Sequence[List[str]]:
         """
-        获取库房编码和名称的列表（去重）
+        鑾峰彇搴撴埧缂栫爜鍜屽悕绉扮殑鍒楄〃锛堝幓閲嶏級
 
-        :return: [[库房编码, 库房名称], ...] 的列表
-        """
+        :return: [[搴撴埧缂栫爜, 搴撴埧鍚嶇О], ...] 鐨勫垪琛?        """
         async with async_db_session() as db:
             return await science_warehouse_result_dao.get_warehouse_code_name_pairs(db)
 
@@ -1389,11 +1315,10 @@ class ScienceWarehouseService:
         warehouse_code: str | None = None,
     ) -> Sequence[List[str]]:
         """
-        根据库房编码获取备品编码和名称的列表（级联筛选）
+        鏍规嵁搴撴埧缂栫爜鑾峰彇澶囧搧缂栫爜鍜屽悕绉扮殑鍒楄〃锛堢骇鑱旂瓫閫夛級
 
-        :param warehouse_code: 库房编码（可选，用于级联筛选）
-        :return: [[备品编码, 备品名称], ...] 的列表
-        """
+        :param warehouse_code: 搴撴埧缂栫爜锛堝彲閫夛紝鐢ㄤ簬绾ц仈绛涢€夛級
+        :return: [[澶囧搧缂栫爜, 澶囧搧鍚嶇О], ...] 鐨勫垪琛?        """
         async with async_db_session() as db:
             return await science_warehouse_result_dao.get_spare_part_code_name_pairs(
                 db, warehouse_code
@@ -1402,9 +1327,8 @@ class ScienceWarehouseService:
     @staticmethod
     async def get_calculation_methods() -> Sequence[str]:
         """
-        获取所有唯一的计算方法
-
-        :return: 计算方法列表
+        鑾峰彇鎵€鏈夊敮涓€鐨勮绠楁柟娉?
+        :return: 璁＄畻鏂规硶鍒楄〃
         """
         async with async_db_session() as db:
             return await science_warehouse_result_dao.get_distinct_calculation_methods(
@@ -1414,11 +1338,10 @@ class ScienceWarehouseService:
     @staticmethod
     async def get_latest_calculation_statistics() -> Dict[str, Any]:
         """
-        获取最新一批次的统计信息（统计表已移除，返回空字典）
-
-        :return: 最新批次的统计信息
+        鑾峰彇鏈€鏂颁竴鎵规鐨勭粺璁′俊鎭紙缁熻琛ㄥ凡绉婚櫎锛岃繑鍥炵┖瀛楀吀锛?
+        :return: 鏈€鏂版壒娆＄殑缁熻淇℃伅
         """
-        # 统计表已移除，返回空字典
+        # 缁熻琛ㄥ凡绉婚櫎锛岃繑鍥炵┖瀛楀吀
         return {}
 
 
