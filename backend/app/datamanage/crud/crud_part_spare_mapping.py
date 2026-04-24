@@ -15,7 +15,7 @@ class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
     async def get_select(
         self,
         product_model: str | None = None,
-        derived_code: str | None = None,
+        product_config_code: str | None = None,
         original_part_name: str | None = None,
         original_part_code: str | None = None,
         spare_part_name: str | None = None,
@@ -25,8 +25,8 @@ class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
         query = select(self.model)
         if product_model:
             query = query.where(self.model.product_model.like(f"%{product_model}%"))
-        if derived_code:
-            query = query.where(self.model.derived_code.like(f"%{derived_code}%"))
+        if product_config_code:
+            query = query.where(self.model.product_config_code.like(f"%{product_config_code}%"))
         if original_part_name:
             query = query.where(
                 self.model.original_part_name.like(f"%{original_part_name}%")
@@ -71,7 +71,7 @@ class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
         self,
         db: AsyncSession,
         product_model: str,
-        product_config_code: str,
+        product_config_code: str | None,
         original_part_code: str,
     ) -> PartSpareMapping:
         """Get a mapping by product model, product config code, and original part code."""
