@@ -29,13 +29,11 @@ async def science_warehouse_calculation_task(
         if input_date:
             parsed_input_date = date.fromisoformat(input_date)
 
-        result = (
-            await science_warehouse_service.calculate_science_warehouse_requirements(
-                time_interval_days=time_interval_days,
-                input_date=parsed_input_date,
-                product_model=product_model,
-                product_config_code=product_config_code,
-            )
+        result = await science_warehouse_service.calculate_science_warehouse_requirements(
+            time_interval_days=time_interval_days,
+            input_date=parsed_input_date,
+            product_model=product_model,
+            product_config_code=product_config_code,
         )
 
         if product_model is not None or product_config_code is not None:
@@ -48,46 +46,6 @@ async def science_warehouse_calculation_task(
         return (
             f"科学库存计算完成 - 计算批次ID: {result.calculation_id}, "
             f"总备品数量: {result.statistics.get('total_warehouse_spares', 0)}"
-        )
-
-    except DataValidationError as e:
-        return f"数据验证错误: {str(e.msg)}"
-    except Exception as e:
-        return f"科学库存计算失败: {str(e)}"
-
-
-@celery_app.task(name="science_warehouse_calculation_and_api_task", base=TaskBase)
-async def science_warehouse_calculation_and_api_task(
-    time_interval_days: int = 180,
-    input_date: str = None,
-    product_model: str | None = None,
-    product_config_code: str | None = None,
-) -> str:
-    """
-    后台任务: 科学库存需求计算并返回 API 格式结果。
-    """
-    try:
-        parsed_input_date = None
-        if input_date:
-            parsed_input_date = date.fromisoformat(input_date)
-
-        result = (
-            await science_warehouse_service.calculate_science_warehouse_requirements(
-                time_interval_days=time_interval_days,
-                input_date=parsed_input_date,
-                product_model=product_model,
-                product_config_code=product_config_code,
-            )
-        )
-
-        api_data = await science_warehouse_service.get_calculation_results_for_api(
-            result.calculation_id
-        )
-
-        return (
-            "科学库存计算并生成 API 数据完成 - "
-            f"计算批次ID: {result.calculation_id}, "
-            f"API数据条数: {len(api_data) if api_data else 0}"
         )
 
     except DataValidationError as e:
