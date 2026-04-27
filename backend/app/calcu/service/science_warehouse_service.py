@@ -654,6 +654,8 @@ class ScienceWarehouseService:
                     )
                 )
 
+                group_has_responsible_product = False
+
                 # 检查每个产品是否由该库房负责维护
                 for product_number in product_numbers:
                     maintenance_responsibility = (
@@ -663,12 +665,14 @@ class ScienceWarehouseService:
                     )
 
                     if maintenance_responsibility["responsible"]:
-                        # 该库房负责维护，计入总需求
-                        total_requirement += model_part_spare_quantity
+                        group_has_responsible_product = True
                         responsible_products += 1
                     else:
                         # 该库房不负责维护，不计入总需求
                         non_responsible_products += 1
+
+                if group_has_responsible_product:
+                    total_requirement += model_part_spare_quantity
 
             return {
                 "success": True,
