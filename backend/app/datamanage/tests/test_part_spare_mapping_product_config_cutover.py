@@ -99,7 +99,7 @@ def test_part_spare_mapping_import_writes_product_config_code(monkeypatch) -> No
         [
             {
                 "产品型号": "CR400AF",
-                "派生码": "A01",
+                "product_config_code": "A01",
                 "零部件名称（原装）": "原件",
                 "零部件物料编码（原装）": "P-001",
                 "零部件名称（备品）": "备件",
@@ -123,3 +123,64 @@ def test_part_spare_mapping_import_writes_product_config_code(monkeypatch) -> No
     assert captured["cleared"] is True
     assert captured["mapping_data"][0]["product_config_code"] == "A01"
     assert "derived_code" not in captured["mapping_data"][0]
+
+
+def test_part_spare_mapping_import_keeps_legacy_excel_header_compatible(
+    monkeypatch,
+) -> None:
+    captured = {}
+
+    async def _fake_clear_all(db):
+        captured["cleared"] = True
+
+    async def _fake_bulk_create(db, mapping_data):
+        captured["mapping_data"] = mapping_data
+        return []
+
+    class _SessionContext:
+        async def __aenter__(self):
+            return object()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        part_spare_mapping_service_module.part_spare_mapping_dao,
+        "clear_all",
+        _fake_clear_all,
+    )
+    monkeypatch.setattr(
+        part_spare_mapping_service_module.part_spare_mapping_dao,
+        "bulk_create",
+        _fake_bulk_create,
+    )
+    monkeypatch.setattr(
+        part_spare_mapping_service_module,
+        "async_db_session",
+        lambda: _SessionContext(),
+    )
+
+    dataframe = pd.DataFrame(
+        [
+            {
+                "产品型号": "CR400AF",
+                "派生码": "A01",
+                "零部件名称（原装）": "原件",
+                "零部件物料编码（原装）": "P-001",
+                "零部件名称（备品）": "备件",
+                "零部件物料编码（备品）": "SP-001",
+            }
+        ]
+    )
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer) as writer:
+        dataframe.to_excel(writer, sheet_name="配置表", index=False)
+
+    result = asyncio.run(
+        part_spare_mapping_service_module.part_spare_mapping_service.import_from_excel(
+            buffer.getvalue()
+        )
+    )
+
+    assert result.success_rows == 1
+    assert captured["mapping_data"][0]["product_config_code"] == "A01"
