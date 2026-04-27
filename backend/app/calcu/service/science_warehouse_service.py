@@ -467,7 +467,9 @@ class ScienceWarehouseService:
                     ):
                         continue
                     mapping = await ScienceWarehouseService.get_part_spare_mapping(
-                        failure.product_model, failure.fault_material_code
+                        failure.product_model,
+                        getattr(failure, "product_config_code", None),
+                        failure.fault_material_code,
                     )
 
                     if mapping and mapping.spare_part_code == spare_part["part_code"]:
@@ -582,6 +584,9 @@ class ScienceWarehouseService:
             for model_part_key, model_part_failures in failures_by_model_part.items():
                 # 解析型号、派生码和零部件编码
                 product_model, product_config_code, part_code = model_part_key.split("_", 2)
+                product_numbers = list(
+                    set([f.product_number for f in model_part_failures])
+                )
 
                 # 检查故障数量是否足够（需要 > 4 个）
                 if len(model_part_failures) <= 4:
@@ -598,34 +603,40 @@ class ScienceWarehouseService:
                         )
 
                         if model_part_spare_quantity > 0:
-                            # 指数分布拟合成功
-                            total_requirement += model_part_spare_quantity
-                            responsible_products += len(
-                                set([f.product_number for f in model_part_failures])
-                            )
-                            exponential_fit_success_count += 1
+                            group_has_responsible_product = False
+
+                            for product_number in product_numbers:
+                                maintenance_responsibility = (
+                                    await ScienceWarehouseService.check_maintenance_responsibility(
+                                        product_number, warehouse_code, spare_part_code
+                                    )
+                                )
+
+                                if maintenance_responsibility["responsible"]:
+                                    group_has_responsible_product = True
+                                    responsible_products += 1
+                                else:
+                                    non_responsible_products += 1
+
+                            if group_has_responsible_product:
+                                total_requirement += model_part_spare_quantity
+                                exponential_fit_success_count += 1
+                            else:
+                                insufficient_failure_data_combinations += 1
+                                exponential_fit_fail_count += 1
                         else:
                             # 指数分布拟合失败，使用默认值
                             insufficient_failure_data_combinations += 1
-                            non_responsible_products += len(
-                                set([f.product_number for f in model_part_failures])
-                            )
+                            non_responsible_products += len(product_numbers)
                             exponential_fit_fail_count += 1
 
                     except Exception as e:
                         # 指数分布拟合异常，使用默认值
                         insufficient_failure_data_combinations += 1
-                        non_responsible_products += len(
-                            set([f.product_number for f in model_part_failures])
-                        )
+                        non_responsible_products += len(product_numbers)
                         exponential_fit_fail_count += 1
 
                     continue
-
-                # 获取该型号+零部件的所有产品编号
-                product_numbers = list(
-                    set([f.product_number for f in model_part_failures])
-                )
 
                 # 使用已过滤的故障数据进行打标处理
                 tags = await part_strategy_service.part_tag_process_with_failures(
@@ -652,6 +663,8 @@ class ScienceWarehouseService:
                     )
                 )
 
+                group_has_responsible_product = False
+
                 # 检查每个产品是否由该库房负责维护
                 for product_number in product_numbers:
                     maintenance_responsibility = (
@@ -661,12 +674,14 @@ class ScienceWarehouseService:
                     )
 
                     if maintenance_responsibility["responsible"]:
-                        # 该库房负责维护，计入总需求
-                        total_requirement += model_part_spare_quantity
+                        group_has_responsible_product = True
                         responsible_products += 1
                     else:
                         # 该库房不负责维护，不计入总需求
                         non_responsible_products += 1
+
+                if group_has_responsible_product:
+                    total_requirement += model_part_spare_quantity
 
             return {
                 "success": True,
@@ -1025,11 +1040,13 @@ class ScienceWarehouseService:
             return await failure_dao.get_by_product_number(db, product_number)
 
     @staticmethod
-    async def get_part_spare_mapping(product_model: str, original_part_code: str):
+    async def get_part_spare_mapping(
+        product_model: str, product_config_code: str, original_part_code: str
+    ):
         """获取部件与备品映射关系"""
         async with async_db_session() as db:
             return await part_spare_mapping_dao.get_by_original_part_code(
-                db, product_model, original_part_code
+                db, product_model, product_config_code, original_part_code
             )
 
     @staticmethod
