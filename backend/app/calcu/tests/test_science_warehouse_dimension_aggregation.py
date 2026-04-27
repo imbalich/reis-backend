@@ -189,6 +189,156 @@ def test_perform_spare_calculation_sums_each_dimension_once(monkeypatch) -> None
     assert result["quantity"] == 4
 
 
+def test_small_sample_exponential_fit_ignores_non_responsible_dimension_group(
+    monkeypatch,
+) -> None:
+    failures = [
+        _build_failure(
+            failure_id=1,
+            product_number="train-a-1",
+            product_config_code="A01",
+        ),
+        _build_failure(
+            failure_id=2,
+            product_number="train-a-2",
+            product_config_code="A01",
+        ),
+        _build_failure(
+            failure_id=101,
+            product_number="train-b-1",
+            product_config_code="B02",
+            fault_material_code="P-002",
+        ),
+        _build_failure(
+            failure_id=102,
+            product_number="train-b-2",
+            product_config_code="B02",
+            fault_material_code="P-002",
+        ),
+    ]
+
+    responsibility_calls = []
+
+    async def _fake_exponential_fit_for_insufficient_data(
+        model_part_failures,
+        product_model,
+        product_config_code,
+        part_code,
+        time_interval_days,
+        input_date,
+    ):
+        if product_config_code == "A01":
+            return 1.2
+        return 2.1
+
+    async def _fake_check_maintenance_responsibility(
+        product_number, warehouse_code, spare_part_code
+    ):
+        responsibility_calls.append(product_number)
+        return {"responsible": product_number.startswith("train-a")}
+
+    monkeypatch.setattr(
+        science_warehouse_service_module.ScienceWarehouseService,
+        "exponential_fit_for_insufficient_data",
+        staticmethod(_fake_exponential_fit_for_insufficient_data),
+    )
+    monkeypatch.setattr(
+        science_warehouse_service_module.ScienceWarehouseService,
+        "check_maintenance_responsibility",
+        staticmethod(_fake_check_maintenance_responsibility),
+    )
+
+    result = asyncio.run(
+        science_warehouse_service_module.ScienceWarehouseService.perform_spare_calculation_with_fit(
+            failures=failures,
+            time_interval_days=180,
+            input_date=date(2026, 4, 27),
+            warehouse_code="WH-001",
+            spare_part_code="SP-001",
+        )
+    )
+
+    assert result["success"] is True
+    assert result["quantity"] == 2
+    assert sorted(responsibility_calls) == [
+        "train-a-1",
+        "train-a-2",
+        "train-b-1",
+        "train-b-2",
+    ]
+    assert result["maintenance_analysis"]["responsible_products"] == 2
+    assert result["maintenance_analysis"]["non_responsible_products"] == 2
+    assert result["maintenance_analysis"]["exponential_fit_success_count"] == 1
+
+
+def test_small_sample_exponential_fit_checks_unique_products_once_per_dimension(
+    monkeypatch,
+) -> None:
+    failures = [
+        _build_failure(
+            failure_id=1,
+            product_number="train-a-1",
+            product_config_code="A01",
+        ),
+        _build_failure(
+            failure_id=2,
+            product_number="train-a-1",
+            product_config_code="A01",
+        ),
+        _build_failure(
+            failure_id=3,
+            product_number="train-a-2",
+            product_config_code="A01",
+        ),
+    ]
+
+    responsibility_calls = []
+
+    async def _fake_exponential_fit_for_insufficient_data(
+        model_part_failures,
+        product_model,
+        product_config_code,
+        part_code,
+        time_interval_days,
+        input_date,
+    ):
+        return 2.1
+
+    async def _fake_check_maintenance_responsibility(
+        product_number, warehouse_code, spare_part_code
+    ):
+        responsibility_calls.append(product_number)
+        return {"responsible": True}
+
+    monkeypatch.setattr(
+        science_warehouse_service_module.ScienceWarehouseService,
+        "exponential_fit_for_insufficient_data",
+        staticmethod(_fake_exponential_fit_for_insufficient_data),
+    )
+    monkeypatch.setattr(
+        science_warehouse_service_module.ScienceWarehouseService,
+        "check_maintenance_responsibility",
+        staticmethod(_fake_check_maintenance_responsibility),
+    )
+
+    result = asyncio.run(
+        science_warehouse_service_module.ScienceWarehouseService.perform_spare_calculation_with_fit(
+            failures=failures,
+            time_interval_days=180,
+            input_date=date(2026, 4, 27),
+            warehouse_code="WH-001",
+            spare_part_code="SP-001",
+        )
+    )
+
+    assert result["success"] is True
+    assert result["quantity"] == 3
+    assert sorted(responsibility_calls) == ["train-a-1", "train-a-2"]
+    assert result["maintenance_analysis"]["responsible_products"] == 2
+    assert result["maintenance_analysis"]["non_responsible_products"] == 0
+    assert result["maintenance_analysis"]["exponential_fit_success_count"] == 1
+
+
 def test_calculate_spare_quantity_by_interval_queries_product_with_product_config_code(
     monkeypatch,
 ) -> None:

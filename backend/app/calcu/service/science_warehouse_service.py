@@ -584,6 +584,9 @@ class ScienceWarehouseService:
             for model_part_key, model_part_failures in failures_by_model_part.items():
                 # 解析型号、派生码和零部件编码
                 product_model, product_config_code, part_code = model_part_key.split("_", 2)
+                product_numbers = list(
+                    set([f.product_number for f in model_part_failures])
+                )
 
                 # 检查故障数量是否足够（需要 > 4 个）
                 if len(model_part_failures) <= 4:
@@ -600,34 +603,40 @@ class ScienceWarehouseService:
                         )
 
                         if model_part_spare_quantity > 0:
-                            # 指数分布拟合成功
-                            total_requirement += model_part_spare_quantity
-                            responsible_products += len(
-                                set([f.product_number for f in model_part_failures])
-                            )
-                            exponential_fit_success_count += 1
+                            group_has_responsible_product = False
+
+                            for product_number in product_numbers:
+                                maintenance_responsibility = (
+                                    await ScienceWarehouseService.check_maintenance_responsibility(
+                                        product_number, warehouse_code, spare_part_code
+                                    )
+                                )
+
+                                if maintenance_responsibility["responsible"]:
+                                    group_has_responsible_product = True
+                                    responsible_products += 1
+                                else:
+                                    non_responsible_products += 1
+
+                            if group_has_responsible_product:
+                                total_requirement += model_part_spare_quantity
+                                exponential_fit_success_count += 1
+                            else:
+                                insufficient_failure_data_combinations += 1
+                                exponential_fit_fail_count += 1
                         else:
                             # 指数分布拟合失败，使用默认值
                             insufficient_failure_data_combinations += 1
-                            non_responsible_products += len(
-                                set([f.product_number for f in model_part_failures])
-                            )
+                            non_responsible_products += len(product_numbers)
                             exponential_fit_fail_count += 1
 
                     except Exception as e:
                         # 指数分布拟合异常，使用默认值
                         insufficient_failure_data_combinations += 1
-                        non_responsible_products += len(
-                            set([f.product_number for f in model_part_failures])
-                        )
+                        non_responsible_products += len(product_numbers)
                         exponential_fit_fail_count += 1
 
                     continue
-
-                # 获取该型号+零部件的所有产品编号
-                product_numbers = list(
-                    set([f.product_number for f in model_part_failures])
-                )
 
                 # 使用已过滤的故障数据进行打标处理
                 tags = await part_strategy_service.part_tag_process_with_failures(
