@@ -467,7 +467,9 @@ class ScienceWarehouseService:
                     ):
                         continue
                     mapping = await ScienceWarehouseService.get_part_spare_mapping(
-                        failure.product_model, failure.fault_material_code
+                        failure.product_model,
+                        getattr(failure, "product_config_code", None),
+                        failure.fault_material_code,
                     )
 
                     if mapping and mapping.spare_part_code == spare_part["part_code"]:

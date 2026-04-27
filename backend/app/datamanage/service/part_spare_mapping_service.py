@@ -20,7 +20,7 @@ class PartSpareMappingService:
     @staticmethod
     async def get_select(
         product_model: Optional[str] = None,
-        derived_code: Optional[str] = None,
+        product_config_code: Optional[str] = None,
         original_part_name: Optional[str] = None,
         original_part_code: Optional[str] = None,
         spare_part_name: Optional[str] = None,
@@ -28,7 +28,7 @@ class PartSpareMappingService:
     ):
         return await part_spare_mapping_dao.get_select(
             product_model=product_model,
-            derived_code=derived_code,
+            product_config_code=product_config_code,
             original_part_name=original_part_name,
             original_part_code=original_part_code,
             spare_part_name=spare_part_name,
@@ -82,7 +82,7 @@ class PartSpareMappingService:
 
                     # 数据转换和验证
                     product_model = str(row["产品型号"]).strip()
-                    derived_code = (
+                    product_config_code = (
                         str(row["派生码"]).strip()
                         if not pd.isna(row["派生码"])
                         else None
@@ -111,7 +111,7 @@ class PartSpareMappingService:
                     valid_data.append(
                         {
                             "product_model": product_model,
-                            "derived_code": derived_code,
+                            "product_config_code": product_config_code,
                             "original_part_name": original_part_name,
                             "original_part_code": original_part_code,
                             "spare_part_name": spare_part_name,
