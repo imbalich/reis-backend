@@ -4,6 +4,7 @@ from backend.app.calcu.schema.spare_statistics import (
     PredictSpareRequest,
     FailureCountRequest,
 )
+from backend.app.calcu.api.v1.calcu.science_warehouse import router as science_router
 
 
 def test_science_warehouse_request_accepts_product_dimension_filters() -> None:
@@ -67,3 +68,8 @@ def test_spare_statistics_failure_count_request_preserves_product_config_code() 
         }
     )
     assert payload.model_part_list[0].product_config_code == "A01"
+
+
+def test_science_warehouse_routes_do_not_expose_calculate_v2() -> None:
+    paths = {route.path for route in science_router.routes}
+    assert "/calculate-v2" not in paths
