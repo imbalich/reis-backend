@@ -239,7 +239,7 @@ class ProductDistributeService:
                         msg=f"型号为 {model} 的产品信息不完整（repair_times、avg_worktime 或 year_days 为空）"
                     )
                 repair_worktimes = product_date.repair_times * product_date.avg_worktime
-                year_worktimes = product_date.year_days * product_date.avg_worktime
+                year_worktimes = 365 * product_date.avg_worktime
                 return repair_worktimes, year_worktimes
             except DataValidationError:
                 raise
