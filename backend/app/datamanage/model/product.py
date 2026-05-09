@@ -30,6 +30,9 @@ class Product(DataClassBase):
     sub_name: Mapped[str] = mapped_column(String(255), nullable=True, comment='产品名称')
     sub_saet: Mapped[str] = mapped_column(String(255), nullable=True, comment='产品系列')
     model: Mapped[str] = mapped_column(String(255), nullable=True, comment='产品型号')
+    product_config_code: Mapped[str] = mapped_column(
+        String(64), nullable=True, comment='产品配置码'
+    )
     industry_unit: Mapped[str] = mapped_column(String(255), nullable=True, comment='产业单元')
     repair_priod: Mapped[str] = mapped_column(String(255), nullable=True, comment='维修周期')
     attach_train: Mapped[str] = mapped_column(String(255), nullable=True, comment='配属车型')

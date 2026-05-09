@@ -15,6 +15,8 @@ class CRUDScienceWarehouseStatistics(CRUDPlus[ScienceWarehouseStatistics]):
     async def get_select(
         self,
         calculation_id: str | None = None,
+        product_model: str | None = None,
+        product_config_code: str | None = None,
     ) -> Select:
         """
         获取科学库存计算统计信息查询语句
@@ -25,6 +27,10 @@ class CRUDScienceWarehouseStatistics(CRUDPlus[ScienceWarehouseStatistics]):
         query = select(self.model)
         if calculation_id:
             query = query.where(self.model.calculation_id == calculation_id)
+        if product_model:
+            query = query.where(self.model.product_model == product_model)
+        if product_config_code is not None:
+            query = query.where(self.model.product_config_code == product_config_code)
 
         return query
 

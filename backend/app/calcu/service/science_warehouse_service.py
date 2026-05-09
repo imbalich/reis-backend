@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # 科学库存服务,支援国铁售后需求
@@ -102,7 +102,10 @@ def is_failure_date_valid(failure_date_str: str, cutoff_date: date) -> bool:
 class ScienceWarehouseService:
     @staticmethod
     async def calculate_science_warehouse_requirements(
-        time_interval_days: int = 180, input_date: date = None
+        time_interval_days: int = 180,
+        input_date: date = None,
+        product_model: str | None = None,
+        product_config_code: str | None = None,
     ) -> "ScienceWarehouseCalculationResponse":
         """
         科学库存需求计算主流程
@@ -159,7 +162,12 @@ class ScienceWarehouseService:
                 # 计算该库房该备品的需求
                 spare_start = time.time()
                 requirement_result = await ScienceWarehouseService.calculate_spare_requirement_with_coverage(
-                    warehouse_code, spare_part, time_interval_days, input_date
+                    warehouse_code,
+                    spare_part,
+                    time_interval_days,
+                    input_date,
+                    product_model=product_model,
+                    product_config_code=product_config_code,
                 )
                 spare_duration = time.time() - spare_start
 
@@ -257,7 +265,13 @@ class ScienceWarehouseService:
 
         # 5. 保存计算结果到数据库
         await ScienceWarehouseService.save_calculation_results(
-            calculation_id, results, statistics, time_interval_days, input_date
+            calculation_id,
+            results,
+            statistics,
+            time_interval_days,
+            input_date,
+            product_model=product_model,
+            product_config_code=product_config_code,
         )
 
         # 导入Schema类
@@ -275,6 +289,25 @@ class ScienceWarehouseService:
                 "input_date": input_date.isoformat() if input_date else None,
             },
         )
+
+    @staticmethod
+    def build_failure_dimension_key(failure: Any) -> str:
+        return "_".join(
+            [
+                getattr(failure, "product_model", "") or "",
+                getattr(failure, "product_config_code", "") or "",
+                getattr(failure, "fault_material_code", "") or "",
+            ]
+        )
+
+    @staticmethod
+    def group_failures_by_dimension(failures: List[Any]) -> dict[str, list[Any]]:
+        grouped: dict[str, list[Any]] = defaultdict(list)
+        for failure in failures:
+            grouped[ScienceWarehouseService.build_failure_dimension_key(failure)].append(
+                failure
+            )
+        return grouped
 
     @staticmethod
     async def get_all_warehouse_spare_list() -> Dict[str, List[Dict[str, Any]]]:
@@ -302,7 +335,12 @@ class ScienceWarehouseService:
 
     @staticmethod
     async def calculate_spare_requirement_with_coverage(
-        warehouse_code: str, spare_part: dict, time_interval_days: int, input_date: date
+        warehouse_code: str,
+        spare_part: dict,
+        time_interval_days: int,
+        input_date: date,
+        product_model: str | None = None,
+        product_config_code: str | None = None,
     ) -> Dict[str, Any]:
         """
         计算单个库房单个备品的需求数量（考虑库房-路局-产品关系）
@@ -336,6 +374,8 @@ class ScienceWarehouseService:
             related_models = await ScienceWarehouseService.get_models_using_spare(
                 spare_part["part_code"]
             )
+            if product_model is not None:
+                related_models = [model for model in related_models if model == product_model]
 
             if not related_models:
                 result["mapping_errors"].append(
@@ -419,8 +459,17 @@ class ScienceWarehouseService:
 
                 # 检查故障部件是否能映射到目标备品
                 for failure in time_filtered_failures:
+                    if product_model is not None and failure.product_model != product_model:
+                        continue
+                    if (
+                        product_config_code is not None
+                        and getattr(failure, "product_config_code", None) != product_config_code
+                    ):
+                        continue
                     mapping = await ScienceWarehouseService.get_part_spare_mapping(
-                        failure.product_model, failure.fault_material_code
+                        failure.product_model,
+                        getattr(failure, "product_config_code", None),
+                        failure.fault_material_code,
                     )
 
                     if mapping and mapping.spare_part_code == spare_part["part_code"]:
@@ -519,11 +568,10 @@ class ScienceWarehouseService:
         """
 
         try:
-            # 1. 按产品型号+零部件编码分组故障数据
-            failures_by_model_part = defaultdict(list)
-            for failure in failures:
-                key = f"{failure.product_model}_{failure.fault_material_code}"
-                failures_by_model_part[key].append(failure)
+            # 1. 按产品型号+派生码+零部件编码分组故障数据
+            failures_by_model_part = ScienceWarehouseService.group_failures_by_dimension(
+                failures
+            )
 
             # 2. 对每个型号+零部件组合进行备件量计算
             total_requirement = 0.0
@@ -534,8 +582,11 @@ class ScienceWarehouseService:
             exponential_fit_fail_count = 0
 
             for model_part_key, model_part_failures in failures_by_model_part.items():
-                # 解析型号和零部件编码
-                product_model, part_code = model_part_key.split("_", 1)
+                # 解析型号、派生码和零部件编码
+                product_model, product_config_code, part_code = model_part_key.split("_", 2)
+                product_numbers = list(
+                    set([f.product_number for f in model_part_failures])
+                )
 
                 # 检查故障数量是否足够（需要 > 4 个）
                 if len(model_part_failures) <= 4:
@@ -545,44 +596,55 @@ class ScienceWarehouseService:
                         model_part_spare_quantity = await ScienceWarehouseService.exponential_fit_for_insufficient_data(
                             model_part_failures,
                             product_model,
+                            product_config_code,
                             part_code,
                             time_interval_days,
                             input_date,
                         )
 
                         if model_part_spare_quantity > 0:
-                            # 指数分布拟合成功
-                            total_requirement += model_part_spare_quantity
-                            responsible_products += len(
-                                set([f.product_number for f in model_part_failures])
-                            )
-                            exponential_fit_success_count += 1
+                            group_has_responsible_product = False
+
+                            for product_number in product_numbers:
+                                maintenance_responsibility = (
+                                    await ScienceWarehouseService.check_maintenance_responsibility(
+                                        product_number, warehouse_code, spare_part_code
+                                    )
+                                )
+
+                                if maintenance_responsibility["responsible"]:
+                                    group_has_responsible_product = True
+                                    responsible_products += 1
+                                else:
+                                    non_responsible_products += 1
+
+                            if group_has_responsible_product:
+                                total_requirement += model_part_spare_quantity
+                                exponential_fit_success_count += 1
+                            else:
+                                insufficient_failure_data_combinations += 1
+                                exponential_fit_fail_count += 1
                         else:
                             # 指数分布拟合失败，使用默认值
                             insufficient_failure_data_combinations += 1
-                            non_responsible_products += len(
-                                set([f.product_number for f in model_part_failures])
-                            )
+                            non_responsible_products += len(product_numbers)
                             exponential_fit_fail_count += 1
 
                     except Exception as e:
                         # 指数分布拟合异常，使用默认值
                         insufficient_failure_data_combinations += 1
-                        non_responsible_products += len(
-                            set([f.product_number for f in model_part_failures])
-                        )
+                        non_responsible_products += len(product_numbers)
                         exponential_fit_fail_count += 1
 
                     continue
 
-                # 获取该型号+零部件的所有产品编号
-                product_numbers = list(
-                    set([f.product_number for f in model_part_failures])
-                )
-
                 # 使用已过滤的故障数据进行打标处理
                 tags = await part_strategy_service.part_tag_process_with_failures(
-                    product_model, part_code, input_date, model_part_failures
+                    product_model,
+                    part_code,
+                    input_date,
+                    model_part_failures,
+                    product_config_code=product_config_code,
                 )
 
                 # 进行拟合
@@ -601,6 +663,8 @@ class ScienceWarehouseService:
                     )
                 )
 
+                group_has_responsible_product = False
+
                 # 检查每个产品是否由该库房负责维护
                 for product_number in product_numbers:
                     maintenance_responsibility = (
@@ -610,12 +674,14 @@ class ScienceWarehouseService:
                     )
 
                     if maintenance_responsibility["responsible"]:
-                        # 该库房负责维护，计入总需求
-                        total_requirement += model_part_spare_quantity
+                        group_has_responsible_product = True
                         responsible_products += 1
                     else:
                         # 该库房不负责维护，不计入总需求
                         non_responsible_products += 1
+
+                if group_has_responsible_product:
+                    total_requirement += model_part_spare_quantity
 
             return {
                 "success": True,
@@ -652,6 +718,7 @@ class ScienceWarehouseService:
                 return 0.0
 
             product_model = product_failures[0].product_model
+            product_config_code = getattr(product_failures[0], "product_config_code", None)
 
             # 2. 获取产品运行参数
             async with async_db_session() as db:
@@ -662,7 +729,10 @@ class ScienceWarehouseService:
                 from backend.app.datamanage.crud.crud_product import product_dao
 
                 product_data = convert_to_pydantic_model(
-                    await product_dao.get_by_model(db, product_model), ProductParam
+                    await product_dao.get_by_model(
+                        db, product_model, product_config_code=product_config_code
+                    ),
+                    ProductParam,
                 )
 
             # 3. 计算每个产品的备件量
@@ -860,12 +930,14 @@ class ScienceWarehouseService:
 
     @staticmethod
     async def calculate_total_run_time_for_products(
-        product_numbers: List[str], product_model: str
+        product_numbers: List[str], product_model: str, product_config_code: str | None = None
     ) -> float:
         """计算特定产品编号列表的总运行时间"""
         async with async_db_session() as db:
             # 获取产品运行参数
-            product = await product_dao.get_by_model(db, product_model)
+            product = await product_dao.get_by_model(
+                db, product_model, product_config_code=product_config_code
+            )
             if not product:
                 return 0.0
 
@@ -897,6 +969,7 @@ class ScienceWarehouseService:
     async def exponential_fit_for_insufficient_data(
         model_part_failures: List,
         product_model: str,
+        product_config_code: str | None,
         part_code: str,
         time_interval_days: int,
         input_date: date,
@@ -912,7 +985,7 @@ class ScienceWarehouseService:
             # 计算这些产品的总运行时间
             total_run_time = (
                 await ScienceWarehouseService.calculate_total_run_time_for_products(
-                    product_numbers, product_model
+                    product_numbers, product_model, product_config_code
                 )
             )
 
@@ -933,7 +1006,9 @@ class ScienceWarehouseService:
             # 计算备件量（使用指数分布的CDF）
             # 获取产品运行参数用于时间转换
             async with async_db_session() as db:
-                product = await product_dao.get_by_model(db, product_model)
+                product = await product_dao.get_by_model(
+                    db, product_model, product_config_code=product_config_code
+                )
                 if not product:
                     return 0.0
 
@@ -965,11 +1040,13 @@ class ScienceWarehouseService:
             return await failure_dao.get_by_product_number(db, product_number)
 
     @staticmethod
-    async def get_part_spare_mapping(product_model: str, original_part_code: str):
+    async def get_part_spare_mapping(
+        product_model: str, product_config_code: str, original_part_code: str
+    ):
         """获取部件与备品映射关系"""
         async with async_db_session() as db:
             return await part_spare_mapping_dao.get_by_original_part_code(
-                db, product_model, original_part_code
+                db, product_model, product_config_code, original_part_code
             )
 
     @staticmethod
@@ -993,6 +1070,8 @@ class ScienceWarehouseService:
         statistics: Dict[str, Any],
         time_interval_days: int,
         input_date: date,
+        product_model: str | None = None,
+        product_config_code: str | None = None,
     ):
         """
         保存计算结果到数据库
@@ -1019,6 +1098,8 @@ class ScienceWarehouseService:
                     result_data.append(
                         {
                             "calculation_id": calculation_id,
+                            "product_model": product_model,
+                            "product_config_code": product_config_code,
                             "warehouse_code": warehouse_code,
                             "warehouse_name": warehouse_name or warehouse_code,
                             "spare_part_code": spare_part_code,
@@ -1216,6 +1297,8 @@ class ScienceWarehouseService:
             for result in results:
                 detailed_item = {
                     "calculation_id": result.calculation_id,
+                    "product_model": getattr(result, "product_model", None),
+                    "product_config_code": getattr(result, "product_config_code", None),
                     "warehouse_code": result.warehouse_code,
                     "warehouse_name": result.warehouse_name,
                     "spare_part_code": result.spare_part_code,
@@ -1239,6 +1322,8 @@ class ScienceWarehouseService:
     @staticmethod
     async def get_select(
         calculation_id: Optional[str] = None,
+        product_model: Optional[str] = None,
+        product_config_code: Optional[str] = None,
         warehouse_code: Optional[str] = None,
         spare_part_code: Optional[str] = None,
         calculation_method: Optional[str] = None,
@@ -1269,6 +1354,14 @@ class ScienceWarehouseService:
             # 计算批次ID支持模糊匹配（因为用户手动输入）
             conditions.append(
                 ScienceWarehouseResult.calculation_id.like(f"%{calculation_id}%")
+            )
+
+        if product_model:
+            conditions.append(ScienceWarehouseResult.product_model == product_model)
+
+        if product_config_code is not None:
+            conditions.append(
+                ScienceWarehouseResult.product_config_code == product_config_code
             )
 
         if warehouse_code:

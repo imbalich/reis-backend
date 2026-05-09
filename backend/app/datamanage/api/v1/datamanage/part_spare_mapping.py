@@ -37,7 +37,7 @@ router = APIRouter()
 async def get_pagination_part_spare_mapping(
     db: CurrentSession,
     product_model: Annotated[str | None, Query()] = None,
-    derived_code: Annotated[str | None, Query()] = None,
+    product_config_code: Annotated[str | None, Query()] = None,
     original_part_name: Annotated[str | None, Query()] = None,
     original_part_code: Annotated[str | None, Query()] = None,
     spare_part_name: Annotated[str | None, Query()] = None,
@@ -45,7 +45,7 @@ async def get_pagination_part_spare_mapping(
 ) -> ResponseSchemaModel[PageData[GetPartSpareMappingDetails]]:
     part_spare_mapping_select = await part_spare_mapping_service.get_select(
         product_model=product_model,
-        derived_code=derived_code,
+        product_config_code=product_config_code,
         original_part_name=original_part_name,
         original_part_code=original_part_code,
         spare_part_name=spare_part_name,

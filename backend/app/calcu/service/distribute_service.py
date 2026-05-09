@@ -27,6 +27,7 @@ class DistributeService:
     @staticmethod
     async def get_product_distribution_params(
         model: str,
+        product_config_code: str | None = None,
         distribution: Optional[str] = None,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
@@ -35,22 +36,25 @@ class DistributeService:
         """
         根据名称和参数自动获取分布
         根据有无 distribution 区分指定或直接获取默认的最优
-
-        :param model: 产品型号
-        :param distribution: 指定分布
-        :param method: 拟合方法
-        :param check: 拟合优度
-        :return:
         """
         async with async_db_session() as db:
             if distribution:
                 result = await fit_product_dao.get_by_model_and_distribution(
-                    db, model, distribution, method=method, check=check
+                    db,
+                    model,
+                    distribution,
+                    product_config_code=product_config_code,
+                    method=method,
+                    check=check,
                 )
                 distribution_params = result if result else None
             else:
                 results = await fit_product_dao.get_by_model(
-                    db, model, method=method, check=check
+                    db,
+                    model,
+                    product_config_code=product_config_code,
+                    method=method,
+                    check=check,
                 )
                 distribution_params = results[0] if results else None
 
@@ -60,6 +64,7 @@ class DistributeService:
     async def get_part_distribution_params(
         model: str,
         part: str,
+        product_config_code: str | None = None,
         distribution: Optional[str] = None,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
@@ -68,13 +73,6 @@ class DistributeService:
         """
         根据名称和参数自动获取分布
         根据有无 distribution 区分指定或直接获取默认的最优
-
-        :param model: 产品型号
-        :param part: 零部件
-        :param distribution: 指定分布
-        :param method: 拟合方法
-        :param check: 拟合优度
-        :return:
         """
         async with async_db_session() as db:
             if distribution:
@@ -82,6 +80,7 @@ class DistributeService:
                     db,
                     model,
                     part,
+                    product_config_code,
                     distribution,
                     method=method,
                     check=check,
@@ -90,14 +89,19 @@ class DistributeService:
                 distribution_params = result if result else None
             else:
                 results = await fit_part_dao.get_by_model_and_part(
-                    db, model, part, method=method, check=check, source=source
+                    db,
+                    model,
+                    part,
+                    product_config_code=product_config_code,
+                    method=method,
+                    check=check,
+                    source=source,
                 )
                 distribution_params = results[0] if results else None
             return distribution_params
 
     @staticmethod
     async def get_distribution_function(distribute_type: DistributeType) -> Callable:
-        # 获取分布方法
         return predict_settings.DISTRIBUTION_FUNCTIONS[distribute_type]
 
     @staticmethod
@@ -116,7 +120,6 @@ class DistributeService:
             value = getattr(params, db_param, None)
             if value is not None:
                 distribution_params[dist_param] = value
-        # 创建分布实例对象
         if distribution_params:
             distribution = distribution_class(**distribution_params)
             return distribution
@@ -125,22 +128,19 @@ class DistributeService:
     @staticmethod
     async def get_product_distribution(
         model: str,
+        product_config_code: str | None = None,
         distribution_type: DistributeType = None,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
     ):
-        """
-        产品级别分布对象:单个计算的时候允许选择分布
-        """
+        """产品级别分布对象。"""
         distribution_params = await DistributeService.get_product_distribution_params(
-            model, distribution_type, method, check
+            model, product_config_code, distribution_type, method, check
         )
         if distribution_params:
-            # 转换pydantic模型
             distribution_params = convert_to_pydantic_model(
                 distribution_params, DistributionParams
             )
-            # 获取分布对象
             return await DistributeService.get_distribution_by_params(
                 distribution_params
             )
@@ -150,23 +150,20 @@ class DistributeService:
     async def get_part_distribution(
         model: str,
         part: str,
+        product_config_code: str | None = None,
         distribution_type: DistributeType = None,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
         source: bool | None = False,
     ):
-        """
-        零部件级别分布对象:单个计算的时候允许选择分布
-        """
+        """零部件级别分布对象。"""
         distribution_params = await DistributeService.get_part_distribution_params(
-            model, part, distribution_type, method, check, source
+            model, part, product_config_code, distribution_type, method, check, source
         )
         if distribution_params:
-            # 转换pydantic模型
             distribution_params = convert_to_pydantic_model(
                 distribution_params, DistributionParams
             )
-            # 获取分布对象
             return await DistributeService.get_distribution_by_params(
                 distribution_params
             )
@@ -176,22 +173,21 @@ class DistributeService:
     async def get_distribution(
         model: str,
         part: str | None = None,
+        product_config_code: str | None = None,
         distribution_type: DistributeType = None,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
         source: bool | None = False,
     ):
-        """
-        通过指定分布类型获取产品/零部件的分布对象obj
-        """
+        """通过指定分布类型获取产品/零部件的分布对象。"""
         if not distribution_type:
             return None
         if part:
             return await DistributeService.get_part_distribution(
-                model, part, distribution_type, method, check, source
+                model, part, product_config_code, distribution_type, method, check, source
             )
         return await DistributeService.get_product_distribution(
-            model, distribution_type, method, check
+            model, product_config_code, distribution_type, method, check
         )
 
 

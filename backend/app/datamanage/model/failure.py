@@ -27,6 +27,9 @@ class Failure(DataClassBase):
     report_id: Mapped[str] = mapped_column(String(128), nullable=True, comment='报告编号')
     product_number: Mapped[str] = mapped_column(String(128), nullable=True, comment='产品编号', name='product_no')
     product_model: Mapped[str] = mapped_column(String(128), nullable=True, comment='产品型号')
+    product_config_code: Mapped[str] = mapped_column(
+        String(64), nullable=True, comment='产品配置码'
+    )
     product_lifetime_stage: Mapped[str] = mapped_column(
         String(128), nullable=True, comment='修造级别', name='repair_level'
     )
@@ -92,3 +95,4 @@ class Failure(DataClassBase):
     loss_accounting: Mapped[str] = mapped_column(String(128), nullable=True, comment='损失核算')
     is_zero_distance: Mapped[int] = mapped_column(nullable=True, comment='是否为零公里 1:是,0:否', name='is_zero')
     is_company: Mapped[int] = mapped_column(nullable=True, comment='是否为永济公司产品 1:是,0:否', name='is_company')
+    is_warranty_fault:  Mapped[str] = mapped_column(String(64),nullable=True, comment='是否保内故障', name='is_warranty_fault')

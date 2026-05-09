@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-@Project ：fastapi-base-backend
-@File    ：crud_product.py
-@IDE     ：PyCharm
-@Author  ：imbalich
-@Date    ：2025/1/14 14:24
+@Project 锛歠astapi-base-backend
+@File    锛歝rud_product.py
+@IDE     锛歅yCharm
+@Author  锛歩mbalich
+@Date    锛?025/1/14 14:24
 """
 
-from typing import Any, Sequence
+from typing import Any, List, Sequence
 
-from sqlalchemy import Select, desc, distinct, select
+from sqlalchemy import Row, Select, desc, distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
@@ -18,70 +18,69 @@ from backend.app.datamanage.model import Product
 
 
 class CRUDProduct(CRUDPlus[Product]):
-    async def get_list(self, model: str = None) -> Select:
+    async def get_list(
+        self, model: str = None, product_config_code: str | None = None
+    ) -> Select:
         """
-        获取数据列表
-        :param model: 产品型号
-        :return: 查询语句
+        鑾峰彇鏁版嵁鍒楄〃
         """
         stmt = select(self.model).order_by(desc(self.model.model))
         where_list = []
         if model:
             where_list.append(self.model.model == model)
+        if product_config_code is not None:
+            where_list.append(self.model.product_config_code == product_config_code)
         if where_list:
             stmt = stmt.where(*where_list)
         return stmt
 
     async def get_distinct_column_values(self, db: AsyncSession, column_name: str) -> Sequence[Any]:
         """
-        获取指定列的所有唯一值
-        :param db: 数据库会话
-        :param column_name: 列名
-        :return: 唯一值列表
+        鑾峰彇鎸囧畾鍒楃殑鎵€鏈夊敮涓€鍊?
         """
-        # 确保列名存在于模型中
         if not hasattr(self.model, column_name):
             raise ValueError(f'Column {column_name} does not exist in model {self.model.__name__}')
 
-        # 构建查询
         column = getattr(self.model, column_name)
         stmt = select(distinct(column)).order_by(column)
-        # 执行查询
         result = await db.execute(stmt)
-
-        # 返回结果
         return result.scalars().all()
+
+    async def get_distinct_columns_values(
+        self, db: AsyncSession, column_names: List[str]
+    ) -> Sequence[Row[tuple[Any, ...]]]:
+        for col in column_names:
+            if not hasattr(self.model, col):
+                raise ValueError(f'Column {col} does not exist in model {self.model.__name__}')
+
+        columns = [getattr(self.model, col) for col in column_names]
+        stmt = select(*columns).distinct().order_by(*columns)
+        result = await db.execute(stmt)
+        return result.all()
 
     async def get_models_by_product(self, db: AsyncSession) -> Sequence[str]:
-        """
-        获取model列的所有唯一值,且avg_worktime、avg_speed、year_days不为空
-        :param db: 数据库会话
-        :return: 唯一值列表
-        """
         stmt = select(distinct(self.model.model)).order_by(self.model.model)
-        where_list = []
-        where_list.append(self.model.avg_worktime.is_not(None))
-        where_list.append(self.model.avg_speed.is_not(None))
-        where_list.append(self.model.year_days.is_not(None))
-        where_list.append(self.model.avg_worktime != 0)
-        where_list.append(self.model.avg_speed != 0)
-        where_list.append(self.model.year_days != 0)
-        if where_list:
-            stmt = stmt.where(*where_list)
+        where_list = [
+            self.model.avg_worktime.is_not(None),
+            self.model.avg_speed.is_not(None),
+            self.model.year_days.is_not(None),
+            self.model.avg_worktime != 0,
+            self.model.avg_speed != 0,
+            self.model.year_days != 0,
+        ]
+        stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()
 
-    async def get_by_model(self, db: AsyncSession, model: str) -> Product:
-        """
-        更具型号查询单条产品信息
-        :param db: 数据库会话
-        :param model: 产品型号
-        :return: 查询语句
-        """
+    async def get_by_model(
+        self, db: AsyncSession, model: str, product_config_code: str | None = None
+    ) -> Product:
         stmt = select(self.model).order_by(desc(self.model.year_days))
         where_list = []
         if model:
             where_list.append(self.model.model == model)
+        if product_config_code is not None:
+            where_list.append(self.model.product_config_code == product_config_code)
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)

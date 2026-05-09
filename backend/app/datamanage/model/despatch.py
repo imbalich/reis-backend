@@ -23,6 +23,9 @@ class Despatch(DataClassBase):
 
     id: Mapped[id_key] = mapped_column(init=False)
     model: Mapped[str] = mapped_column(String(255), nullable=True, comment='model')
+    product_config_code: Mapped[str] = mapped_column(
+        String(64), nullable=True, comment='产品配置码'
+    )
     identifier: Mapped[str] = mapped_column(String(255), nullable=True, comment='identifier')
     attach_company: Mapped[str] = mapped_column(String(255), nullable=True, comment='配属路局')
     attach_dept: Mapped[str] = mapped_column(String(255), nullable=True, comment='配属路段')

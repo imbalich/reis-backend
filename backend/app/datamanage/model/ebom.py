@@ -26,7 +26,9 @@ class Ebom(DataClassBase):
     sync_time: Mapped[str] = mapped_column(String(100), nullable=True, comment='数据解析入库时间')
     file_name1: Mapped[str] = mapped_column(String(200), nullable=True, comment='源文件名称')
     prd_no: Mapped[str] = mapped_column(String(100), nullable=True, comment='产品型号')
-    prd_code: Mapped[str] = mapped_column(String(100), nullable=True, comment='产品配置码Header')
+    product_config_code: Mapped[str] = mapped_column(
+        String(64), nullable=True, comment='产品配置码'
+    )
     prd_name: Mapped[str] = mapped_column(String(100), nullable=True, comment='产品名称')
     prd_level: Mapped[str] = mapped_column(String(100), nullable=True, comment='修造级别')
     prd_vision: Mapped[str] = mapped_column(String(100), nullable=True, comment='产品总成版本号')

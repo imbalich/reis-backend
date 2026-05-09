@@ -1,22 +1,28 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from datetime import date
-from typing import Optional
-from sqlalchemy import Date, String, Integer, Float, Text
+
+from sqlalchemy import Date, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import Base, id_key
 
 
 class ScienceWarehouseResult(Base):
-    """科学库存计算结果"""
+    """科学库存计算结果。"""
 
     __tablename__ = "calcu_science_warehouse_result"
 
     id: Mapped[id_key] = mapped_column(init=False)
     calculation_id: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True, comment="计算批次ID"
+    )
+    product_model: Mapped[str | None] = mapped_column(
+        String(128), nullable=True, index=True, comment="产品型号"
+    )
+    product_config_code: Mapped[str | None] = mapped_column(
+        String(128), nullable=True, index=True, comment="派生码"
     )
     warehouse_code: Mapped[str] = mapped_column(
         String(255), nullable=False, index=True, comment="库房编码"
@@ -37,7 +43,7 @@ class ScienceWarehouseResult(Base):
         Integer, nullable=False, comment="需求数量"
     )
     calculation_method: Mapped[str] = mapped_column(
-        String(50), nullable=False, comment="计算方法（fitted/default）"
+        String(50), nullable=False, comment="计算方法"
     )
     time_interval_days: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="时间间隔（天）"

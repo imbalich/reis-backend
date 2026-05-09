@@ -7,25 +7,21 @@
 @Author  : imbalich
 @Time    : 2025/4/27 11:07
 """
+
 import math
 from datetime import date, timedelta
 
 from backend.app.calcu.schema.distribute_param import DistributeType
 from backend.app.calcu.service.distribute_service import distribute_service
 from backend.app.datamanage.crud.crud_allotment import allotment_dao
-from backend.app.datamanage.crud.crud_ebom import ebom_dao
 from backend.app.datamanage.crud.crud_product import product_dao
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
-from backend.app.fit.schema.base_param import ProductParam, EbomParam
-from backend.app.fit.schema.fit_param import FitMethodType, FitCheckType
+from backend.app.fit.schema.base_param import ProductParam
+from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
 from backend.app.fit.service.part_fit_service import part_fit_service
 from backend.app.fit.service.part_strategy_service import part_strategy_service
 from backend.app.fit.service.product_strategy_service import product_strategy_service
-from backend.app.fit.utils.convert_model import (
-    convert_to_pydantic_model,
-    convert_to_pydantic_models,
-    convert_to_total_quantity,
-)
+from backend.app.fit.utils.convert_model import convert_to_pydantic_model
 from backend.app.fit.utils.time_utils import dateutils
 from backend.common.exception import errors
 from backend.common.log import log
@@ -34,50 +30,44 @@ from backend.database.db import async_db_session
 
 class SpareService:
     @staticmethod
+    def _build_despatch_map(tags: list[list]) -> dict[str | tuple[str, str], date]:
+        if not tags:
+            return {}
+
+        tag_len = len(tags[0])
+        despatch_map: dict[str | tuple[str, str], date] = {}
+
+        for tag in tags:
+            if len(tag) != tag_len:
+                key = tag[0]
+            elif tag_len >= 7:
+                key = (tag[0], tag[1])
+            else:
+                key = tag[0]
+
+            start_tag = tag[-5]
+            if key not in despatch_map or start_tag < despatch_map[key]:
+                despatch_map[key] = start_tag
+
+        return despatch_map
+
+    @staticmethod
     async def get_spare_num(
         tags: list[list],
         start_date: date,
         end_date: date,
         product_data: ProductParam,
         distribution,
-    ):
-        # 备件量计算方法
-        result = 0
+    ) -> int:
+        """根据标签和分布对象计算备件数量，返回向上取整后的结果。"""
         if not tags:
             return 0
 
-        # 兼容整机级（product_tag）和零部件级（part_tag）两种标签结构
-        # - 整机级: [产品编号, 开始日期, 结束日期, 天数差, 运行时间, 类型]  -> len == 6
-        # - 零部件级: [产品编号, 虚拟物料编码, 开始日期, 结束日期, 天数差, 运行时间, 类型] -> len == 7
-        tag_len = len(tags[0])
+        result = 0.0
+        despatch_map = SpareService._build_despatch_map(tags)
 
-        # 第一步：根据结构构建“发运日期”映射
-        # 整机级: key = 产品编号
-        # 零部件级: key = (产品编号, 虚拟物料编码)
-        despatch_map = {}
-        for tag in tags:
-            # 防止混合结构，长度不一致时退化为按产品编号
-            if len(tag) != tag_len:
-                key = tag[0]
-            else:
-                if tag_len >= 7:
-                    # 零部件级：产品编号 + 虚拟键
-                    key = (tag[0], tag[1])
-                else:
-                    # 整机级：只有产品编号
-                    key = tag[0]
-
-            start_tag = tag[-5]  # 开始日期（统一使用 tag[-5]）
-            if key not in despatch_map or start_tag < despatch_map[key]:
-                despatch_map[key] = start_tag
-
-        # 第二步：对每个 key（整机或"产品+虚拟件"组合）计算 CDF 差值并累加
-        for key, despatch_date in despatch_map.items():
-            # 检查发运日期是否晚于计算日期，如果是则跳过该产品
-            if (start_date - despatch_date).days < 0 or (
-                end_date - despatch_date
-            ).days < 0:
-                # 发运日期晚于计算日期，跳过该产品
+        for despatch_date in despatch_map.values():
+            if (start_date - despatch_date).days < 0 or (end_date - despatch_date).days < 0:
                 continue
 
             xvals = [
@@ -102,54 +92,16 @@ class SpareService:
         end_date: date,
         product_data: ProductParam,
         distribution,
-    ):
-        """
-        备件量计算方法 - 返回浮点数结果（不取整）
-
-        :param tags: 标签数据
-        :param start_date: 开始日期
-        :param end_date: 结束日期
-        :param product_data: 产品参数
-        :param distribution: 分布对象
-        :return: 浮点数备件数量
-        """
-        # 备件量计算方法
-        result = 0.0
+    ) -> float:
+        """根据标签和分布对象计算备件数量，返回浮点结果。"""
         if not tags:
             return 0.0
 
-        # 兼容整机级（product_tag）和零部件级（part_tag）两种标签结构
-        # - 整机级: [产品编号, 开始日期, 结束日期, 天数差, 运行时间, 类型]  -> len == 6
-        # - 零部件级: [产品编号, 虚拟物料编码, 开始日期, 结束日期, 天数差, 运行时间, 类型] -> len == 7
-        tag_len = len(tags[0])
+        result = 0.0
+        despatch_map = SpareService._build_despatch_map(tags)
 
-        # 第一步：根据结构构建"发运日期"映射
-        # 整机级: key = 产品编号
-        # 零部件级: key = (产品编号, 虚拟物料编码)
-        despatch_map = {}
-        for tag in tags:
-            # 防止混合结构，长度不一致时退化为按产品编号
-            if len(tag) != tag_len:
-                key = tag[0]
-            else:
-                if tag_len >= 7:
-                    # 零部件级：产品编号 + 虚拟键
-                    key = (tag[0], tag[1])
-                else:
-                    # 整机级：只有产品编号
-                    key = tag[0]
-
-            start_tag = tag[-5]  # 开始日期（统一使用 tag[-5]）
-            if key not in despatch_map or start_tag < despatch_map[key]:
-                despatch_map[key] = start_tag
-
-        # 第二步：对每个 key（整机或"产品+虚拟件"组合）计算 CDF 差值并累加
-        for key, despatch_date in despatch_map.items():
-            # 检查发运日期是否晚于计算日期，如果是则跳过该产品
-            if (start_date - despatch_date).days < 0 or (
-                end_date - despatch_date
-            ).days < 0:
-                # 发运日期晚于计算日期，跳过该产品
+        for despatch_date in despatch_map.values():
+            if (start_date - despatch_date).days < 0 or (end_date - despatch_date).days < 0:
                 continue
 
             xvals = [
@@ -165,7 +117,7 @@ class SpareService:
             yvals = distribution.CDF(xvals=xvals, show_plot=False)
             result += yvals[1] - yvals[0]
 
-        return result  # 返回浮点数，不取整
+        return result
 
     @staticmethod
     async def get_spare_num_float_by_allotment(
@@ -176,94 +128,38 @@ class SpareService:
         input_date: date,
         product_data: ProductParam,
         distribution,
-    ):
-        """
-        备件量计算方法 - 通过配属数据过滤 - 返回浮点数结果（不取整）
-
-        只有在allotment_date <= input_date的产品编号才参与CDF计算
-
-        :param db: 数据库会话
-        :param tags: 标签数据
-        :param start_date: 开始日期
-        :param end_date: 结束日期
-        :param input_date: 输入日期（用于过滤配属日期）
-        :param product_data: 产品参数
-        :param distribution: 分布对象
-        :return: 浮点数备件数量
-        """
-        # 备件量计算方法
-        result = 0.0
+        product_config_code: str | None = None,
+    ) -> float:
+        """按配属日期过滤后计算备件数量，返回浮点结果。"""
         if not tags:
             return 0.0
 
-        # 第一步：获取tags中的所有产品编号
-        product_numbers = set()
-        for tag in tags:
-            product_numbers.add(tag[0])  # 产品编号在tag[0]位置
-
-        log.info(f"备件计算过滤统计 - 标签产品编号数量: {len(product_numbers)}")
-
+        product_numbers = {tag[0] for tag in tags if tag}
+        log.info("备件计算过滤统计 - 标签产品编号数量: {}", len(product_numbers))
         if not product_numbers:
             return 0.0
 
-        # 第二步：从配属表中查询有效的产品编号（allotment_date <= input_date）
-        allotments = await allotment_dao.get_by_product_numbers(
-            db, list(product_numbers)
-        )
-        valid_product_numbers = set()
-        for allotment in allotments:
-            if allotment.allotment_date and allotment.allotment_date <= input_date:
-                valid_product_numbers.add(allotment.product_number)
-
+        allotments = await allotment_dao.get_by_product_numbers(db, list(product_numbers))
+        valid_product_numbers = {
+            allotment.product_number
+            for allotment in allotments
+            if allotment.allotment_date and allotment.allotment_date <= input_date
+        }
         log.info(
-            f"备件计算过滤统计 - 配属记录总数: {len(allotments)}, 有效配属产品编号: {len(valid_product_numbers)}"
+            "备件计算过滤统计 - 配属记录总数: {}, 有效配属产品编号: {}",
+            len(allotments),
+            len(valid_product_numbers),
         )
-
         if not valid_product_numbers:
             return 0.0
 
-        # 第三步：兼容整机级（product_tag）和零部件级（part_tag）两种标签结构
-        # - 整机级: [产品编号, 开始日期, 结束日期, 天数差, 运行时间, 类型]  -> len == 6
-        # - 零部件级: [产品编号, 虚拟物料编码, 开始日期, 结束日期, 天数差, 运行时间, 类型] -> len == 7
-        tag_len = len(tags[0])
+        filtered_tags = [tag for tag in tags if tag and tag[0] in valid_product_numbers]
+        despatch_map = SpareService._build_despatch_map(filtered_tags)
+        log.info("备件计算过滤统计 - 最终参与CDF计算的产品数量: {}", len(despatch_map))
 
-        # 第四步：根据结构构建"发运日期"映射，只处理有效产品编号
-        # 整机级: key = 产品编号
-        # 零部件级: key = (产品编号, 虚拟物料编码)
-        despatch_map = {}
-        for tag in tags:
-            product_number = tag[0]
-
-            # 只处理配属数据中有效的产品编号
-            if product_number not in valid_product_numbers:
-                continue
-
-            # 防止混合结构，长度不一致时退化为按产品编号
-            if len(tag) != tag_len:
-                key = tag[0]
-            else:
-                if tag_len >= 7:
-                    # 零部件级：产品编号 + 虚拟键
-                    key = (tag[0], tag[1])
-                else:
-                    # 整机级：只有产品编号
-                    key = tag[0]
-
-            start_tag = tag[-5]  # 开始日期（统一使用 tag[-5]）
-            if key not in despatch_map or start_tag < despatch_map[key]:
-                despatch_map[key] = start_tag
-
-        # 统计最终参与CDF计算的产品编号数量
-        final_product_count = len(despatch_map)
-        log.info(f"备件计算过滤统计 - 最终参与CDF计算的产品数量: {final_product_count}")
-
-        # 第五步：对每个 key（整机或"产品+虚拟件"组合）计算 CDF 差值并累加
-        for key, despatch_date in despatch_map.items():
-            # 检查发运日期是否晚于计算日期，如果是则跳过该产品
-            if (start_date - despatch_date).days < 0 or (
-                end_date - despatch_date
-            ).days < 0:
-                # 发运日期晚于计算日期，跳过该产品
+        result = 0.0
+        for despatch_date in despatch_map.values():
+            if (start_date - despatch_date).days < 0 or (end_date - despatch_date).days < 0:
                 continue
 
             xvals = [
@@ -279,7 +175,7 @@ class SpareService:
             yvals = distribution.CDF(xvals=xvals, show_plot=False)
             result += yvals[1] - yvals[0]
 
-        return result  # 返回浮点数，不取整
+        return result
 
     @staticmethod
     async def get_spare_num_by_fit(
@@ -288,38 +184,16 @@ class SpareService:
         end_date: date,
         product_data: ProductParam,
         method: FitMethodType,
-    ):
-        """
-        重新拟合出结果,只能选取最优分布
-        """
-        # 备件量计算方法
-        result = 0
+    ) -> int:
+        """基于标签重新拟合最优分布后计算备件数量。"""
         if not tags:
             return 0
 
-        # 兼容整机级（product_tag）和零部件级（part_tag）两种标签结构
-        tag_len = len(tags[0])
-
-        # 第一步：根据结构构建“发运日期”映射
-        despatch_map = {}
-        for tag in tags:
-            if len(tag) != tag_len:
-                key = tag[0]
-            else:
-                if tag_len >= 7:
-                    key = (tag[0], tag[1])
-                else:
-                    key = tag[0]
-
-            start_tag = tag[-5]  # 开始日期
-            if key not in despatch_map or start_tag < despatch_map[key]:
-                despatch_map[key] = start_tag
-
-        # 第二步：进行拟合
+        despatch_map = SpareService._build_despatch_map(tags)
         distribution = await part_fit_service.tag_fit(tags, method)
 
-        # 第三步：对每个 key（整机或“产品+虚拟件”组合）计算 CDF 差值并累加
-        for key, despatch_date in despatch_map.items():
+        result = 0.0
+        for despatch_date in despatch_map.values():
             xvals = [
                 (start_date - despatch_date + timedelta(days=90)).days
                 * product_data.year_days
@@ -336,8 +210,21 @@ class SpareService:
         return math.ceil(result)
 
     @staticmethod
+    async def _get_product_param(
+        model: str, product_config_code: str | None = None
+    ) -> ProductParam:
+        async with async_db_session() as db:
+            product = await product_dao.get_by_model(
+                db,
+                model,
+                product_config_code=product_config_code,
+            )
+        return convert_to_pydantic_model(product, ProductParam)
+
+    @staticmethod
     async def get_product_spare_num(
         model: str,
+        product_config_code: str | None = None,
         distribution_type: DistributeType = DistributeType.Weibull_2P,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
@@ -345,34 +232,39 @@ class SpareService:
         start_date: str | date = None,
         end_date: str | date = None,
         source: bool | None = False,
-    ):
-        """
-        获取产品级备件量
-        """
-        # 1. 确定分布:查库获取分布字段
+    ) -> int:
+        """获取产品级备件预测结果。"""
         distribution = await distribute_service.get_product_distribution(
-            model, distribution_type, method, check
+            model=model,
+            product_config_code=product_config_code,
+            distribution_type=distribution_type,
+            method=method,
+            check=check,
         )
-        # 2. 计算备件量:两个时间点之间CDF的差值,需要标签，用标签中每一个去算(我滴龟龟，麻了)
-        tags = await product_strategy_service.model_tag_process(model, input_date)
-        # 3. 日期转换
+        tags = await product_strategy_service.model_tag_process(
+            model,
+            input_date,
+            product_config_code=product_config_code,
+        )
         start_date = dateutils.validate_and_parse_date(start_date)
         end_date = dateutils.validate_and_parse_date(end_date)
-        # 4.产品信息
-        async with async_db_session() as db:
-            product_data = convert_to_pydantic_model(
-                await product_dao.get_by_model(db, model), ProductParam
-            )
-        # 5.计算数量
-        result = await SpareService.get_spare_num(
-            tags, start_date, end_date, product_data, distribution
+        product_data = await SpareService._get_product_param(
+            model=model,
+            product_config_code=product_config_code,
         )
-        return result
+        return await SpareService.get_spare_num(
+            tags,
+            start_date,
+            end_date,
+            product_data,
+            distribution,
+        )
 
     @staticmethod
     async def get_part_spare_num(
         model: str,
         part: str,
+        product_config_code: str | None = None,
         distribution_type: DistributeType = DistributeType.Weibull_2P,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
@@ -380,49 +272,50 @@ class SpareService:
         start_date: str | date = None,
         end_date: str | date = None,
         source: bool | None = False,
-    ):
-        """
-        获取零部件级备件量
-        :param model:
-        :param part:
-        :param distribution_type:
-        :param method:
-        :param check:
-        :param input_date:
-        :param start_date:
-        :param end_date:
-        :return:
-        """
-        # 1. 确定分布:查库获取分布字段
+    ) -> int:
+        """获取零部件级备件预测结果。"""
         distribution = await distribute_service.get_part_distribution(
-            model, part, distribution_type, method, check, source
+            model=model,
+            part=part,
+            product_config_code=product_config_code,
+            distribution_type=distribution_type,
+            method=method,
+            check=check,
+            source=source,
         )
-        log.info(f"型号{model}的零部件{part}的分布: {distribution}")
+        log.info("型号{}的零部件{}分布: {}", model, part, distribution)
         if distribution is None:
             raise errors.DataValidationError(
-                msg=f"型号{model}的零部件{part}未找到匹配的拟合分布，请检查source={source}或拟合结果"
+                msg=(
+                    f"型号{model}的零部件{part}未找到匹配的拟合分布，"
+                    f"请检查 source={source} 或拟合结果"
+                )
             )
-        # 1. 计算备件量:两个时间点之间CDF的差值,需要标签，用标签中每一个去算(我滴龟龟，麻了)
-        tags = await part_strategy_service.part_tag_process(model, part, input_date)
-        # # 2. 根据标签拟合分布自动选取最优分布
-        # distribution = await part_fit_service.tag_fit(tags, method)
-        # 3. 日期转换
+
+        tags = await part_strategy_service.part_tag_process(
+            model,
+            part,
+            input_date,
+            product_config_code=product_config_code,
+        )
         start_date = dateutils.validate_and_parse_date(start_date)
         end_date = dateutils.validate_and_parse_date(end_date)
-        # 4.产品信息
-        async with async_db_session() as db:
-            product_data = convert_to_pydantic_model(
-                await product_dao.get_by_model(db, model), ProductParam
-            )
-        # 5.计算数量
-        result = await SpareService.get_spare_num(
-            tags, start_date, end_date, product_data, distribution
+        product_data = await SpareService._get_product_param(
+            model=model,
+            product_config_code=product_config_code,
         )
-        return result
+        return await SpareService.get_spare_num(
+            tags,
+            start_date,
+            end_date,
+            product_data,
+            distribution,
+        )
 
     @staticmethod
     async def get_all_parts_spare_num_by_model(
         model: str,
+        product_config_code: str | None = None,
         distribution_type: DistributeType = None,
         method: FitMethodType = FitMethodType.MLE,
         check: FitCheckType = FitCheckType.BIC,
@@ -430,27 +323,29 @@ class SpareService:
         start_date: str | date = None,
         end_date: str | date = None,
         source: bool | None = False,
-    ):
-        # 1. 确定哪些零部件有分布
+    ) -> dict:
+        """获取单型号下全部零部件的备件预测结果。"""
         async with async_db_session() as db:
-            parts = await fit_part_dao.get_by_model(db, model)
+            parts = await fit_part_dao.get_by_model(
+                db,
+                model,
+                product_config_code=product_config_code,
+            )
             if not parts:
                 raise errors.DataValidationError(
                     msg=f"型号{model}没有零部件拥有拟合分布"
                 )
 
-        # 2. 处理参数
         start_date = dateutils.validate_and_parse_date(start_date)
         end_date = dateutils.validate_and_parse_date(end_date)
+        product_data = await SpareService._get_product_param(
+            model=model,
+            product_config_code=product_config_code,
+        )
 
-        async with async_db_session() as db:
-            product_data = convert_to_pydantic_model(
-                await product_dao.get_by_model(db, model), ProductParam
-            )
-
-        # 3. 获取每个零部件的备件量
         results = {
             "model": model,
+            "product_config_code": product_config_code,
             "input_date": input_date,
             "start_date": start_date,
             "end_date": end_date,
@@ -467,37 +362,44 @@ class SpareService:
         for part in parts:
             try:
                 distribution = await distribute_service.get_part_distribution(
-                    model, part, distribution_type, method, check, source
+                    model=model,
+                    part=part,
+                    product_config_code=product_config_code,
+                    distribution_type=distribution_type,
+                    method=method,
+                    check=check,
+                    source=source,
                 )
                 if distribution is None:
                     raise errors.DataValidationError(
-                        msg=f"型号{model}的零部件{part}未找到匹配的拟合分布，请检查source={source}或拟合数据"
+                        msg=(
+                            f"型号{model}的零部件{part}未找到匹配的拟合分布，"
+                            f"请检查 source={source} 或拟合数据"
+                        )
                     )
+
                 tags = await part_strategy_service.part_tag_process(
-                    model, part, input_date
+                    model,
+                    part,
+                    input_date,
+                    product_config_code=product_config_code,
                 )
-                # 使用固定分布计算，确保与单零部件预测一致
                 result = await SpareService.get_spare_num(
-                    tags, start_date, end_date, product_data, distribution
+                    tags,
+                    start_date,
+                    end_date,
+                    product_data,
+                    distribution,
                 )
-                # 需要再乘以bom数量 —— 为保持与单零部件接口一致，先保留原逻辑但注释掉
-                # async with async_db_session() as db:
-                #     ebom_data = await ebom_dao.get_by_model_and_part(db, model, part)
-                #     if not ebom_data:
-                #         raise errors.DataValidationError(
-                #             msg=f"型号{model}的零部件{part}的BOM信息不存在"
-                #         )
-                #     ebom_data = convert_to_pydantic_models(ebom_data, EbomParam)
-                #     total_bl_quantity = convert_to_total_quantity(ebom_data)
                 results["success"] += 1
                 results["parts"][part] = result
-            except Exception as e:
+            except Exception as exc:
                 results["fail"] += 1
-                # 优先使用自定义异常的msg属性，否则使用str(e)或repr(e)
-                error_msg = getattr(e, "msg", None) or str(e) or repr(e) or "未知错误"
+                error_msg = getattr(exc, "msg", None) or str(exc) or repr(exc) or "未知错误"
                 errors_info[part] = (
-                    f"型号{model}没有零部件{part}计算失败，错误信息为{error_msg}"
+                    f"型号{model}的零部件{part}计算失败，错误信息为 {error_msg}"
                 )
+
         if errors_info:
             results["errors"] = errors_info
         return results
