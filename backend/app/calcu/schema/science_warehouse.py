@@ -70,8 +70,6 @@ class ScienceWarehouseResultDetails(SchemaBase):
     """科学库存计算结果详情。"""
 
     calculation_id: str = Field(..., description="计算批次ID")
-    product_model: Optional[str] = Field(None, description="产品型号")
-    product_config_code: Optional[str] = Field(None, description="派生码")
     warehouse_code: str = Field(..., description="库房编码")
     warehouse_name: str = Field(..., description="库房名称")
     spare_part_code: str = Field(..., description="备品编码")
@@ -89,8 +87,6 @@ class ScienceWarehouseFilterParam(SchemaBase):
     """科学库存查询过滤参数。"""
 
     calculation_id: Optional[str] = Field(None, description="计算批次ID")
-    product_model: Optional[str] = Field(None, description="产品型号")
-    product_config_code: Optional[str] = Field(None, description="派生码")
     warehouse_code: Optional[str] = Field(None, description="库房编码")
     spare_part_code: Optional[str] = Field(None, description="备品编码")
     calculation_method: Optional[str] = Field(None, description="计算方法")
@@ -121,6 +117,21 @@ class ScienceWarehouseBatchResponse(SchemaBase):
     errors: List[str] = Field(default_factory=list, description="错误信息")
 
 
+class ScienceWarehousePushRequest(SchemaBase):
+    """科学库存推送请求。"""
+
+    push_reason: str = Field(..., max_length=500, description="推送原因")
+
+
+class ScienceWarehousePushTaskResponse(SchemaBase):
+    """科学库存推送任务提交响应。"""
+
+    task_id: str = Field(..., description="Celery任务ID")
+    task_name: str = Field(..., description="Celery任务名称")
+    calculation_id: str = Field(..., description="计算批次ID")
+    message: str = Field(..., description="提示信息")
+
+
 class ScienceWarehouseListDetails(SchemaBase):
     """科学库存列表详情。"""
 
@@ -128,8 +139,6 @@ class ScienceWarehouseListDetails(SchemaBase):
 
     id: int = Field(..., description="记录ID")
     calculation_id: str = Field(..., description="计算批次ID")
-    product_model: Optional[str] = Field(None, description="产品型号")
-    product_config_code: Optional[str] = Field(None, description="派生码")
     warehouse_code: str = Field(..., description="库房编码")
     warehouse_name: str = Field(..., description="库房名称")
     spare_part_code: str = Field(..., description="备品编码")

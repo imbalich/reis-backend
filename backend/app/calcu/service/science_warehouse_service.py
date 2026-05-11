@@ -1098,8 +1098,6 @@ class ScienceWarehouseService:
                     result_data.append(
                         {
                             "calculation_id": calculation_id,
-                            "product_model": product_model,
-                            "product_config_code": product_config_code,
                             "warehouse_code": warehouse_code,
                             "warehouse_name": warehouse_name or warehouse_code,
                             "spare_part_code": spare_part_code,
@@ -1297,8 +1295,6 @@ class ScienceWarehouseService:
             for result in results:
                 detailed_item = {
                     "calculation_id": result.calculation_id,
-                    "product_model": getattr(result, "product_model", None),
-                    "product_config_code": getattr(result, "product_config_code", None),
                     "warehouse_code": result.warehouse_code,
                     "warehouse_name": result.warehouse_name,
                     "spare_part_code": result.spare_part_code,
@@ -1322,8 +1318,6 @@ class ScienceWarehouseService:
     @staticmethod
     async def get_select(
         calculation_id: Optional[str] = None,
-        product_model: Optional[str] = None,
-        product_config_code: Optional[str] = None,
         warehouse_code: Optional[str] = None,
         spare_part_code: Optional[str] = None,
         calculation_method: Optional[str] = None,
@@ -1354,14 +1348,6 @@ class ScienceWarehouseService:
             # 计算批次ID支持模糊匹配（因为用户手动输入）
             conditions.append(
                 ScienceWarehouseResult.calculation_id.like(f"%{calculation_id}%")
-            )
-
-        if product_model:
-            conditions.append(ScienceWarehouseResult.product_model == product_model)
-
-        if product_config_code is not None:
-            conditions.append(
-                ScienceWarehouseResult.product_config_code == product_config_code
             )
 
         if warehouse_code:

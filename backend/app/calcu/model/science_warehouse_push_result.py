@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Date, Float, Integer, String
+from sqlalchemy import Date, DateTime, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import Base, id_key
 
 
-class ScienceWarehouseResult(Base):
-    """科学库存计算结果。"""
+class ScienceWarehousePushResult(Base):
+    """科学库存待推送结果。"""
 
-    __tablename__ = "calcu_science_warehouse_result"
+    __tablename__ = "calcu_science_warehouse_push_result"
 
     id: Mapped[id_key] = mapped_column(init=False)
     calculation_id: Mapped[str] = mapped_column(
@@ -45,7 +45,12 @@ class ScienceWarehouseResult(Base):
     input_date: Mapped[date] = mapped_column(
         Date, nullable=False, comment="计算截止日期"
     )
-    created_time: Mapped[date] = mapped_column(Date, nullable=False, comment="创建时间")
+    created_time: Mapped[date] = mapped_column(
+        Date, nullable=False, comment="原结果创建时间"
+    )
     confidence: Mapped[float] = mapped_column(
         Float, nullable=False, default=0.5, comment="置信度"
+    )
+    imported_time: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default_factory=datetime.now, comment="导入时间"
     )

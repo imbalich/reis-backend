@@ -11,6 +11,8 @@ from fastapi import APIRouter, HTTPException, Query
 from backend.app.calcu.schema.science_warehouse import (
     ScienceWarehouseDetailsResponse,
     ScienceWarehouseListDetails,
+    ScienceWarehousePushRequest,
+    ScienceWarehousePushTaskResponse,
     ScienceWarehouseRequest,
     ScienceWarehouseResultItem,
 )
@@ -19,6 +21,7 @@ from backend.app.calcu.service.science_warehouse_service import (
 )
 from backend.app.task.tasks.science_warehouse_task.tasks import (
     science_warehouse_calculation_task,
+    science_warehouse_push_task,
 )
 from backend.common.pagination import DependsPagination, PageData, paging_data
 from backend.common.response.response_schema import (
@@ -56,6 +59,31 @@ async def calculate_science_warehouse_requirements(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"任务提交失败: {str(e)}")
+
+
+@router.post("/push/{calculation_id}", summary="推送人工审查后的科学库存结果 -> 后台任务执行")
+async def push_science_warehouse_results(
+    calculation_id: str,
+    request: ScienceWarehousePushRequest,
+) -> ResponseSchemaModel[ScienceWarehousePushTaskResponse]:
+    """
+    提交科学库存推送任务到后台执行。
+    """
+    try:
+        task = science_warehouse_push_task.delay(
+            calculation_id=calculation_id,
+            push_reason=request.push_reason,
+        )
+        return response_base.success(
+            data={
+                "task_id": task.id,
+                "task_name": science_warehouse_push_task.name,
+                "calculation_id": calculation_id,
+                "message": "科学库存推送任务已提交",
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"推送任务提交失败: {str(e)}")
 
 
 @router.get("/results/{calculation_id}/api", summary="获取 API 格式计算结果")
@@ -178,8 +206,6 @@ async def get_calculation_methods() -> ResponseModel:
 async def get_pagination_science_warehouse_results(
     db: CurrentSession,
     calculation_id: Annotated[str | None, Query()] = None,
-    product_model: Annotated[str | None, Query()] = None,
-    product_config_code: Annotated[str | None, Query()] = None,
     warehouse_code: Annotated[str | None, Query()] = None,
     spare_part_code: Annotated[str | None, Query()] = None,
     calculation_method: Annotated[str | None, Query()] = None,
@@ -191,8 +217,6 @@ async def get_pagination_science_warehouse_results(
     try:
         science_warehouse_select = await science_warehouse_service.get_select(
             calculation_id=calculation_id,
-            product_model=product_model,
-            product_config_code=product_config_code,
             warehouse_code=warehouse_code,
             spare_part_code=spare_part_code,
             calculation_method=calculation_method,

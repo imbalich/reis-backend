@@ -52,3 +52,25 @@ async def science_warehouse_calculation_task(
         return f"数据验证错误: {str(e.msg)}"
     except Exception as e:
         return f"科学库存计算失败: {str(e)}"
+
+
+@celery_app.task(name="science_warehouse_push_task", base=TaskBase)
+async def science_warehouse_push_task(calculation_id: str, push_reason: str) -> str:
+    """
+    后台任务: 推送人工审查后的科学库存结果到 ESB。
+    """
+    try:
+        from backend.app.calcu.service.science_warehouse_push_service import (
+            science_warehouse_push_service,
+        )
+
+        result = await science_warehouse_push_service.push_by_calculation_id(
+            calculation_id=calculation_id,
+            push_reason=push_reason,
+        )
+        return (
+            f"科学库存推送完成 - 计算批次ID: {result['calculation_id']}, "
+            f"总记录数: {result['total_records']}, 状态: {result['status']}"
+        )
+    except Exception as e:
+        return f"科学库存推送失败: {str(e)}"
