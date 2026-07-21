@@ -259,7 +259,7 @@ class Settings(BaseSettings):
     
     # 业务配置
     FAILURE_DATA_SOURCE: Literal["legacy", "mro_correct"] = "legacy"   # legacy / mro_correct
-    SCIENCE_WAREHOUSE_ESB_URL: str = "http://172.30.9.40:18080/esb/comm/api"
+    SCIENCE_WAREHOUSE_ESB_URL: str = "http://172.30.9.50/esb/comm/api"
     SCIENCE_WAREHOUSE_ESB_SOURCE_SYSTEM: str = "REIS"
     SCIENCE_WAREHOUSE_ESB_SERVICE_NAME: str = "S_REIS_WMS_WMS_REIS_ZCYJ001_S"
     SCIENCE_WAREHOUSE_ESB_TIMEOUT_SECONDS: int = 120
