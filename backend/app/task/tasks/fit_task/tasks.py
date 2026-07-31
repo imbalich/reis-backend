@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
 @Project : fastapi-base-backend
@@ -18,6 +18,7 @@ from backend.app.fit.schema.fit_param import (
     FitMethodType,
 )
 from backend.app.fit.service.part_fit_service import part_fit_service
+from backend.app.fit_aaron.service.part_fit_service import part_fit_service as part_fit_aaron_service
 from backend.app.fit.service.product_fit_service import product_fit_service
 from backend.app.task.celery import celery_app
 from backend.common.exception.errors import DataValidationError
@@ -100,6 +101,34 @@ async def part_fit_task(
         return f"Error processing model {model}, part {part}: {exc.msg}"
     except Exception as exc:
         return f"Unexpected Error processing model {model}, part {part}: {exc}"
+
+
+@celery_app.task(name="part_fit_aaron_task")
+async def part_fit_aaron_task(
+    model: str,
+    part: str,
+    input_date: str,
+    method: FitMethodType = FitMethodType.MLE,
+    product_config_code: str | None = None,
+) -> str:
+    """Aaron????????????????"""
+    try:
+        # Aaron?2026-07-31???Aaron???????????
+        # ?????fit-aaron???????part_fit_task???????????
+        # Aaron 2026-07-31 新增：Aaron 分支复用 fit_aaron.service.part_fit_service，在服务层将 data_result 转成 tags。
+        fit_param = CreateFitPartInParam(
+            model=model,
+            product_config_code=product_config_code,
+            part=part,
+            input_date=input_date,
+            method=method,
+        )
+        await part_fit_aaron_service.create(obj=fit_param)
+        return f"Aaron task completed for model: {model}, part: {part}"
+    except DataValidationError as exc:
+        return f"Aaron error processing model {model}, part {part}: {exc.msg}"
+    except Exception as exc:
+        return f"Aaron unexpected error processing model {model}, part {part}: {exc}"
 
 
 @celery_app.task()
@@ -294,3 +323,4 @@ async def part_fit_model_all_task(
         if len(problematic_parts) > 10:
             result_summary += f" ... and {len(problematic_parts) - 10} more"
     return result_summary
+
