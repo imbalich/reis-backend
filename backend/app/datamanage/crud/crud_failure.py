@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model import FailureModel
+from backend.common.product_config import apply_product_config_code_filter
 
 T = TypeVar("T")
 
@@ -67,8 +68,9 @@ class CRUDFailure(CRUDPlus[T]):
 
         column = getattr(self.model, column_name)
         where_list = [self.model.product_model == product_model, column.isnot(None)]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = select(distinct(column)).where(*where_list).order_by(column)
         result = await db.execute(stmt)
         return result.scalars().all()
@@ -88,8 +90,9 @@ class CRUDFailure(CRUDPlus[T]):
 
         columns = [getattr(self.model, col) for col in column_names]
         where_list = [self.model.product_model == product_model]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = select(*columns).distinct().where(*where_list).order_by(*columns)
         result = await db.execute(stmt)
         return result.all()
@@ -111,8 +114,9 @@ class CRUDFailure(CRUDPlus[T]):
         where_list = []
         if product_model is not None:
             where_list.append(self.model.product_model == product_model)
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         if fault_location is not None:
             where_list.append(self.model.fault_location == fault_location)
         if product_lifetime_stage is not None:
@@ -141,8 +145,9 @@ class CRUDFailure(CRUDPlus[T]):
     ) -> Sequence[FailureModel]:
         stmt = select(self.model).order_by(self.model.discovery_date)
         where_list = [self.model.product_model == model]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         where_list.extend(
             [
                 self.model.is_zero_distance == 0,
@@ -176,8 +181,9 @@ class CRUDFailure(CRUDPlus[T]):
         where_list = []
         if input_date:
             where_list.append(self.model.discovery_date <= input_date.strftime("%Y-%m-%d"))
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         where_list.extend(
             [
                 self.model.product_model == model,

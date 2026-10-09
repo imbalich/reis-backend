@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model import Ebom
+from backend.common.product_config import apply_product_config_code_filter
 
 
 class CRUDEbom(CRUDPlus[Ebom]):
@@ -40,8 +41,9 @@ class CRUDEbom(CRUDPlus[Ebom]):
         where_list = []
         if prd_no:
             where_list.append(self.model.prd_no == prd_no)
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         if where_list:
             stmt = stmt.where(*where_list)
         return stmt
@@ -67,8 +69,9 @@ class CRUDEbom(CRUDPlus[Ebom]):
     ) -> Select:
         stmt = select(self.model)
         where_list = [self.model.prd_no == model]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = stmt.where(*where_list)
         return stmt
 
@@ -85,8 +88,9 @@ class CRUDEbom(CRUDPlus[Ebom]):
             self.model.y8_matbnum1 == part,
             self.model.state_now == 1,
         ]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()

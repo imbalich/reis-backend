@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model import Repair
+from backend.common.product_config import apply_product_config_code_filter
 
 
 class CRUDRepair(CRUDPlus[Repair]):
@@ -38,8 +39,9 @@ class CRUDRepair(CRUDPlus[Repair]):
         where_list = []
         if model is not None:
             where_list.append(self.model.model == model)
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         if state_now is not None:
             where_list.append(self.model.state_now == state_now)
         if where_list:
@@ -57,8 +59,9 @@ class CRUDRepair(CRUDPlus[Repair]):
             self.model.model == model,
             self.model.state_now == 1,
         ]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = stmt.where(*where_list)
         results = await db.execute(stmt)
         return results.scalars().all()
@@ -75,8 +78,9 @@ class CRUDRepair(CRUDPlus[Repair]):
             self.model.state_now == 1,
             self.model.repair_levels != "新造",
         ]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = stmt.where(*where_list)
         results = await db.execute(stmt)
         return results.scalars().all()

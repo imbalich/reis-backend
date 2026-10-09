@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.calcu.model.science_warehouse_result import ScienceWarehouseResult
+from backend.common.product_config import build_product_config_code_filter
 
 
 class CRUDScienceWarehouseResult(CRUDPlus[ScienceWarehouseResult]):
@@ -33,8 +34,11 @@ class CRUDScienceWarehouseResult(CRUDPlus[ScienceWarehouseResult]):
             query = query.where(self.model.calculation_id == calculation_id)
         if product_model:
             query = query.where(self.model.product_model == product_model)
-        if product_config_code is not None:
-            query = query.where(self.model.product_config_code == product_config_code)
+        product_config_filter = build_product_config_code_filter(
+            self.model.product_config_code, product_config_code
+        )
+        if product_config_filter is not None:
+            query = query.where(product_config_filter)
         if warehouse_code:
             query = query.where(self.model.warehouse_code == warehouse_code)
         if spare_part_code:

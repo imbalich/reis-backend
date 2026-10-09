@@ -17,6 +17,10 @@ from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.fit.model.fit_part import FitPart
 from backend.app.fit.schema.fit_param import FitCheckType, FitMethodType
+from backend.common.product_config import (
+    apply_product_config_code_filter,
+    build_product_config_code_filter,
+)
 
 
 class CRUDFitPart(CRUDPlus[FitPart]):
@@ -47,8 +51,11 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             .where(self.model.method == method)
             .order_by(desc(self.model.created_time))
         )
-        if product_config_code is not None:
-            stmt = stmt.where(self.model.product_config_code == product_config_code)
+        product_config_filter = build_product_config_code_filter(
+            self.model.product_config_code, product_config_code
+        )
+        if product_config_filter is not None:
+            stmt = stmt.where(product_config_filter)
         where_list = []
         if input_date:
             where_list.append(self.model.input_date == input_date)
@@ -67,8 +74,9 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         stmt = select(distinct(self.model.part))
         where_list = []
         where_list.append(self.model.model == model)
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
@@ -133,8 +141,9 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             self.model.method == method,
             self.model.source == source,
         ]
-        if product_config_code is not None:
-            base_conditions.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            base_conditions, self.model.product_config_code, product_config_code
+        )
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:
@@ -198,8 +207,9 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             self.model.part == part,
             self.model.method == method,
         ]
-        if product_config_code is not None:
-            base_conditions.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            base_conditions, self.model.product_config_code, product_config_code
+        )
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:
@@ -268,8 +278,9 @@ class CRUDFitPart(CRUDPlus[FitPart]):
             self.model.method == method,
             self.model.source == source,
         ]
-        if product_config_code is not None:
-            base_conditions.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            base_conditions, self.model.product_config_code, product_config_code
+        )
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:

@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.calcu.model.spare_statistics_result import SpareStatisticsResult
+from backend.common.product_config import apply_product_config_code_filter
 
 
 class CRUDSpareStatisticsResult(CRUDPlus[SpareStatisticsResult]):
@@ -44,7 +45,9 @@ class CRUDSpareStatisticsResult(CRUDPlus[SpareStatisticsResult]):
         if model:
             conditions.append(self.model.model == model)
         if product_config_code is not None:
-            conditions.append(self.model.product_config_code == product_config_code)
+            apply_product_config_code_filter(
+                conditions, self.model.product_config_code, product_config_code
+            )
         if part:
             conditions.append(self.model.part == part)
         if input_date:
@@ -81,7 +84,9 @@ class CRUDSpareStatisticsResult(CRUDPlus[SpareStatisticsResult]):
             self.model.task_type == task_type,
         ]
         if product_config_code is not None:
-            conditions.append(self.model.product_config_code == product_config_code)
+            apply_product_config_code_filter(
+                conditions, self.model.product_config_code, product_config_code
+            )
         else:
             conditions.append(self.model.product_config_code.is_(None))
 
@@ -114,7 +119,9 @@ class CRUDSpareStatisticsResult(CRUDPlus[SpareStatisticsResult]):
             self.model.task_type == "prediction",
         ]
         if product_config_code is not None:
-            conditions.append(self.model.product_config_code == product_config_code)
+            apply_product_config_code_filter(
+                conditions, self.model.product_config_code, product_config_code
+            )
         else:
             conditions.append(self.model.product_config_code.is_(None))
 

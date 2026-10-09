@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model import Despatch
+from backend.common.product_config import apply_product_config_code_filter
 
 
 class CRUDDespatch(CRUDPlus[Despatch]):
@@ -40,8 +41,9 @@ class CRUDDespatch(CRUDPlus[Despatch]):
         where_list = []
         if model:
             where_list.append(self.model.model == model)
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         if identifier is not None:
             where_list.append(self.model.identifier == identifier)
         if repair_level is not None:
@@ -60,10 +62,13 @@ class CRUDDespatch(CRUDPlus[Despatch]):
         model: str,
         product_config_code: str | None = None,
     ) -> Despatch:
-        filters = {"model": model}
-        if product_config_code is not None:
-            filters["product_config_code"] = product_config_code
-        return await self.select_model_by_column(db, **filters)
+        where_list = [self.model.model == model]
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
+        stmt = select(self.model).where(*where_list)
+        result = await db.execute(stmt)
+        return result.scalars().first()
 
     async def get_despatchs_by_model(
         self,
@@ -77,8 +82,9 @@ class CRUDDespatch(CRUDPlus[Despatch]):
             self.model.repair_level == "新造",
             ~self.model.identifier.like("0000%"),
         ]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = stmt.where(*where_list)
         results = await db.execute(stmt)
         return results.scalars().all()
@@ -97,8 +103,9 @@ class CRUDDespatch(CRUDPlus[Despatch]):
             self.model.repair_level.notin_(exclude_repair_level),
             ~self.model.identifier.like("0000%"),
         ]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = stmt.where(*where_list)
         results = await db.execute(stmt)
         return results.scalars().all()
@@ -120,8 +127,9 @@ class CRUDDespatch(CRUDPlus[Despatch]):
             self.model.model == model,
             self.model.repair_level == "新造",
         ]
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
         return result.scalars().all()

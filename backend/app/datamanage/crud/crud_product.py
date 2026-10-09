@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model import Product
+from backend.common.product_config import apply_product_config_code_filter
 
 
 class CRUDProduct(CRUDPlus[Product]):
@@ -28,8 +29,9 @@ class CRUDProduct(CRUDPlus[Product]):
         where_list = []
         if model:
             where_list.append(self.model.model == model)
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         if where_list:
             stmt = stmt.where(*where_list)
         return stmt
@@ -79,8 +81,9 @@ class CRUDProduct(CRUDPlus[Product]):
         where_list = []
         if model:
             where_list.append(self.model.model == model)
-        if product_config_code is not None:
-            where_list.append(self.model.product_config_code == product_config_code)
+        apply_product_config_code_filter(
+            where_list, self.model.product_config_code, product_config_code
+        )
         if where_list:
             stmt = stmt.where(*where_list)
         result = await db.execute(stmt)

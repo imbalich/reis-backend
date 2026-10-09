@@ -17,6 +17,7 @@ from sqlalchemy import and_, func, select
 from backend.app.datamanage.crud.crud_failure import CRUDFailure
 from backend.app.datamanage.model import FailureModel
 from backend.common.log import log
+from backend.common.product_config import apply_product_config_code_filter
 from backend.database.db import async_db_session
 
 
@@ -95,10 +96,9 @@ class SpareStatisticsService:
                 FailureModel.is_zero_distance == 0,
                 CRUDFailure._non_user_responsibility_condition(FailureModel),
             ]
-            if product_config_code is not None:
-                conditions.append(
-                    FailureModel.product_config_code == product_config_code
-                )
+            apply_product_config_code_filter(
+                conditions, FailureModel.product_config_code, product_config_code
+            )
 
             stmt = select(func.count(FailureModel.pk)).where(and_(*conditions))
             count = (await db.execute(stmt)).scalar()
@@ -123,10 +123,9 @@ class SpareStatisticsService:
                 FailureModel.fault_location.isnot(None),
                 CRUDFailure._non_user_responsibility_condition(FailureModel),
             ]
-            if product_config_code is not None:
-                conditions.append(
-                    FailureModel.product_config_code == product_config_code
-                )
+            apply_product_config_code_filter(
+                conditions, FailureModel.product_config_code, product_config_code
+            )
 
             stmt = select(func.min(FailureModel.fault_location)).where(and_(*conditions))
             part_name = (await db.execute(stmt)).scalar()

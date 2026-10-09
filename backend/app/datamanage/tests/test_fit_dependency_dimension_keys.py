@@ -122,6 +122,26 @@ def test_ebom_query_keys_by_product_config_code() -> None:
 
     assert "product_config_code" in sql
     assert "dm_ebom" in sql
+    assert "A01" in sql
+    assert "IS NULL" not in sql.upper()
+
+
+def test_ebom_ps00_query_includes_empty_product_config_code() -> None:
+    async def _run() -> str:
+        db = _FakeSession()
+        await ebom_dao.get_by_model_and_part(
+            db,
+            model="YGZN2Q239",
+            product_config_code="PS00",
+            part="CNR0000021931",
+        )
+        return _compile_sql(db.statements[-1])
+
+    sql = asyncio.run(_run())
+
+    assert "PS00" in sql
+    assert "IS NULL" in sql.upper()
+    assert "CNR0000021931" in sql
 
 
 def test_repair_query_keys_by_product_config_code() -> None:

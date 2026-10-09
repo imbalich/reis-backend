@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model.part_spare_mapping import PartSpareMapping
+from backend.common.product_config import build_product_config_code_filter
 
 
 class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
@@ -75,10 +76,15 @@ class CRUDPartSpareMapping(CRUDPlus[PartSpareMapping]):
         original_part_code: str,
     ) -> PartSpareMapping:
         """Get a mapping by product model, product config code, and original part code."""
+        product_config_filter = build_product_config_code_filter(
+            self.model.product_config_code, product_config_code
+        )
         stmt = select(self.model).where(
             self.model.product_model == product_model,
-            self.model.product_config_code == product_config_code,
             self.model.original_part_code == original_part_code,
+            product_config_filter
+            if product_config_filter is not None
+            else self.model.product_config_code == product_config_code,
         )
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
