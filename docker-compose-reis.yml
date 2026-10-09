@@ -22,9 +22,9 @@ services:
       - bash
       - -c
       - |
-        wait-for-it -s fba_mysql:3306 -s fba_redis:6379 -t 60
+        wait-for-it -s 172.30.1.148:3306 -t 60
+        wait-for-it -s 172.30.1.148:6379 -t 60
         supervisord -c /etc/supervisor/supervisord.conf
-        supervisorctl restart
     ports:
       - "8001:8001"  # 可选：直接API访问
 
