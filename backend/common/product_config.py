@@ -7,6 +7,22 @@ from sqlalchemy import ColumnElement, or_
 DEFAULT_PRODUCT_CONFIG_CODE = "PS00"
 
 
+def normalize_product_config_code(product_config_code: str | None) -> str:
+    """空值、空白和未填派生码一律按 PS00 处理。"""
+    if product_config_code is None:
+        return DEFAULT_PRODUCT_CONFIG_CODE
+    code = str(product_config_code).strip()
+    return code or DEFAULT_PRODUCT_CONFIG_CODE
+
+
+def product_config_codes_equal(
+    left: str | None,
+    right: str | None,
+) -> bool:
+    """派生码比较：空/NULL 与 PS00 视为同一派生码。"""
+    return normalize_product_config_code(left) == normalize_product_config_code(right)
+
+
 def build_product_config_code_filter(
     column,
     product_config_code: str | None,

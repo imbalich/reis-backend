@@ -6,12 +6,17 @@
 
 from datetime import date
 
-from backend.app.calcu.service.science_warehouse_service import (
-    science_warehouse_service,
+from backend.app.calcu.schema.science_warehouse import (
+    DEFAULT_SCIENCE_WAREHOUSE_INPUT_DATE,
 )
+from backend.app.calcu.service.science_warehouse_service_change import (
+    ScienceWarehouseServiceChange,
+)
+from backend.app.datamanage.crud.crud_warehouse_inventory import warehouse_inventory_dao
 from backend.app.task.celery import celery_app
 from backend.app.task.tasks.base import TaskBase
 from backend.common.exception.errors import DataValidationError
+from backend.database.db import async_db_session
 
 
 @celery_app.task(name="science_warehouse_calculation_task", base=TaskBase)
@@ -25,27 +30,37 @@ async def science_warehouse_calculation_task(
     后台任务: 科学库存需求计算。
     """
     try:
-        parsed_input_date = None
-        if input_date:
-            parsed_input_date = date.fromisoformat(input_date)
-
-        result = await science_warehouse_service.calculate_science_warehouse_requirements(
-            time_interval_days=time_interval_days,
-            input_date=parsed_input_date,
-            product_model=product_model,
-            product_config_code=product_config_code,
+        parsed_input_date = (
+            date.fromisoformat(input_date)
+            if input_date
+            else DEFAULT_SCIENCE_WAREHOUSE_INPUT_DATE
         )
 
-        if product_model is not None or product_config_code is not None:
-            return (
-                f"科学库存计算完成（新维度过滤走主服务）- "
-                f"计算批次ID: {result.calculation_id}, "
-                f"总备品数量: {result.statistics.get('total_warehouse_spares', 0)}"
-            )
+        async with async_db_session() as db:
+            inventories = await warehouse_inventory_dao.get_all(db)
+        warehouse_spare_pairs = []
+        seen = set()
+        for inventory in inventories:
+            pair = (inventory.warehouse_code, inventory.part_code)
+            if pair in seen:
+                continue
+            seen.add(pair)
+            warehouse_spare_pairs.append(pair)
 
+        if not warehouse_spare_pairs:
+            return "警告：未找到任何库房-备件组合，请检查数据库"
+
+        result = await ScienceWarehouseServiceChange.batch_warehouse_spare_calculate(
+            time_interval_days=time_interval_days,
+            input_date=parsed_input_date,
+            warehouse_spare_pairs=warehouse_spare_pairs,
+            save_to_db=True,
+        )
         return (
-            f"科学库存计算完成 - 计算批次ID: {result.calculation_id}, "
-            f"总备品数量: {result.statistics.get('total_warehouse_spares', 0)}"
+            f"科学库存计算完成 - 计算批次ID: {result.get('calculation_id')}, "
+            f"总组合数: {result.get('total_pairs', 0)}, "
+            f"成功: {result.get('success_count', 0)}, "
+            f"失败: {result.get('failed_count', 0)}"
         )
 
     except DataValidationError as e:

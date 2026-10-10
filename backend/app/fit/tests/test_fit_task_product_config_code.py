@@ -34,10 +34,11 @@ def test_product_fit_all_task_iterates_model_config_pairs(monkeypatch) -> None:
         fit_tasks.product_fit_all_task("2026-04-17", fit_tasks.FitMethodType.MLE)
     )
 
-    assert "Processed 2 model-config pairs" in result
+    assert "Processed 3 model-config pairs" in result
     assert captured == [
         ("YJ90A1", "PS00", "2026-04-17", fit_tasks.FitMethodType.MLE),
         ("YJ90A1", "PS01", "2026-04-17", fit_tasks.FitMethodType.MLE),
+        ("YJ90B", "PS00", "2026-04-17", fit_tasks.FitMethodType.MLE),
     ]
 
 

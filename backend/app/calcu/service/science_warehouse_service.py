@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # 科学库存服务,支援国铁售后需求
@@ -31,9 +31,14 @@ from typing import Sequence
 # from backend.app.calcu.crud.crud_science_warehouse_statistics import (
 #     science_warehouse_statistics_dao,
 # )
-from backend.app.fit.service.part_strategy_service import part_strategy_service
-from backend.app.fit.service.part_fit_service import part_fit_service
+from backend.app.calcu.service.distribute_service import distribute_service
+from backend.app.fit.schema.fit_param import CreateFitPartInParam, FitCheckType, FitMethodType
+from backend.app.fit_aaron.service.part_fit_service import part_fit_service
 from backend.app.fit.utils.time_utils import dateutils
+from backend.common.product_config import (
+    normalize_product_config_code,
+    product_config_codes_equal,
+)
 from backend.database.db import async_db_session
 from backend.utils.snowflake import snowflake
 
@@ -117,7 +122,11 @@ class ScienceWarehouseService:
         start_time = time.time()
 
         if not input_date:
-            input_date = date.today()
+            from backend.app.calcu.schema.science_warehouse import (
+                DEFAULT_SCIENCE_WAREHOUSE_INPUT_DATE,
+            )
+
+            input_date = DEFAULT_SCIENCE_WAREHOUSE_INPUT_DATE
 
         # 1. 获取所有库房备品清单
         warehouse_spares = await ScienceWarehouseService.get_all_warehouse_spare_list()
@@ -295,7 +304,9 @@ class ScienceWarehouseService:
         return "_".join(
             [
                 getattr(failure, "product_model", "") or "",
-                getattr(failure, "product_config_code", "") or "",
+                normalize_product_config_code(
+                    getattr(failure, "product_config_code", None)
+                ),
                 getattr(failure, "fault_material_code", "") or "",
             ]
         )
@@ -463,12 +474,17 @@ class ScienceWarehouseService:
                         continue
                     if (
                         product_config_code is not None
-                        and getattr(failure, "product_config_code", None) != product_config_code
+                        and not product_config_codes_equal(
+                            getattr(failure, "product_config_code", None),
+                            product_config_code,
+                        )
                     ):
                         continue
                     mapping = await ScienceWarehouseService.get_part_spare_mapping(
                         failure.product_model,
-                        getattr(failure, "product_config_code", None),
+                        normalize_product_config_code(
+                            getattr(failure, "product_config_code", None)
+                        ),
                         failure.fault_material_code,
                     )
 
@@ -584,6 +600,7 @@ class ScienceWarehouseService:
             for model_part_key, model_part_failures in failures_by_model_part.items():
                 # 解析型号、派生码和零部件编码
                 product_model, product_config_code, part_code = model_part_key.split("_", 2)
+                product_config_code = normalize_product_config_code(product_config_code)
                 product_numbers = list(
                     set([f.product_number for f in model_part_failures])
                 )
@@ -638,20 +655,19 @@ class ScienceWarehouseService:
 
                     continue
 
-                # 使用已过滤的故障数据进行打标处理
-                tags = await part_strategy_service.part_tag_process_with_failures(
-                    product_model,
-                    part_code,
-                    input_date,
-                    model_part_failures,
-                    product_config_code=product_config_code,
+                # 样本足够：先查拟合结果库，没有则 Aaron 计算入库后再查
+                best_distribution = (
+                    await ScienceWarehouseService.get_or_create_aaron_distribution(
+                        product_model,
+                        part_code,
+                        product_config_code,
+                        input_date,
+                    )
                 )
-
-                # 进行拟合
-                fit_result = await part_fit_service.tag_fit(tags)
-
-                # 获取最佳分布
-                best_distribution = fit_result.best_distribution
+                if best_distribution is None:
+                    insufficient_failure_data_combinations += 1
+                    non_responsible_products += len(product_numbers)
+                    continue
 
                 # 计算该型号+零部件的备件量
                 model_part_spare_quantity = (
@@ -701,6 +717,45 @@ class ScienceWarehouseService:
             return {"success": False, "error": str(e)}
 
     @staticmethod
+    async def get_or_create_aaron_distribution(
+        product_model: str,
+        part_code: str,
+        product_config_code: str,
+        input_date: date,
+    ):
+        """先查 fit_part，没有则 Aaron 拟合入库后再查。"""
+        product_config_code = normalize_product_config_code(product_config_code)
+
+        async def _lookup():
+            for source in (False, True):
+                distribution = await distribute_service.get_part_distribution(
+                    product_model,
+                    part_code,
+                    product_config_code=product_config_code,
+                    method=FitMethodType.MLE,
+                    check=FitCheckType.BIC,
+                    source=source,
+                )
+                if distribution is not None:
+                    return distribution
+            return None
+
+        distribution = await _lookup()
+        if distribution is not None:
+            return distribution
+
+        await part_fit_service.create(
+            obj=CreateFitPartInParam(
+                model=product_model,
+                part=part_code,
+                product_config_code=product_config_code,
+                input_date=input_date.isoformat(),
+                method=FitMethodType.MLE,
+            )
+        )
+        return await _lookup()
+
+    @staticmethod
     async def calculate_spare_quantity_by_interval(
         best_distribution,
         time_interval_days: int,
@@ -718,7 +773,9 @@ class ScienceWarehouseService:
                 return 0.0
 
             product_model = product_failures[0].product_model
-            product_config_code = getattr(product_failures[0], "product_config_code", None)
+            product_config_code = normalize_product_config_code(
+                getattr(product_failures[0], "product_config_code", None)
+            )
 
             # 2. 获取产品运行参数
             async with async_db_session() as db:

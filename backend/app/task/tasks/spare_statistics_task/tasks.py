@@ -34,6 +34,7 @@ from backend.app.task.celery import celery_app
 from backend.app.task.tasks.base import TaskBase
 from backend.common.exception.errors import DataValidationError
 from backend.common.log import log
+from backend.common.product_config import normalize_product_config_code
 from backend.common.socketio.actions import task_notification
 from backend.database.db import async_db_session
 
@@ -43,9 +44,9 @@ def _normalize_model_part_item(
 ) -> Tuple[str, str | None, str]:
     if len(item) == 2:
         model, part = item
-        return str(model), None, str(part)
+        return str(model), normalize_product_config_code(None), str(part)
     model, product_config_code, part = item
-    return str(model), product_config_code, str(part)
+    return str(model), normalize_product_config_code(product_config_code), str(part)
 
 
 @celery_app.task(name="spare_prediction_batch_task", base=TaskBase)

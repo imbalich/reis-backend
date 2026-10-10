@@ -23,7 +23,7 @@ def _build_failure(
 
 
 def test_perform_spare_calculation_splits_by_product_config_code(monkeypatch) -> None:
-    tag_calls = []
+    lookup_calls = []
     quantity_calls = []
 
     failures = [
@@ -42,21 +42,17 @@ def test_perform_spare_calculation_splits_by_product_config_code(monkeypatch) ->
         for index in range(5)
     ]
 
-    async def _fake_part_tag_process_with_failures(
-        product_model, part_code, input_date, model_part_failures, product_config_code=None
+    async def _fake_get_or_create(
+        product_model, part_code, product_config_code, input_date
     ):
-        tag_calls.append(
+        lookup_calls.append(
             {
                 "product_model": product_model,
                 "part_code": part_code,
                 "product_config_code": product_config_code,
-                "failure_ids": [failure.id for failure in model_part_failures],
             }
         )
         return product_config_code
-
-    async def _fake_tag_fit(tags):
-        return SimpleNamespace(best_distribution=tags)
 
     async def _fake_calculate_spare_quantity_by_interval(
         best_distribution, time_interval_days, product_failures, input_date
@@ -75,14 +71,9 @@ def test_perform_spare_calculation_splits_by_product_config_code(monkeypatch) ->
         return {"responsible": True}
 
     monkeypatch.setattr(
-        science_warehouse_service_module.part_strategy_service,
-        "part_tag_process_with_failures",
-        _fake_part_tag_process_with_failures,
-    )
-    monkeypatch.setattr(
-        science_warehouse_service_module.part_fit_service,
-        "tag_fit",
-        _fake_tag_fit,
+        science_warehouse_service_module.ScienceWarehouseService,
+        "get_or_create_aaron_distribution",
+        staticmethod(_fake_get_or_create),
     )
     monkeypatch.setattr(
         science_warehouse_service_module.ScienceWarehouseService,
@@ -106,7 +97,7 @@ def test_perform_spare_calculation_splits_by_product_config_code(monkeypatch) ->
     )
 
     assert result["success"] is True
-    assert [call["product_config_code"] for call in tag_calls] == ["A01", "B02"]
+    assert [call["product_config_code"] for call in lookup_calls] == ["A01", "B02"]
     assert quantity_calls == [
         {
             "best_distribution": "A01",
@@ -136,13 +127,10 @@ def test_perform_spare_calculation_sums_each_dimension_once(monkeypatch) -> None
         for index in range(5)
     ]
 
-    async def _fake_part_tag_process_with_failures(
-        product_model, part_code, input_date, model_part_failures, product_config_code=None
+    async def _fake_get_or_create(
+        product_model, part_code, product_config_code, input_date
     ):
         return product_config_code
-
-    async def _fake_tag_fit(tags):
-        return SimpleNamespace(best_distribution=tags)
 
     async def _fake_calculate_spare_quantity_by_interval(
         best_distribution, time_interval_days, product_failures, input_date
@@ -155,14 +143,9 @@ def test_perform_spare_calculation_sums_each_dimension_once(monkeypatch) -> None
         return {"responsible": True}
 
     monkeypatch.setattr(
-        science_warehouse_service_module.part_strategy_service,
-        "part_tag_process_with_failures",
-        _fake_part_tag_process_with_failures,
-    )
-    monkeypatch.setattr(
-        science_warehouse_service_module.part_fit_service,
-        "tag_fit",
-        _fake_tag_fit,
+        science_warehouse_service_module.ScienceWarehouseService,
+        "get_or_create_aaron_distribution",
+        staticmethod(_fake_get_or_create),
     )
     monkeypatch.setattr(
         science_warehouse_service_module.ScienceWarehouseService,
@@ -187,6 +170,21 @@ def test_perform_spare_calculation_sums_each_dimension_once(monkeypatch) -> None
 
     assert result["success"] is True
     assert result["quantity"] == 4
+
+
+def test_empty_and_ps00_failures_share_one_dimension_group() -> None:
+    failures = [
+        _build_failure(failure_id=1, product_number="t-1", product_config_code=""),
+        _build_failure(failure_id=2, product_number="t-2", product_config_code="PS00"),
+        _build_failure(failure_id=3, product_number="t-3", product_config_code=None),
+    ]
+    grouped = science_warehouse_service_module.ScienceWarehouseService.group_failures_by_dimension(
+        failures
+    )
+    assert len(grouped) == 1
+    key = next(iter(grouped))
+    assert "_PS00_" in key
+    assert len(grouped[key]) == 3
 
 
 def test_small_sample_exponential_fit_ignores_non_responsible_dimension_group(
@@ -405,3 +403,83 @@ def test_calculate_spare_quantity_by_interval_queries_product_with_product_confi
 
     assert captured["product_model"] == "CR400AF"
     assert captured["product_config_code"] == "A01"
+
+
+def test_get_or_create_aaron_distribution_reads_then_creates(monkeypatch) -> None:
+    lookups = []
+    creates = []
+
+    async def _fake_get_part_distribution(*args, **kwargs):
+        lookups.append(kwargs)
+        if not creates:
+            return None
+        return "aaron-dist"
+
+    class _FakePartFitService:
+        async def create(self, obj):
+            creates.append(obj)
+
+    monkeypatch.setattr(
+        science_warehouse_service_module.distribute_service,
+        "get_part_distribution",
+        _fake_get_part_distribution,
+    )
+    monkeypatch.setattr(
+        science_warehouse_service_module,
+        "part_fit_service",
+        _FakePartFitService(),
+    )
+
+    result = asyncio.run(
+        science_warehouse_service_module.ScienceWarehouseService.get_or_create_aaron_distribution(
+            product_model="CR400AF",
+            part_code="P-001",
+            product_config_code="",
+            input_date=date(2025, 12, 30),
+        )
+    )
+
+    assert result == "aaron-dist"
+    assert creates[0].product_config_code == "PS00"
+    assert creates[0].input_date == "2025-12-30"
+    assert creates[0].model == "CR400AF"
+    assert creates[0].part == "P-001"
+    assert len(lookups) == 3
+
+
+def test_calculate_science_warehouse_defaults_cutoff_to_2025_12_30(monkeypatch) -> None:
+    captured = {}
+
+    async def _fake_get_all_warehouse_spare_list():
+        return {}
+
+    async def _fake_save_calculation_results(
+        calculation_id,
+        results,
+        statistics,
+        time_interval_days,
+        input_date,
+        product_model=None,
+        product_config_code=None,
+    ):
+        captured["input_date"] = input_date
+
+    monkeypatch.setattr(
+        science_warehouse_service_module.ScienceWarehouseService,
+        "get_all_warehouse_spare_list",
+        staticmethod(_fake_get_all_warehouse_spare_list),
+    )
+    monkeypatch.setattr(
+        science_warehouse_service_module.ScienceWarehouseService,
+        "save_calculation_results",
+        staticmethod(_fake_save_calculation_results),
+    )
+
+    asyncio.run(
+        science_warehouse_service_module.ScienceWarehouseService.calculate_science_warehouse_requirements(
+            time_interval_days=180,
+            input_date=None,
+        )
+    )
+
+    assert captured["input_date"] == date(2025, 12, 30)

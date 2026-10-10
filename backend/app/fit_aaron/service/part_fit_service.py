@@ -24,6 +24,7 @@ from backend.app.fit.utils.time_utils import dateutils
 from backend.app.fit_aaron.service.part_strategy_service import part_strategy_service
 from backend.common.exception import errors
 from backend.common.exception.errors import DataValidationError, FailureCheckError
+from backend.common.product_config import normalize_product_config_code
 from backend.database.db import async_db_session
 
 
@@ -104,6 +105,7 @@ class PartFitService:
     @staticmethod
     async def create(*, obj: CreateFitPartInParam) -> None:
         input_date = dateutils.validate_and_parse_date(obj.input_date)
+        product_config_code = normalize_product_config_code(obj.product_config_code)
         is_system_default = input_date == date.today() and obj.method == FitMethodType.MLE
 
         async with async_db_session() as db:
@@ -113,7 +115,7 @@ class PartFitService:
                 obj.part,
                 input_date,
                 obj.method,
-                product_config_code=obj.product_config_code,
+                product_config_code=product_config_code,
             ):
                 return
 
@@ -123,7 +125,7 @@ class PartFitService:
             input_date,
             obj.method,
             not is_system_default,
-            product_config_code=obj.product_config_code,
+            product_config_code=product_config_code,
         )
 
     @staticmethod
@@ -209,6 +211,7 @@ class PartFitService:
         source: bool = False,
         product_config_code: str | None = None,
     ):
+        product_config_code = normalize_product_config_code(product_config_code)
         async with async_db_session() as db:
             return await fit_part_dao.get_by_model_and_part(
                 db,
@@ -231,6 +234,7 @@ class PartFitService:
         source: bool = False,
         product_config_code: str | None = None,
     ):
+        product_config_code = normalize_product_config_code(product_config_code)
         async with async_db_session() as db:
             results = await fit_part_dao.get_by_model_and_part(
                 db,

@@ -17,7 +17,11 @@ class PartSpareMapping(Base):
         String(255), nullable=False, index=True, comment="产品型号"
     )
     product_config_code: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True, index=True, comment="派生码"
+        String(255),
+        nullable=True,
+        index=True,
+        comment="派生码",
+        name="derived_code",
     )
     original_part_name: Mapped[str] = mapped_column(
         String(255), nullable=False, index=True, comment="零部件名称（原装）"

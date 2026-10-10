@@ -9,6 +9,7 @@ from typing import Annotated, Any, Dict, List
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.app.calcu.schema.science_warehouse import (
+    DEFAULT_SCIENCE_WAREHOUSE_INPUT_DATE,
     ScienceWarehouseDetailsResponse,
     ScienceWarehouseListDetails,
     ScienceWarehousePushRequest,
@@ -44,7 +45,9 @@ async def calculate_science_warehouse_requirements(
     try:
         task = science_warehouse_calculation_task.delay(
             time_interval_days=request.time_interval_days,
-            input_date=request.input_date.isoformat() if request.input_date else None,
+            input_date=(
+                request.input_date or DEFAULT_SCIENCE_WAREHOUSE_INPUT_DATE
+            ).isoformat(),
             product_model=request.product_model,
             product_config_code=request.product_config_code,
         )

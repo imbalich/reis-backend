@@ -17,6 +17,11 @@ from backend.app.calcu.service import science_warehouse_service as science_servi
 from backend.app.task.tasks.science_warehouse_task import __all__ as science_task_exports
 
 
+def test_science_warehouse_request_defaults_input_date_to_2025_12_30() -> None:
+    payload = ScienceWarehouseRequest.model_validate({"time_interval_days": 180})
+    assert payload.input_date == date(2025, 12, 30)
+
+
 def test_science_warehouse_request_accepts_product_dimension_filters() -> None:
     payload = ScienceWarehouseRequest.model_validate(
         {

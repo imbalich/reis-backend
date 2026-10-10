@@ -27,6 +27,7 @@ from backend.app.fit.utils.time_utils import dateutils
 from backend.app.fit_aaron.service.aaron_part_data_service import aaron_part_data_service
 from backend.common.exception import errors
 from backend.common.log import log
+from backend.common.product_config import normalize_product_config_code
 from backend.database.db import async_db_session
 
 
@@ -39,6 +40,7 @@ class PartStrategyService:
         product_config_code: str | None = None,
     ) -> list[list]:
         input_date = dateutils.validate_and_parse_date(input_date)
+        product_config_code = normalize_product_config_code(product_config_code)
         await PartStrategyService._check_base_data(
             model,
             part,
@@ -173,6 +175,7 @@ class PartStrategyService:
         product_config_code: str | None = None,
     ) -> list[list]:
         input_date = dateutils.validate_and_parse_date(input_date)
+        product_config_code = normalize_product_config_code(product_config_code)
         await PartStrategyService._check_base_data(
             model,
             part,
@@ -274,6 +277,7 @@ class PartStrategyService:
         product_config_code: str | None = None,
         check_failure: bool = True,
     ) -> None:
+        product_config_code = normalize_product_config_code(product_config_code)
         product_check = await datacheckutils.check_model_in_product(
             model,
             product_config_code=product_config_code,

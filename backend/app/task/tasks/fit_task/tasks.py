@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
 @Project : fastapi-base-backend
@@ -23,10 +23,16 @@ from backend.app.fit.service.product_fit_service import product_fit_service
 from backend.app.task.celery import celery_app
 from backend.common.exception.errors import DataValidationError
 from backend.common.log import log
+from backend.common.product_config import (
+    normalize_product_config_code,
+    product_config_codes_equal,
+)
 
 
 def _format_dimension_label(model: str, product_config_code: str | None) -> str:
-    return f"{model} + {product_config_code}" if product_config_code else model
+    if product_config_code is None:
+        return model
+    return f"{model} + {normalize_product_config_code(product_config_code)}"
 
 
 def _filter_dimension_pairs_for_model(
@@ -38,9 +44,11 @@ def _filter_dimension_pairs_for_model(
     for pair_model, pair_config in pairs:
         if pair_model != model:
             continue
-        if product_config_code is not None and pair_config != product_config_code:
+        if product_config_code is not None and not product_config_codes_equal(
+            pair_config, product_config_code
+        ):
             continue
-        matched_pairs.append((pair_model, pair_config))
+        matched_pairs.append((pair_model, normalize_product_config_code(pair_config)))
     return matched_pairs
 
 
@@ -49,9 +57,9 @@ def _get_valid_dimension_pairs(
 ) -> list[tuple[str, str]]:
     valid_pairs: list[tuple[str, str]] = []
     for model, product_config_code in pairs:
-        if not model or not product_config_code:
+        if not model:
             continue
-        valid_pairs.append((model, product_config_code))
+        valid_pairs.append((model, normalize_product_config_code(product_config_code)))
     return valid_pairs
 
 

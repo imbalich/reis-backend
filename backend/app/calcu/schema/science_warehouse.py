@@ -8,12 +8,17 @@ from pydantic import ConfigDict, Field
 
 from backend.common.schema import SchemaBase
 
+DEFAULT_SCIENCE_WAREHOUSE_INPUT_DATE = date(2025, 12, 30)
+
 
 class ScienceWarehouseRequest(SchemaBase):
     """科学库存计算请求参数。"""
 
     time_interval_days: int = Field(180, description="需求预测时间间隔（天）")
-    input_date: Optional[date] = Field(None, description="计算截止日期")
+    input_date: Optional[date] = Field(
+        DEFAULT_SCIENCE_WAREHOUSE_INPUT_DATE,
+        description="计算截止日期，未传时默认 2025-12-30",
+    )
     product_model: Optional[str] = Field(None, description="产品型号过滤")
     product_config_code: Optional[str] = Field(None, description="派生码过滤")
 
