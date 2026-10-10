@@ -7,8 +7,8 @@
 
 """
 from datetime import date, datetime, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 import json
-import math
 from typing import Optional
 from sqlalchemy import select
 
@@ -43,6 +43,17 @@ from backend.common.exception.errors import DataValidationError, FailureCheckErr
 from backend.common.log import log
 from backend.common.product_config import normalize_product_config_code
 from backend.database.db import async_db_session
+
+_REQUIRED_QUANTITY_PLACES = Decimal("0.00001")
+
+
+def round_required_quantity(value) -> Decimal:
+    """需求数量保留五位小数，四舍五入。"""
+    if value is None:
+        return Decimal("0.00000")
+    return Decimal(str(value)).quantize(
+        _REQUIRED_QUANTITY_PLACES, rounding=ROUND_HALF_UP
+    )
 
 
 def parse_discovery_date(discovery_date_str: str) -> Optional[date]:
@@ -368,20 +379,20 @@ class ScienceWarehouseServiceChange:
             if "quantity" in model_failure_spare_mapping:
                 quantity = model_failure_spare_mapping["quantity"]
                 if quantity is not None:
-                    ceil_quantity = math.ceil(quantity)
-                    total_quantity += ceil_quantity
-                    quantity_details.append(f"{model}+{part}:{quantity:.4f}(ceil={ceil_quantity})")
+                    total_quantity += quantity
+                    quantity_details.append(f"{model}+{part}:{quantity:.5f}")
                 else:
                     quantity_details.append(f"{model}+{part}:None")
             else:
                 # 记录被跳过的故障件
                 quantity_details.append(f"{model}+{part}:跳过(未计算)")
 
+        rounded_quantity = round_required_quantity(total_quantity)
         log.info(
             f"[科学库存计算] 库房{warehouse_code}备品{spare_part_code}计算完成，"
             f"总故障件映射数={len(model_failure_spare_mappings)}，"
             f"成功计算={calculated_count}，跳过={skipped_count}，"
-            f"最终备件量={math.ceil(total_quantity)}，"
+            f"最终备件量={rounded_quantity}，"
             f"总最大故障次数={total_max_failure_count}"
         )
         if quantity_details:
@@ -399,7 +410,7 @@ class ScienceWarehouseServiceChange:
             "warehouse_name": warehouse_spare.warehouse_name,
             "spare_part_code": spare_part_code,
             "spare_part_name": warehouse_spare.part_name,
-            "quantity": math.ceil(total_quantity),
+            "quantity": rounded_quantity,
             "max_failure_count": total_max_failure_count,
             "calculation_method": "fitted",
             "error_code": None,
@@ -1121,7 +1132,7 @@ class ScienceWarehouseServiceChange:
                     "warehouse_name": warehouse_name,
                     "spare_part_code": spare_part_code,
                     "spare_part_name": spare_part_name,
-                    "required_quantity": int(required_quantity),  # 确保是整数
+                    "required_quantity": round_required_quantity(required_quantity),
                     "calculation_method": calculation_method,
                     "time_interval_days": time_interval_days,
                     "input_date": input_date,

@@ -1397,10 +1397,6 @@ class ScienceWarehouseService:
 
         conditions = []
 
-        # 固定条件：required_quantity必须大于0
-        conditions.append(ScienceWarehouseResult.required_quantity > 0)
-        conditions.append(ScienceWarehouseResult.required_quantity >= ScienceWarehouseResult.max_failure_count)
-
         if calculation_id:
             # 计算批次ID支持模糊匹配（因为用户手动输入）
             conditions.append(
@@ -1428,11 +1424,10 @@ class ScienceWarehouseService:
                 )
             )
 
-        return (
-            select(ScienceWarehouseResult)
-            .where(and_(*conditions))
-            .order_by(ScienceWarehouseResult.required_quantity.desc())
-        )
+        stmt = select(ScienceWarehouseResult)
+        if conditions:
+            stmt = stmt.where(and_(*conditions))
+        return stmt.order_by(ScienceWarehouseResult.required_quantity.desc())
 
     @staticmethod
     async def get_warehouse_code_name_pairs() -> Sequence[List[str]]:

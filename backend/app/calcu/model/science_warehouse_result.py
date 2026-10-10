@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date
+from decimal import Decimal
 
-from sqlalchemy import Date, Float, Integer, String
+from sqlalchemy import Date, Float, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.common.model import Base, id_key
@@ -33,8 +34,8 @@ class ScienceWarehouseResult(Base):
     max_failure_count: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="最大滚动故障次数"
     )
-    required_quantity: Mapped[int] = mapped_column(
-        Integer, nullable=False, comment="需求数量"
+    required_quantity: Mapped[Decimal] = mapped_column(
+        Numeric(8, 5), nullable=False, comment="需求数量"
     )
     calculation_method: Mapped[str] = mapped_column(
         String(50), nullable=False, comment="计算方法"

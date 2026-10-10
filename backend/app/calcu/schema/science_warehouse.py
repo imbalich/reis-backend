@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date
+from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from pydantic import ConfigDict, Field
@@ -79,7 +80,7 @@ class ScienceWarehouseResultDetails(SchemaBase):
     warehouse_name: str = Field(..., description="库房名称")
     spare_part_code: str = Field(..., description="备品编码")
     spare_part_name: str = Field(..., description="备品名称")
-    required_quantity: int = Field(..., description="需求数量")
+    required_quantity: Decimal = Field(..., description="需求数量")
     calculation_method: str = Field(..., description="计算方法")
     time_interval_days: int = Field(..., description="时间间隔（天）")
     input_date: date = Field(..., description="计算截止日期")
@@ -148,7 +149,7 @@ class ScienceWarehouseListDetails(SchemaBase):
     warehouse_name: str = Field(..., description="库房名称")
     spare_part_code: str = Field(..., description="备品编码")
     spare_part_name: str = Field(..., description="备品名称")
-    required_quantity: int = Field(..., description="需求数量")
+    required_quantity: Decimal = Field(..., description="需求数量")
     calculation_method: str = Field(..., description="计算方法")
     time_interval_days: int = Field(..., description="时间间隔（天）")
     input_date: date = Field(..., description="计算截止日期")
