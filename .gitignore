@@ -10,3 +10,4 @@ venv/
 .promptx/
 .worktrees/
 report.log
+backend/app/calcu/script/output/

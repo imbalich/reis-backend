@@ -46,8 +46,10 @@ class DateUtils:
                 return datetime.strptime(input_date, '%Y-%m-%d').date()
             except ValueError:
                 raise DataValidationError(msg="input_date 格式错误,必须是 'YYYY-MM-DD' 格式的字符串")
+        elif isinstance(input_date, datetime):
+            return input_date.date()
         elif isinstance(input_date, date):
-            return input_date.today()
+            return input_date
         else:
             raise DataValidationError(msg='input_date 必须是字符串或 date 对象')
 

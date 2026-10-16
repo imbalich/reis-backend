@@ -80,11 +80,11 @@ class DistributeService:
                     db,
                     model,
                     part,
-                    product_config_code,
                     distribution,
                     method=method,
                     check=check,
                     source=source,
+                    product_config_code=product_config_code,
                 )
                 distribution_params = result if result else None
             else:
