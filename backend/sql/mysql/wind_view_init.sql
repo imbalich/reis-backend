@@ -49,14 +49,17 @@ SELECT
     COOLING_MODE                                      AS cooling_mode,
     VOLTAGE_LEVEL                                     AS voltage_level,
     STRUCTURE                                         AS structure,
-    NULL                                              AS repair_times,
+    -- 风电无修级概念: 用产品寿命(年)折算天数替代修级间隔, 保证关键件打标校验通过
+    CAST(PROD_REPAIR AS SIGNED) * 365                 AS repair_times,
     CAST(AVG_WORKTIME AS SIGNED)                      AS avg_worktime,   -- 日均工作小时
     NULL                                              AS avg_speed,      -- 时速为铁路概念，风电不适用
     YEAR_DAYS                                         AS year_days,      -- 年运行天数
     UPDATE_TIME                                       AS update_time,
     MARK1                                             AS mark,
     PRD_BIG_TYPE                                      AS prd_big_type
-FROM fba.dm_jl_product;
+FROM fba.dm_jl_product p
+-- 去重: 产品表存在同 MODEL 多行(如 YJ258A), 仅保留每组最小 ID
+WHERE p.ID = (SELECT MIN(p2.ID) FROM fba.dm_jl_product p2 WHERE p2.MODEL = p.MODEL);
 
 -- ============================================================================
 -- 2. dm_failure ← dm_jl_failure （故障记录）
