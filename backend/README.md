@@ -1,83 +1,45 @@
-# FastAPI Best Architecture - Backend
+# REIS 后端运行说明
 
-## Docker
+在仓库根目录执行命令。应用入口是 `fba`，定义在 `pyproject.toml` 的 `[project.scripts]`。
 
-1. Make sure you're at the root of the project
-2. Run the following Docker command to build container:
+## 准备环境
 
-   ```shell
-   docker build -f Dockerfile -t fba_backend_independent .
-   ```
+```shell
+uv sync --frozen
+```
 
-3. Start container
+复制 `backend/.env.example` 为 `backend/.env`，填写本机数据库、Redis 和 RabbitMQ。生产配置使用 `deploy/backend/docker-compose/.env.server`，不要把密码提交进 Git。
 
-   Native boot needs to change `127.0.0.1` in `.env` to `host.docker.internal`
+## 启动服务
 
-   ```shell
-   docker run -d -p 8000:8000 --name fba_server fba_backend_independent
-   ```
+```shell
+uv run fba run
+uv run fba celery worker
+uv run fba celery beat
+uv run fba celery flower
+```
 
-## Contributing
+`fba run` 默认监听 `127.0.0.1:8000`。需要对外访问时指定主机和端口，例如 `uv run fba run --host 0.0.0.0 --port 8001`。
 
-1. Prerequisites
+## 现网容器
 
-    - Python >= 3.10
-    - Git
-    - [uv](https://docs.astral.sh/uv/getting-started/installation/)
-    - Fork this repository to your GitHub account
+`docker-compose-reis.yml` 构建并启动：
 
-2. Installation and setup
+| 容器 | 作用 |
+|------|------|
+| `fba_server` | API，映射端口 `8001` |
+| `fba_celery` | Worker、Beat 和 Flower，Flower 端口 `8555` |
+| `fba_ui` | 前端 Nginx |
+| `fba_rabbitmq` | 生产环境 Celery 消息代理 |
 
-   Clone your forked repository:
+MySQL、Redis 使用宿主机实例。容器启动前会等待 `DATABASE_HOST` 对应的 3306 和 6379。
 
-   ```shell
-   git clone https://github.com/<your account>/fastapi_best_architecture.git
-   ```
+## 脚本
 
-   Go to the root directory of the project, open the terminal, and run the following command:
+以下脚本位于 `backend/`，在 Windows 上优先使用上面的 `uv run fba` 命令。
 
-   ```sh
-   uv sync --frozen
-   ```
-
-3. Checkout
-
-   Checkout a new branch and make your changes
-
-   ```shell
-   git checkout -b your-new-feature-branch
-   ```
-
-4. Format and Lint
-
-   Auto-formatting and lint via `pre-commit`
-
-   ```shell
-   pre-commit run --all-files
-   ```
-
-5. Commit and push
-
-   Commit your changes and push your branch to the GitHub.
-
-6. PR
-
-   Create a PR via GitHub
-
-## Scripts
-
-> [!WARNING]
->
-> The following script may not apply to the Windows platform
->
-> It is recommended to execute under the backend directory, and chmod authorization may be required
-
-- `pre_start.sh`: Perform automatic database migration
-
-- `celery-start.sh`: For celery docker script, implementation is not recommended
-
-- `scripts/format.sh`: Perform ruff format check
-
-- `scripts/lint.sh`: Perform pre-commit formatting
-
-- `scripts/export.sh`: Execute uv export dependency package
+| 脚本 | 用途 |
+|------|------|
+| `celery-start.sh` | 容器内同时启动 worker、beat 和 flower |
+| `scripts/format.sh` | Ruff 格式检查 |
+| `scripts/lint.sh` | pre-commit 检查 |
