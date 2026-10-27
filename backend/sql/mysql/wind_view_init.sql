@@ -40,7 +40,7 @@ SELECT
     NULL                                              AS sub_name,
     SUB_SAET                                          AS sub_saet,
     MODEL                                             AS model,
-    PS_CODE                                           AS product_config_code,
+    PS_CODE                                           AS ps_code,        -- 派生码(与master模型映射一致: name='ps_code')
     INDUSTRY_UNIT                                     AS industry_unit,
     NULL                                              AS repair_priod,
     NULL                                              AS attach_train,
@@ -58,8 +58,12 @@ SELECT
     MARK1                                             AS mark,
     PRD_BIG_TYPE                                      AS prd_big_type
 FROM fba.dm_jl_product p
--- 去重: 产品表存在同 MODEL 多行(如 YJ258A), 仅保留每组最小 ID
-WHERE p.ID = (SELECT MIN(p2.ID) FROM fba.dm_jl_product p2 WHERE p2.MODEL = p.MODEL);
+-- 去重: 同一机型可存在多行(同派生码重复行), 按(机型,派生码)组合去重, 各保留最小ID
+WHERE p.ID = (
+    SELECT MIN(p2.ID) FROM fba.dm_jl_product p2
+    WHERE p2.MODEL = p.MODEL
+      AND COALESCE(p2.PS_CODE, '') = COALESCE(p.PS_CODE, '')
+);
 
 -- ============================================================================
 -- 2. dm_failure ← dm_jl_failure （故障记录）
@@ -143,7 +147,9 @@ FROM fba.dm_jl_failure;
 DROP VIEW IF EXISTS dm_despatch;
 DROP TABLE IF EXISTS dm_despatch;
 CREATE VIEW dm_despatch AS
-SELECT * FROM fba.dm_despatch;
+-- 产业隔离: 仅保留风电产品表覆盖的机型, 避免读到铁路发运数据(评审意见)
+SELECT d.* FROM fba.dm_despatch d
+WHERE d.model IN (SELECT DISTINCT MODEL FROM fba.dm_jl_product);
 
 -- ============================================================================
 -- 4. dm_ebom ← fba.dm_ebom （部件清单，透传）
@@ -152,7 +158,9 @@ SELECT * FROM fba.dm_despatch;
 DROP VIEW IF EXISTS dm_ebom;
 DROP TABLE IF EXISTS dm_ebom;
 CREATE VIEW dm_ebom AS
-SELECT * FROM fba.dm_ebom;
+-- 产业隔离: 仅保留风电产品表覆盖的机型, 避免读到铁路BOM数据(评审意见)
+SELECT e.* FROM fba.dm_ebom e
+WHERE e.prd_no IN (SELECT DISTINCT MODEL FROM fba.dm_jl_product);
 
 -- ============================================================================
 -- 验证语句（执行后人工核对）
