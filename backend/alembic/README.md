@@ -1,3 +1,7 @@
-Generic single-database configuration with an async dbapi.
+# 数据库迁移
 
-If you add a new app to the framework, be sure to read the contents of the `env.py` file.
+迁移使用 Alembic，配置在 `backend/alembic/env.py`，连接串来自应用的数据库配置。
+
+新增业务表时，先在对应模块的 `model` 中定义模型，并在该模块的 `model/__init__.py` 中导出，保证启动时能被元数据发现，再生成迁移。
+
+部分历史迁移文件未纳入版本库。现网表结构变更需要和当前库对照后再执行，不要假设本地迁移链与现网完全一致。

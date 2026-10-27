@@ -1,78 +1,75 @@
-<div align="center">
+# REIS 后端
 
-<img alt="The logo includes the abstract combination of the three letters FBA, forming a lightning bolt that seems to spread out from the ground" width="320" src="https://wu-clan.github.io/picx-images-hosting/logo/fba.png">
+可靠性与经济性集成系统（Reliability And Economical Integration System）的后端服务。面向国铁售后场景，提供主数据管理、寿命拟合、科学库存、可靠性分析及相关后台计算。
 
-# FastAPI Best Architecture
+代码在 FastAPI 分层结构上演进，当前仓库以 REIS 业务为准，不再沿用上游模板的产品说明。
 
-Enterprise-level backend architecture solution
+## 业务模块
 
-English | [简体中文](./README.zh-CN.md)
+接口统一挂在 `/api/v1` 下。
 
-[![GitHub](https://img.shields.io/github/license/fastapi-practices/fastapi_best_architecture)](https://github.com/fastapi-practices/fastapi_best_architecture/blob/master/LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
-![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-%2300758f)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.0%2B-%23336791)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-%23778877)
-[![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://pydantic.dev)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
-![Docker](https://img.shields.io/badge/Docker-%232496ED?logo=docker&logoColor=white)
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://discord.com/invite/yNN3wTbVAC)
-![Discord](https://img.shields.io/discord/1185035164577972344)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fastapi-practices/fastapi_best_architecture)
+| 模块 | 路径前缀 | 作用 |
+|------|----------|------|
+| 认证与系统管理 | `/auth`、`/sys`、`/logs`、`/monitors` | 登录、权限、操作日志、运行监控 |
+| 主数据 | `/datamanage` | 产品、故障、配属、库房、备品映射、发运等基础数据 |
+| 寿命拟合 | `/fit` | 按产品型号、派生码和部件做寿命分布拟合 |
+| Aaron 拟合 | `/fit-aaron` | 使用 Aaron 曲线的拟合链路 |
+| 科学库存与备件计算 | `/calcu` | 科学库存、备件统计、可靠度指标、优化计算 |
+| 敏感度 | `/sense` | 敏感度排序与预测 |
+| 可靠性框图 | `/rbd` | 可靠性框图分析 |
+| RCM | `/rcm` | 以可靠性为中心的维修分析 |
+| 性能退化 | `/degrade` | 退化数据拟合 |
+| 全寿命成本 | `/lcc` | 寿命周期成本与修程对比 |
+| 等寿命 | `/lifetime` | 等寿命点与曲线 |
+| 后台任务 | `/tasks` | Celery 任务结果与调度 |
 
-</div>
+科学库存推送到 WMS 的流程见 [docs/science-warehouse-wms-esb-push.md](docs/science-warehouse-wms-esb-push.md)。
 
-## Pseudo 3-tier architecture
+## 代码分层
 
-The mvc architecture is a common design pattern in python web, but the 3-tier architecture is even more fascinating
+每个业务包按下面的层次组织：
 
-In python web development, there is no common standard for the concept of 3-tier architecture, so we'll call it a
-pseudo 3-tier architecture here
+| 层次 | 目录 | 职责 |
+|------|------|------|
+| 接口 | `api` | 路由、参数和响应 |
+| 传输对象 | `schema` | 请求与响应结构 |
+| 业务 | `service` | 计算与流程 |
+| 数据访问 | `crud` | 数据库读写 |
+| 模型 | `model` | 表结构 |
 
-But please note that we don't have a traditional multi-app structure (django, springBoot...) If you don't like this
-pattern, use templates to transform it to your heart's content!
+## 本地运行
 
-| workflow       | java           | fastapi_best_architecture |
-|----------------|----------------|---------------------------|
-| view           | controller     | api                       |
-| data transmit  | dto            | schema                    |
-| business logic | service + impl | service                   |
-| data access    | dao / mapper   | crud                      |
-| model          | model / entity | model                     |
+依赖 Python 3.10 及以上，包管理使用 [uv](https://docs.astral.sh/uv/)。
 
-## Help
+```shell
+uv sync --frozen
+copy backend\.env.example backend\.env
+```
 
-For more details, please check
-the [official documentation](https://fastapi-practices.github.io/fastapi_best_architecture_docs/)
+按本机环境修改 `backend/.env` 中的数据库、Redis 和 RabbitMQ。开发环境 Celery 默认走 Redis，生产环境强制走 RabbitMQ。
 
-## Contributors
+在项目根目录启动：
 
-<a href="https://github.com/fastapi-practices/fastapi_best_architecture/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=fastapi-practices/fastapi_best_architecture"/>
-</a>
+```shell
+uv run fba run
+uv run fba celery worker
+uv run fba celery beat
+```
 
-## Special thanks
+开发环境文档地址为 `http://127.0.0.1:8000/docs`。生产环境关闭 OpenAPI。
 
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Pydantic](https://docs.pydantic.dev/latest/)
-- [SQLAlchemy](https://docs.sqlalchemy.org/en/20/)
-- [Casbin](https://casbin.org/zh/)
-- [Ruff](https://beta.ruff.rs/docs/)
-- ...
+## 现网部署
 
-## Interactivity
+现网使用 `docker-compose-reis.yml`。MySQL 和 Redis 部署在宿主机，不由该 compose 文件拉起。API 与 Celery 容器通过 `deploy/backend/docker-compose/.env.server` 读取连接信息，该文件挂载为容器内的 `/fba/backend/.env`。
 
-[Discord](https://wu-clan.github.io/homepage/)
+```shell
+docker compose -f docker-compose-reis.yml up -d --build
+```
 
-## Sponsor us
+改环境变量后需要重启 `fba_server` 和 `fba_celery`，配置只在进程启动时读取。
 
-If this program has helped you, you can sponsor us with some coffee
-beans: [:coffee: Sponsor :coffee:](https://wu-clan.github.io/sponsor/)
+## 相关说明
 
-## License
-
-This project is licensed by the terms of
-the [MIT](https://github.com/fastapi-practices/fastapi_best_architecture/blob/master/LICENSE) license
-
-[![Stargazers over time](https://starchart.cc/fastapi-practices/fastapi_best_architecture.svg?variant=adaptive)](https://starchart.cc/fastapi-practices/fastapi_best_architecture)
+- 后端命令与脚本：[backend/README.md](backend/README.md)
+- 后台任务：[backend/app/task/README.md](backend/app/task/README.md)
+- 变更记录以 Git 历史为准，见 [CHANGELOG.md](CHANGELOG.md)

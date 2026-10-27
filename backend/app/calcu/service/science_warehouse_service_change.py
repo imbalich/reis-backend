@@ -8,16 +8,21 @@
 """
 from datetime import date, datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
-import json
 from typing import Optional
-from sqlalchemy import select
 
+import numpy as np
+import pandas as pd
 
 from backend.app.calcu.crud.crud_science_warehouse_result import (
     science_warehouse_result_dao,
 )
-from backend.app.fit.schema.base_param import ProductParam
-from backend.app.fit.utils.convert_model import convert_to_pydantic_model
+from backend.app.fit.schema.base_param import DespatchParam, ProductParam
+from backend.app.fit.utils.convert_model import (
+    convert_to_pydantic_model,
+    convert_to_pydantic_models,
+    convert_to_total_quantity,
+    get_ebom_tree_with_parents,
+)
 from reliability.Distributions import Exponential_Distribution
 from backend.app.datamanage.crud.crud_despatch import despatch_dao
 from backend.app.datamanage.crud.crud_failure import failure_dao
@@ -34,10 +39,16 @@ from backend.app.fit.schema.fit_param import (
     FitCheckType,
     FitMethodType,
 )
-from backend.app.fit.service.part_strategy_service import part_strategy_service
-from backend.app.fit.utils.data_check_utils import datacheckutils
+from backend.app.fit_aaron.service.aaron_part_data_service import (
+    build_base_result,
+    normalize_failure_dataframe,
+    objects_to_dataframe,
+)
 from backend.app.fit_aaron.service.part_fit_service import (
     part_fit_service as aaron_part_fit_service,
+)
+from backend.app.fit_aaron.service.part_strategy_service import (
+    part_strategy_service as aaron_part_strategy_service,
 )
 from backend.common.exception.errors import DataValidationError, FailureCheckError
 from backend.common.log import log
@@ -45,6 +56,9 @@ from backend.common.product_config import normalize_product_config_code
 from backend.database.db import async_db_session
 
 _REQUIRED_QUANTITY_PLACES = Decimal("0.00001")
+
+# 截止日前故障数超过该值才走 Aaron 拟合，否则按 Aaron 的指数口径估计
+_MIN_FAILURES_FOR_FIT = 4
 
 
 def round_required_quantity(value) -> Decimal:
@@ -56,50 +70,43 @@ def round_required_quantity(value) -> Decimal:
     )
 
 
-def parse_discovery_date(discovery_date_str: str) -> Optional[date]:
-    """
-    解析故障发现日期字符串为date对象
-
-    :param discovery_date_str: 日期字符串
-    :return: 解析后的date对象，解析失败返回None
-    """
-    if not discovery_date_str or not isinstance(discovery_date_str, str):
+def to_date(value) -> Optional[date]:
+    """把 date/datetime/Timestamp/字符串统一转成 date，无法解析返回 None。"""
+    if value is None:
         return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    parsed = pd.to_datetime(value, errors="coerce")
+    return None if pd.isna(parsed) else parsed.date()
 
-    # 去除前后空格
-    discovery_date_str = discovery_date_str.strip()
 
-    if not discovery_date_str:
-        return None
+def build_units_by_product(
+    model: str,
+    despatch_data: list,
+    failure_data: list,
+    bl_quantity: int,
+) -> dict[str, list[Optional[date]]]:
+    """
+    复用 Aaron 构建样本的规则生成零件位置：
+    每个产品按 BOM 用量展开为多个位置，寿命起点取发运日期与故障表生产日期中较早者。
 
-    # 尝试多种日期格式
-    date_formats = [
-        "%Y-%m-%d",  # 2023-12-25
-        "%Y/%m/%d",  # 2023/12/25
-        "%Y%m%d",  # 20231225
-        "%Y-%m-%d %H:%M:%S",  # 2023-12-25 10:30:00
-        "%Y/%m/%d %H:%M:%S",  # 2023/12/25 10:30:00
-        "%Y-%m-%d %H:%M",  # 2023-12-25 10:30
-        "%Y/%m/%d %H:%M",  # 2023/12/25 10:30
-    ]
-
-    for fmt in date_formats:
-        try:
-            parsed_datetime = datetime.strptime(discovery_date_str, fmt)
-            return parsed_datetime.date()
-        except ValueError:
+    :return: 产品编号 -> 各零件位置的寿命起点列表
+    """
+    despatch_df = objects_to_dataframe(despatch_data)
+    failure_df = normalize_failure_dataframe(objects_to_dataframe(failure_data))
+    base_result = build_base_result(
+        model, despatch_df, failure_df, bl_quantity if bl_quantity > 0 else 1
+    )
+    units_by_product: dict[str, list[Optional[date]]] = {}
+    for identifier, life_cycle_time in zip(
+        base_result["identifier"], base_result["life_cycle_time"]
+    ):
+        if identifier is None or pd.isna(identifier):
             continue
-
-    # 如果所有格式都失败，尝试pandas的自动解析
-    try:
-        import pandas as pd
-
-        parsed_datetime = pd.to_datetime(discovery_date_str)
-        return parsed_datetime.date()
-    except:
-        pass
-
-    return None
+        units_by_product.setdefault(str(identifier), []).append(to_date(life_cycle_time))
+    return units_by_product
 
 
 class ScienceWarehouseServiceChange:
@@ -109,9 +116,15 @@ class ScienceWarehouseServiceChange:
         input_date: str | date,
         warehouse_code: str,
         spare_part_code: str,
+        use_cached_fit: bool = True,
+        fit_context_cache: dict | None = None,
     ) -> dict:
         """
         单库房-单备品-计算流程
+
+        :param use_cached_fit: True 先读 fit_part 已入库结果，没有再 Aaron 拟合入库；
+            False 每次现场 Aaron 拟合且只在内存中使用，不读写 fit_part（测试口径）
+        :param fit_context_cache: 批次内共享的 型号+派生码+故障件 计算上下文缓存
 
         输出0的主要场景：
             所有故障件在库房支撑的路局下都没有产品
@@ -196,13 +209,16 @@ class ScienceWarehouseServiceChange:
                     "total_max_failure_count": 0,
                 },
             }
-        # 4.计算每种故障有多少产品编号被库房管理
+        # 4.计算每种故障有多少产品编号被库房管理（按派生码归属过滤）
         log.info(
             f"[科学库存计算] 库房{warehouse_code}备品{spare_part_code}，开始计算，共{len(model_failure_spare_mappings)}个故障件映射"
         )
+        if fit_context_cache is None:
+            fit_context_cache = {}
         for model_failure_spare_mapping in model_failure_spare_mappings:
 
             model = model_failure_spare_mapping["product_model"]
+            product_config_code = model_failure_spare_mapping["product_config_code"]
             part = model_failure_spare_mapping["original_part_code"]
 
             products_set = set()
@@ -213,13 +229,30 @@ class ScienceWarehouseServiceChange:
                 )
                 if allotment_products:
                     products_set.update(allotment_products)
-            # 4.2 计算一种故障总计有多少需要被这个库房管理
-            products = list(products_set)
+            # 4.1 型号+派生码+故障件的计算上下文（零件位置、运行参数、分布），批次内复用
+            context = await ScienceWarehouseServiceChange.get_mapping_context(
+                model,
+                product_config_code,
+                part,
+                input_date,
+                use_cached_fit=use_cached_fit,
+                cache=fit_context_cache,
+            )
+            # 4.2 只保留属于该派生码的产品（以 Aaron 样本中的发运/故障派生码为准）
+            units_by_product = context["units_by_product"]
+            products = sorted(p for p in products_set if p in units_by_product)
             product_count = len(products)
+            model_failure_spare_mapping["allotment_product_count"] = len(products_set)
             model_failure_spare_mapping["product_count"] = product_count
             model_failure_spare_mapping["products"] = products
+            model_failure_spare_mapping["unit_count"] = sum(
+                len(units_by_product[p]) for p in products
+            )
+            model_failure_spare_mapping["context"] = context
             log.info(
-                f"[科学库存计算] 型号{model}故障件{part}，在库房{warehouse_code}支撑的路局下共有{product_count}个产品"
+                f"[科学库存计算] 型号{model}派生码{product_config_code}故障件{part}，"
+                f"库房{warehouse_code}支撑的路局下共有{len(products_set)}个产品，"
+                f"属于该派生码{product_count}个，零件位置{model_failure_spare_mapping['unit_count']}个"
             )
 
         # 5.计算每个型号+故障件在过去x天内的故障次数最大值（滚动计算）
@@ -294,49 +327,46 @@ class ScienceWarehouseServiceChange:
         skipped_count = 0  # 被跳过的故障件数量
         calculated_count = 0  # 成功计算的故障件数量
         for model_failure_spare_mapping in model_failure_spare_mappings:
+            model = model_failure_spare_mapping["product_model"]
+            product_config_code = model_failure_spare_mapping["product_config_code"]
+            part = model_failure_spare_mapping["original_part_code"]
+            context = model_failure_spare_mapping["context"]
             if model_failure_spare_mapping["product_count"] == 0:
-                # 5.1 如果这种故障件没有型号跑在库房支撑的路局下，则跳过
-                model = model_failure_spare_mapping["product_model"]
-                part = model_failure_spare_mapping["original_part_code"]
+                # 5.1 如果这种故障件没有该派生码的产品跑在库房支撑的路局下，则跳过
                 log.warning(
-                    f"[科学库存计算] 型号{model}故障件{part}在库房{warehouse_code}支撑的路局下没有产品，跳过"
+                    f"[科学库存计算] 型号{model}派生码{product_config_code}故障件{part}"
+                    f"在库房{warehouse_code}支撑的路局下没有产品，跳过"
+                    + (f"（{context['error']}）" if context["error"] else "")
                 )
                 skipped_count += 1
                 continue
-            # 5.2 如果这种故障件有型号跑在库房支撑的路局下，则计算每个型号+故障件需要多少备品
-            model = model_failure_spare_mapping["product_model"]
-            part = model_failure_spare_mapping["original_part_code"]
-            products = model_failure_spare_mapping["products"]
-            # 5.2 打标 - 拟合 - 获取分布
-            # 5.2.1 标签获取
-            distribution, fit_type = (
-                await ScienceWarehouseServiceChange.get_distribution_by_model_and_part(
-                    model,
-                    part,
-                    input_date,
-                    product_config_code=model_failure_spare_mapping.get(
-                        "product_config_code"
-                    ),
-                )
-            )
+            # 5.2 获取分布（上下文中已按故障数选择 Aaron 拟合或指数估计）
+            distribution = context["distribution"]
+            fit_type = context["fit_type"]
             if distribution is None:
                 log.error(
-                    f"[科学库存计算] 型号{model}故障件{part}获取分布失败（fit_type={fit_type}），跳过"
+                    f"[科学库存计算] 型号{model}派生码{product_config_code}故障件{part}"
+                    f"获取分布失败（fit_type={fit_type}，{context['error']}），跳过"
                 )
                 skipped_count += 1
                 continue
-            # 5.3 计算单型号+故障件的备件量
-            log.info(
-                f"[科学库存计算] 型号{model}故障件{part}开始计算备件量，产品数量={len(products)}，拟合类型={fit_type}"
-            )
-            quantity = await ScienceWarehouseServiceChange.calculate_spare_quantity(
-                distribution, products, model, input_date, time_interval_days
+            # 5.3 按零件位置累加备件量（BOM 用量已体现在位置数中）
+            quantity = ScienceWarehouseServiceChange.calculate_spare_quantity_by_units(
+                distribution,
+                context["units_by_product"],
+                model_failure_spare_mapping["products"],
+                context["hours_per_day"],
+                input_date,
+                time_interval_days,
             )
             model_failure_spare_mapping["fit_type"] = fit_type
             model_failure_spare_mapping["quantity"] = quantity
             calculated_count += 1
             log.info(
-                f"[科学库存计算] 型号{model}故障件{part}备件量计算完成，quantity={quantity:.4f}"
+                f"[科学库存计算] 型号{model}派生码{product_config_code}故障件{part}备件量计算完成，"
+                f"产品数={model_failure_spare_mapping['product_count']}，"
+                f"零件位置数={model_failure_spare_mapping['unit_count']}，"
+                f"拟合类型={fit_type}，分布={context['distribution_name']}，quantity={quantity:.5f}"
             )
 
         # 7.计算该库房-单备品的备件量 以及 最大滚动故障次数
@@ -350,7 +380,10 @@ class ScienceWarehouseServiceChange:
         )
 
         for model_failure_spare_mapping in model_failure_spare_mappings:
-            model = model_failure_spare_mapping["product_model"]
+            model = (
+                f"{model_failure_spare_mapping['product_model']}"
+                f"({model_failure_spare_mapping['product_config_code']})"
+            )
             part = model_failure_spare_mapping["original_part_code"]
 
             # 累加最大故障次数（只累加有产品的映射，没有产品的映射不参与累加）
@@ -420,6 +453,24 @@ class ScienceWarehouseServiceChange:
                 "calculated_count": calculated_count,
                 "skipped_count": skipped_count,
                 "total_max_failure_count": total_max_failure_count,  # 统计信息中也包含
+                "mapping_details": [
+                    {
+                        "product_model": m["product_model"],
+                        "product_config_code": m["product_config_code"],
+                        "original_part_code": m["original_part_code"],
+                        "allotment_product_count": m.get("allotment_product_count", 0),
+                        "product_count": m.get("product_count", 0),
+                        "unit_count": m.get("unit_count", 0),
+                        "bl_quantity": m["context"]["bl_quantity"],
+                        "failure_count": m["context"]["failure_count"],
+                        "fit_type": m["context"]["fit_type"],
+                        "distribution": m["context"]["distribution_name"],
+                        "quantity": m.get("quantity"),
+                        "max_failure_count": m.get("max_failure_count", 0),
+                        "error": m["context"]["error"],
+                    }
+                    for m in model_failure_spare_mappings
+                ],
             },
         }
         return result
@@ -455,7 +506,8 @@ class ScienceWarehouseServiceChange:
             {product_model:xx,derived_code:xx,original_part_name:xx,original_part_code:xx,spare_part_name:xx,spare_part_code:xx,created_by:xx,changed_time:xx},
             {product_model:xx,derived_code:xx,original_part_name:xx,original_part_code:xx,spare_part_name:xx,spare_part_code:xx,created_by:xx,changed_time:xx},
         :param spare_part_code: 备品编码
-        :return: 备品支持的 型号-故障件-备品 映射关系去重集（根据product_model，original_part_code，spare_part_code去重）
+        :return: 备品支持的 型号-派生码-故障件-备品 映射关系去重集
+            （根据product_model，规范化后的product_config_code，original_part_code，spare_part_code去重）
         """
         async with async_db_session() as db:
             spare_models = await part_spare_mapping_dao.get_by_spare_part_code(
@@ -467,14 +519,17 @@ class ScienceWarehouseServiceChange:
                 )
                 return None
 
-            # 根据product_model，original_part_code，spare_part_code去重
-            # 使用字典，以 (product_model, original_part_code, spare_part_code) 作为key
+            # 同一型号多个派生码各自独立计算，空派生码按 PS00 合并
             seen = {}
             deduplicated_models = []
 
             for model in spare_models:
+                product_config_code = normalize_product_config_code(
+                    model.product_config_code
+                )
                 key = (
                     model.product_model,
+                    product_config_code,
                     model.original_part_code,
                     model.spare_part_code,
                 )
@@ -484,9 +539,7 @@ class ScienceWarehouseServiceChange:
                     # 将ORM对象转换为字典，便于后续使用
                     model_dict = {
                         "product_model": model.product_model,
-                        "product_config_code": normalize_product_config_code(
-                            model.product_config_code
-                        ),
+                        "product_config_code": product_config_code,
                         "original_part_name": model.original_part_name,
                         "original_part_code": model.original_part_code,
                         "spare_part_name": model.spare_part_name,
@@ -610,102 +663,131 @@ class ScienceWarehouseServiceChange:
         )
 
     @staticmethod
-    async def get_distribution_by_model_and_part(
+    async def get_mapping_context(
         model: str,
+        product_config_code: str | None,
         part: str,
-        input_date: str | date = None,
-        product_config_code: str | None = None,
-    ):
+        input_date: date,
+        use_cached_fit: bool = True,
+        cache: dict | None = None,
+    ) -> dict:
         """
-        获取型号+故障件的分布。
-        故障超过 4 条时改用 Aaron 曲线，样本不足时仍走原来的指数分布。
+        型号+派生码+故障件的计算上下文：零件位置、运行参数、分布。
+        同一批次内按 key 缓存，避免每个库房重复打标拟合。
         """
         product_config_code = normalize_product_config_code(product_config_code)
+        key = (model, product_config_code, part, input_date, use_cached_fit)
+        if cache is not None and key in cache:
+            return cache[key]
+        context = await ScienceWarehouseServiceChange._build_mapping_context(
+            model, product_config_code, part, input_date, use_cached_fit
+        )
+        if cache is not None:
+            cache[key] = context
+        return context
+
+    @staticmethod
+    async def _build_mapping_context(
+        model: str,
+        product_config_code: str,
+        part: str,
+        input_date: date,
+        use_cached_fit: bool,
+    ) -> dict:
+        context = {
+            "units_by_product": {},
+            "bl_quantity": 0,
+            "hours_per_day": 0.0,
+            "failure_count": 0,
+            "distribution": None,
+            "distribution_name": None,
+            "fit_type": "insufficient_data",
+            "error": None,
+        }
         async with async_db_session() as db:
-            try:
-                tags = await part_strategy_service.part_tag_process(
-                    model,
-                    part,
-                    input_date,
-                    product_config_code=product_config_code,
-                )
-                if not tags or len(tags) == 0:
-                    log.warning(
-                        f"科学库存计算获取型号{model}故障件{part}的标签为空，无法进行拟合"
-                    )
-                    return None, "insufficient_data"
+            despatch_rows = await despatch_dao.get_despatchs_by_model(
+                db, model, product_config_code=product_config_code
+            )
+            failure_rows = await failure_dao.get_by_model_and_part(
+                db, model, part, input_date, product_config_code=product_config_code
+            )
+            ebom_rows = await get_ebom_tree_with_parents(
+                db, model, product_config_code, part
+            )
+            product_row = await product_dao.get_by_model(
+                db, model, product_config_code=product_config_code
+            )
+        context["failure_count"] = len(failure_rows)
 
-                log.debug(
-                    f"科学库存计算获取型号{model}故障件{part}的标签数量={len(tags)}"
-                )
+        if product_row is None:
+            context["error"] = f"型号{model}派生码{product_config_code}的产品运行参数不存在"
+            return context
+        if not ebom_rows:
+            context["error"] = f"型号{model}派生码{product_config_code}中零部件{part}的BOM信息不存在"
+            return context
+        product_data = convert_to_pydantic_model(product_row, ProductParam)
+        context["hours_per_day"] = (
+            product_data.year_days * product_data.avg_worktime / 365
+        )
+        context["bl_quantity"] = convert_to_total_quantity(ebom_rows, part)
+        context["units_by_product"] = build_units_by_product(
+            model,
+            convert_to_pydantic_models(despatch_rows, DespatchParam),
+            failure_rows,
+            context["bl_quantity"],
+        )
 
-                if isinstance(input_date, date):
-                    fit_input_date = input_date
-                else:
-                    from backend.app.fit.utils.time_utils import dateutils
+        try:
+            if context["failure_count"] > _MIN_FAILURES_FOR_FIT:
+                await ScienceWarehouseServiceChange._resolve_fitted_distribution(
+                    context, model, product_config_code, part, input_date, use_cached_fit
+                )
+            else:
+                # 样本不足：λ = 故障数 / (派生码维度累计运行时间 × BOM用量)，零故障按 1/t
+                async with async_db_session() as db:
+                    lambda_ = await aaron_part_fit_service.none_tag_fit(
+                        db, model, part, input_date, product_config_code=product_config_code
+                    )
+                context["distribution"] = Exponential_Distribution(Lambda=lambda_)
+                context["distribution_name"] = f"Exponential_1P(λ={lambda_:.6e})"
+                context["fit_type"] = "exponential_fit"
+        except (DataValidationError, FailureCheckError) as e:
+            context["error"] = e.msg
+        except Exception as e:
+            log.exception(
+                f"[科学库存计算] 型号{model}派生码{product_config_code}故障件{part}获取分布异常: {e}"
+            )
+            context["error"] = f"{type(e).__name__}: {e}"
+        return context
 
-                    fit_input_date = dateutils.validate_and_parse_date(input_date)
-                distribution = await ScienceWarehouseServiceChange._get_or_create_aaron_distribution(
-                    model, part, fit_input_date, product_config_code
-                )
-                if distribution is None:
-                    log.error(
-                        f"科学库存计算获取型号{model}故障件{part}的 Aaron 分布为空，拟合可能失败"
-                    )
-                    return None, "insufficient_data"
-
-                return distribution, "fitted"
-            except DataValidationError as e:
-                # 产品信息不存在或累计运行时间不足等数据验证错误
-                log.warning(
-                    f"科学库存计算获取型号{model}故障件{part}的分布时遇到数据验证错误：{str(e)}，"
-                    f"将跳过该故障件"
-                )
-                return None, "insufficient_data"
-            except FailureCheckError as e:
-                log.info(
-                    f"科学库存计算获取型号{model}故障件{part}的分布时遇到故障检查错误，"
-                    f"将使用指数分布拟合: {str(e)}"
-                )
-                failures = await fit_part_dao.get_by_model_and_part(
-                    db, model, part, input_date
-                )
-                t = await datacheckutils.total_run_time(db, model)
-                # 更严格的检查：避免除零错误（包括浮点数0.0）
-                if t is None or t <= 0:
-                    log.error(
-                        f"科学库存计算获取型号{model}故障件{part}的分布失败，"
-                        f"累计运行时间为0或无效（t={t}）"
-                    )
-                    return None, "insufficient_data"
-                # 确保failures不为空
-                if not failures or len(failures) == 0:
-                    log.warning(
-                        f"科学库存计算获取型号{model}故障件{part}的分布失败，"
-                        f"故障数据为空，无法进行指数分布拟合"
-                    )
-                    return None, "insufficient_data"
-                lambda_ = len(failures) / t
-                # 确保lambda_是有效的正数
-                if lambda_ <= 0:
-                    log.error(
-                        f"科学库存计算获取型号{model}故障件{part}的分布失败，"
-                        f"计算出的lambda值无效（lambda_={lambda_}，failures={len(failures)}，t={t}）"
-                    )
-                    return None, "insufficient_data"
-                distribution = Exponential_Distribution(Lambda=lambda_)
-                return distribution, "exponential_fit"
-            except Exception as e:
-                import traceback
-
-                error_trace = traceback.format_exc()
-                log.error(
-                    f"科学库存计算获取型号{model}故障件{part}的分布失败,"
-                    f"异常类型: {type(e).__name__}, "
-                    f"失败原因: {str(e)}, "
-                    f"堆栈跟踪: {error_trace}"
-                )
-                return None, "insufficient_data"
+    @staticmethod
+    async def _resolve_fitted_distribution(
+        context: dict,
+        model: str,
+        product_config_code: str,
+        part: str,
+        input_date: date,
+        use_cached_fit: bool,
+    ) -> None:
+        """故障数足够时取 Aaron 拟合的 BIC 最优分布。"""
+        if use_cached_fit:
+            distribution = await ScienceWarehouseServiceChange._get_or_create_aaron_distribution(
+                model, part, input_date, product_config_code
+            )
+            if distribution is None:
+                context["error"] = "Aaron 拟合结果为空"
+                return
+        else:
+            tags = await aaron_part_strategy_service.part_tag_process(
+                model, part, input_date, product_config_code=product_config_code
+            )
+            fit = await aaron_part_fit_service.tag_fit(tags, FitMethodType.MLE)
+            distribution = fit.best_distribution
+        context["distribution"] = distribution
+        context["distribution_name"] = getattr(
+            distribution, "param_title_long", type(distribution).__name__
+        )
+        context["fit_type"] = "fitted"
 
     @staticmethod
     async def get_failure_count_by_model_and_part_in_products(
@@ -733,223 +815,40 @@ class ScienceWarehouseServiceChange:
             return failure_count
 
     @staticmethod
-    async def calculate_spare_quantity(
+    def calculate_spare_quantity_by_units(
         distribution,
+        units_by_product: dict[str, list[Optional[date]]],
         products: list,
-        product_model: str,
-        input_date: str | date,
+        hours_per_day: float,
+        input_date: date,
         time_interval_days: int,
-    ):
+    ) -> float:
         """
-        计算备件量
-        优化思路：
-        1. 批量查询发运表获取发运日期（优先）
-        2. 对于发运表中没有的产品，批量查询故障表获取 manufacturing_date（备选）
-        3. 构建完整的产品编号->发运日期映射
-        4. 遍历每个产品，计算CDF差值并累加
+        按零件位置计算备件量：每个位置 F(t+Δ) - F(t) 累加。
+        t 为截止日距寿命起点的累计运行小时，起点晚于截止日的位置从 0 开始计。
 
-        :param distribution: 分布对象
+        :param units_by_product: 产品编号 -> 各零件位置寿命起点
         :param products: 需要被管理的产品编号列表
-        :param product_model: 产品型号（用于查询故障表）
-        :param input_date: 输入日期
-        :param time_interval_days: 需求预测时间间隔（天数）
+        :param hours_per_day: 日历日折算运行小时 = year_days * avg_worktime / 365
         :return: 备件量
         """
-        if not products:
-            log.warning(f"[备件量计算] 型号{product_model}产品列表为空，返回0.0")
+        end_date = input_date + timedelta(days=time_interval_days)
+        start_hours, end_hours = [], []
+        missing_start_count = 0
+        for product_number in products:
+            for life_start in units_by_product.get(product_number, []):
+                if life_start is None:
+                    missing_start_count += 1
+                    continue
+                start_hours.append(max(0.0, (input_date - life_start).days * hours_per_day))
+                end_hours.append(max(0.0, (end_date - life_start).days * hours_per_day))
+        if missing_start_count:
+            log.warning(f"[备件量计算] {missing_start_count}个零件位置缺少寿命起点，跳过")
+        if not start_hours:
             return 0.0
-
-        # 确保 input_date 是 date 对象
-        if isinstance(input_date, str):
-            from backend.app.fit.utils.time_utils import dateutils
-
-            input_date = dateutils.validate_and_parse_date(input_date)
-
-        log.info(
-            f"[备件量计算] 型号{product_model}开始计算，产品数量={len(products)}，"
-            f"input_date={input_date}，time_interval_days={time_interval_days}，"
-            f"产品编号列表={products}"
-        )
-
-        async with async_db_session() as db:
-            # 1. 获取产品运行参数（只需要查询一次）
-            product_data = convert_to_pydantic_model(
-                await product_dao.get_by_model(db, product_model), ProductParam
-            )
-
-            # 2. 批量查询发运表获取发运日期（优先）
-            # 使用 select_models 的 identifier__in 参数进行批量查询
-            despatch_data = await despatch_dao.select_models(
-                db, identifier__in=products, repair_level__eq="新造"
-            )
-
-            # 构建产品编号->发运日期的映射（从发运表）
-            product_despatch_map = {}
-            for despatch in despatch_data:
-                if despatch.identifier and despatch.life_cycle_time:
-                    # 如果同一个产品编号有多条记录，取最早的
-                    if (
-                        despatch.identifier not in product_despatch_map
-                        or despatch.life_cycle_time
-                        < product_despatch_map[despatch.identifier]
-                    ):
-                        product_despatch_map[despatch.identifier] = (
-                            despatch.life_cycle_time
-                        )
-
-            found_products = list(product_despatch_map.keys())
-            log.info(
-                f"[备件量计算] 型号{product_model}从发运表获取到{len(product_despatch_map)}个产品的发运日期，"
-                f"找到的产品编号列表={found_products}"
-            )
-
-            # 3. 对于发运表中没有的产品，批量查询故障表获取 manufacturing_date
-            missing_products = [p for p in products if p not in product_despatch_map]
-            if missing_products:
-                log.info(
-                    f"[备件量计算] 型号{product_model}有{len(missing_products)}个产品在发运表中未找到，"
-                    f"未找到的产品编号列表={missing_products}，尝试从故障表获取manufacturing_date"
-                )
-                # 批量查询故障表：根据 product_model 和 product_number 列表查询
-                # 查询每个产品编号最早的 manufacturing_date
-                stmt = (
-                    select(failure_dao.model)
-                    .where(
-                        failure_dao.model.product_model == product_model,
-                        failure_dao.model.product_number.in_(missing_products),
-                        failure_dao.model.manufacturing_date.isnot(None),
-                    )
-                    .order_by(
-                        failure_dao.model.product_number,
-                        failure_dao.model.manufacturing_date,
-                    )
-                )
-                result = await db.execute(stmt)
-                failure_data = result.scalars().all()
-
-                # 从故障表中提取 manufacturing_date（取每个产品编号最早的）
-                seen_products = set()
-                for failure in failure_data:
-                    if (
-                        failure.product_number
-                        and failure.product_number not in seen_products
-                    ):
-                        seen_products.add(failure.product_number)
-                        if failure.manufacturing_date:
-                            # 解析 manufacturing_date（可能是字符串）
-                            if isinstance(failure.manufacturing_date, str):
-                                parsed_date = parse_discovery_date(
-                                    failure.manufacturing_date
-                                )
-                                if parsed_date:
-                                    product_despatch_map[failure.product_number] = (
-                                        parsed_date
-                                    )
-                            elif isinstance(failure.manufacturing_date, date):
-                                product_despatch_map[failure.product_number] = (
-                                    failure.manufacturing_date
-                                )
-                found_from_failure = list(seen_products)
-                log.info(
-                    f"[备件量计算] 型号{product_model}从故障表获取到{len(seen_products)}个产品的manufacturing_date，"
-                    f"从故障表找到的产品编号列表={found_from_failure}"
-                )
-
-            # 统计找不到发运日期的产品数量
-            products_without_despatch = [
-                p for p in products if p not in product_despatch_map
-            ]
-            if products_without_despatch:
-                log.warning(
-                    f"[备件量计算] 型号{product_model}有{len(products_without_despatch)}个产品找不到发运日期，"
-                    f"找不到发运日期的产品编号列表={products_without_despatch}"
-                )
-
-            # 4. 计算每个产品的备件量（CDF差值）
-            result = 0.0
-            start_date = input_date
-            end_date = input_date + timedelta(days=time_interval_days)
-            skipped_products_count = 0  # 被跳过的产品数量
-            invalid_interval_count = 0  # 运行时间区间无效的产品数量
-            cdf_failed_count = 0  # CDF计算失败的产品数量
-            cdf_zero_count = 0  # CDF计算结果为0的产品数量
-
-            for product_number in products:
-                # 获取该产品的发运日期
-                despatch_date = product_despatch_map.get(product_number)
-
-                # 如果找不到发运日期，跳过该产品
-                if not despatch_date:
-                    skipped_products_count += 1
-                    continue
-
-                # 计算运行时间（小时）
-                start_x = (
-                    (start_date - despatch_date).days
-                    * product_data.year_days
-                    * product_data.avg_worktime
-                    / 365
-                )
-                end_x = (
-                    (end_date - despatch_date).days
-                    * product_data.year_days
-                    * product_data.avg_worktime
-                    / 365
-                )
-
-                # 确保运行时间为非负数
-                start_x = max(0, start_x)
-                end_x = max(0, end_x)
-
-                # 如果开始时间大于等于结束时间，跳过
-                if start_x >= end_x:
-                    invalid_interval_count += 1
-                    log.debug(
-                        f"[备件量计算] 产品编号{product_number}运行时间区间无效，"
-                        f"发运日期={despatch_date}，start_x={start_x:.2f}，end_x={end_x:.2f}，跳过"
-                    )
-                    continue
-
-                # 计算CDF差值
-                try:
-                    yvals = distribution.CDF(xvals=[start_x, end_x], show_plot=False)
-                    prediction = yvals[1] - yvals[0]
-                    if prediction <= 0:
-                        cdf_zero_count += 1
-                        log.debug(
-                            f"[备件量计算] 产品编号{product_number}CDF差值<=0，"
-                            f"start_x={start_x:.2f}，end_x={end_x:.2f}，prediction={prediction:.6f}，跳过"
-                        )
-                    else:
-                        result += prediction
-                except Exception as e:
-                    cdf_failed_count += 1
-                    log.warning(
-                        f"[备件量计算] 产品编号{product_number}计算CDF失败: {e}，跳过"
-                    )
-                    continue
-
-            log.info(
-                f"[备件量计算] 型号{product_model}计算完成，"
-                f"总产品数={len(products)}，"
-                f"找不到发运日期={skipped_products_count}，"
-                f"运行时间区间无效={invalid_interval_count}，"
-                f"CDF计算失败={cdf_failed_count}，"
-                f"CDF差值<=0={cdf_zero_count}，"
-                f"成功计算={len(products) - skipped_products_count - invalid_interval_count - cdf_failed_count - cdf_zero_count}，"
-                f"最终备件量={result:.4f}"
-            )
-
-            if result == 0.0:
-                log.warning(
-                    f"[备件量计算] 型号{product_model}备件量计算结果为0，"
-                    f"可能原因：所有产品都找不到发运日期({skipped_products_count})，"
-                    f"或运行时间区间无效({invalid_interval_count})，"
-                    f"或CDF计算失败({cdf_failed_count})，"
-                    f"或CDF差值<=0({cdf_zero_count})"
-                )
-
-            return result
+        start_cdf = np.atleast_1d(distribution.CDF(xvals=np.array(start_hours), show_plot=False))
+        end_cdf = np.atleast_1d(distribution.CDF(xvals=np.array(end_hours), show_plot=False))
+        return float(np.clip(end_cdf - start_cdf, 0.0, None).sum())
 
     @staticmethod
     async def batch_warehouse_spare_calculate(
@@ -958,6 +857,7 @@ class ScienceWarehouseServiceChange:
         warehouse_spare_pairs: list[tuple[str, str]],
         calculation_id: str | None = None,
         save_to_db: bool = False,
+        use_cached_fit: bool = True,
     ) -> dict:
         """
         批量计算多个库房-备品组合的备件量
@@ -967,6 +867,7 @@ class ScienceWarehouseServiceChange:
         :param warehouse_spare_pairs: 库房-备品组合列表，格式：[(warehouse_code, spare_part_code), ...]
         :param calculation_id: 计算批次ID（可选，如果不提供则自动生成）
         :param save_to_db: 是否保存到数据库（默认True）
+        :param use_cached_fit: False 时全部现场 Aaron 拟合、不读写 fit_part（测试口径）
         :return: 批量计算结果统计
         """
         from datetime import date as date_type
@@ -989,6 +890,7 @@ class ScienceWarehouseServiceChange:
         success_count = 0
         failed_count = 0
         total_quantity = 0
+        fit_context_cache: dict = {}
 
         log.info(
             f"[批量科学库存计算] 开始计算，批次ID={calculation_id}，"
@@ -1010,6 +912,8 @@ class ScienceWarehouseServiceChange:
                     input_date=input_date,
                     warehouse_code=warehouse_code,
                     spare_part_code=spare_part_code,
+                    use_cached_fit=use_cached_fit,
+                    fit_context_cache=fit_context_cache,
                 )
 
                 # 统一处理成功和失败的结果
