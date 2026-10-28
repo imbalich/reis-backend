@@ -164,6 +164,9 @@ class PartFitService:
         async with async_db_session() as db:
             async with db.begin():
                 try:
+                    from backend.common.industry import resolve_industry
+
+                    industry = await resolve_industry(db, model)
                     tags = await part_strategy_service.part_tag_process(
                         model,
                         part,
@@ -179,6 +182,7 @@ class PartFitService:
                         input_date,
                         method,
                         is_user_input,
+                        industry,
                     )
                     await fit_part_dao.creates(db, distribution_params)
                 except FailureCheckError:
@@ -197,6 +201,7 @@ class PartFitService:
                         method,
                         is_user_input,
                         lambda_,
+                        industry,
                     )
                     await fit_part_dao.create(db, distribution_param)
 
@@ -209,6 +214,7 @@ class PartFitService:
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
         product_config_code: str | None = None,
+        industry: str | None = None,
     ):
         async with async_db_session() as db:
             return await fit_part_dao.get_by_model_and_part(
@@ -220,6 +226,7 @@ class PartFitService:
                 check,
                 source,
                 product_config_code=product_config_code,
+                industry=industry,
             )
 
     @staticmethod
@@ -231,6 +238,7 @@ class PartFitService:
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
         product_config_code: str | None = None,
+        industry: str | None = None,
     ):
         async with async_db_session() as db:
             results = await fit_part_dao.get_by_model_and_part(
@@ -242,6 +250,7 @@ class PartFitService:
                 check,
                 source,
                 product_config_code=product_config_code,
+                industry=industry,
             )
             if not results:
                 return None

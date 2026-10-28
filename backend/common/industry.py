@@ -91,6 +91,21 @@ async def resolve_industry(db: AsyncSession, model: str) -> Industry:
     return Industry.WIND if normalized in wind_models else Industry.RAILWAY
 
 
+def aggregate_industry(industries: set[Industry]) -> str:
+    """聚合一组产业为单行标记: 全风电→wind / 全铁路→railway / 混合→mixed / 空→railway
+
+    用于科学库存等按(库房,备品)聚合的结果行: 行的产业取决于支撑该行的型号产业构成。
+    ESB 推送防线只放行 industry='railway' 的行(评审PR#3意见#7, 业务已确认风电不推ESB)。
+    """
+    if not industries:
+        return 'railway'
+    if industries == {Industry.WIND}:
+        return 'wind'
+    if industries == {Industry.RAILWAY}:
+        return 'railway'
+    return 'mixed'
+
+
 # ---------------------------------------------------------------------------
 # 拟合管道协议类型: 只声明管道实际使用的属性(评审PR#3意见#3)
 # ---------------------------------------------------------------------------

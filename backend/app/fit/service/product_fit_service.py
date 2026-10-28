@@ -157,6 +157,9 @@ class ProductFitService:
         async with async_db_session() as db:
             async with db.begin():
                 try:
+                    from backend.common.industry import resolve_industry
+
+                    industry = await resolve_industry(db, model)
                     tags = await product_strategy_service.model_tag_process(
                         model,
                         input_date,
@@ -170,6 +173,7 @@ class ProductFitService:
                         input_date,
                         method,
                         is_user_input,
+                        industry,
                     )
                     await fit_product_dao.creates(db, distribution_params)
                 except FailureCheckError:
@@ -185,6 +189,7 @@ class ProductFitService:
                         method,
                         is_user_input,
                         lambda_,
+                        industry,
                     )
                     await fit_product_dao.create_model(db, distribution_param)
 
@@ -196,6 +201,7 @@ class ProductFitService:
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
         product_config_code: str | None = None,
+        industry: str | None = None,
     ):
         async with async_db_session() as db:
             return await fit_product_dao.get_by_model(
@@ -216,6 +222,7 @@ class ProductFitService:
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
         product_config_code: str | None = None,
+        industry: str | None = None,
     ):
         async with async_db_session() as db:
             results = await fit_product_dao.get_by_model(
@@ -226,6 +233,7 @@ class ProductFitService:
                 check,
                 source,
                 product_config_code=product_config_code,
+                industry=industry,
             )
             if not results:
                 return None

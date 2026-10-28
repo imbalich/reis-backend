@@ -50,3 +50,7 @@ class ScienceWarehouseResult(Base):
     confidence: Mapped[float] = mapped_column(
         Float, nullable=False, default=0.5, comment="置信度"
     )
+    industry: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="railway", index=True,
+        comment="数据产业(railway/wind/mixed), 评审PR#3意见#4"
+    )

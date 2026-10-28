@@ -71,6 +71,7 @@ def convert_to_product_distribution_params(
     input_date: date,
     method: FitMethodType,
     source: bool,
+    industry: str = 'railway',
 ) -> List[CreateProductDistributionParam]:
     distribution_params = []
     # 计算group_id
@@ -82,6 +83,7 @@ def convert_to_product_distribution_params(
             product_config_code=product_config_code,
             input_date=input_date,  # 注意：这里移除了 .today()
             method=method,
+            industry=industry,
             distribution=row["Distribution"],
             alpha=(
                 float(row["Alpha"])
@@ -277,7 +279,7 @@ def convert_to_product_exponential_distribution_params(
     method: FitMethodType,
     source: bool,
     lambda_: float,
-) -> CreateProductDistributionParam:
+    industry: str = 'railway',) -> CreateProductDistributionParam:
     group_id = uuid4_str()
     param = CreateProductDistributionParam(
         group_id=group_id,
@@ -285,6 +287,7 @@ def convert_to_product_exponential_distribution_params(
         product_config_code=product_config_code,
         input_date=input_date,  # 注意：这里移除了 .today()
         method=method,
+        industry=industry,
         distribution="Exponential_1P",
         alpha=None,
         beta=None,
@@ -316,6 +319,7 @@ def convert_to_part_exponential_distribution_params(
     method: FitMethodType,
     source: bool,
     lambda_: float,
+    industry: str = 'railway',
 ) -> CreatePartDistributionParam:
     group_id = uuid4_str()
     param = CreatePartDistributionParam(
@@ -325,6 +329,7 @@ def convert_to_part_exponential_distribution_params(
         part=part,
         input_date=input_date,  # 注意：这里移除了 .today()
         method=method,
+        industry=industry,
         distribution="Exponential_1P",
         alpha=None,
         beta=None,
