@@ -36,7 +36,6 @@ async def product_tag(
         model,
         input_date,
         product_config_code=product_config_code,
-        industry=industry,
     )
     return response_base.success(data=tags)
 

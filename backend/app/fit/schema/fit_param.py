@@ -94,7 +94,6 @@ class CreateProductDistributionParam(SchemaBase):
 
     source: bool
     industry: str = 'railway'
-    industry: str = 'railway'
 
 
 class CreatePartDistributionParam(SchemaBase):

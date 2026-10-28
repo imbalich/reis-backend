@@ -16,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.sense.model.sense_sort import SenseSort
-from backend.database import db
 
 
 class CRUDSensePart(CRUDPlus[SenseSort]):

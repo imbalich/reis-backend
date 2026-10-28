@@ -52,12 +52,6 @@ class _FakeSession:
     async def __aexit__(self, *args):
         return False
 
-    def begin(self):
-        return self
-
-    async def __aenter2__(self):
-        pass
-
     # context manager for begin()
     class _Tx:
         async def __aenter__(self_inner):

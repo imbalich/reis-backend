@@ -18,7 +18,6 @@ from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model import Product
 from backend.app.datamanage.model.dm_jl_product import ProductJL
-from backend.app.datamanage.model.dm_jl_product import ProductJL
 from backend.common.industry import Industry, resolve_industry
 from backend.common.product_config import apply_product_config_code_filter
 

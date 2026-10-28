@@ -43,7 +43,6 @@ async def part_tag(
         part,
         input_date,
         product_config_code=product_config_code,
-        industry=industry,
     )
     return response_base.success(data=tags)
 
@@ -163,6 +162,5 @@ async def part_get_equivalent_lamda(
         input_time1,
         input_time2,
         product_config_code=product_config_code,
-        industry=industry,
     )
     return response_base.success(data=results)
