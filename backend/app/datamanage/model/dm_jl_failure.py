@@ -17,6 +17,15 @@ from sqlalchemy.orm import Mapped, mapped_column
 from backend.common.model import DataClassBase, id_key
 
 
+
+
+def cn_yes_no_to_int(value) -> int | None:
+    """中文'是/否'转数值: 是→1 否→0 其他→None (与铁路 is_zero/is_company 语义一致)"""
+    if value is None:
+        return None
+    return {'是': 1, '否': 0}.get(str(value))
+
+
 class FailureJL(DataClassBase):
     """故障单-风电(来源: dm_jl_failure, 风电专属表)"""
 
@@ -153,8 +162,8 @@ class FailureJL(DataClassBase):
 
     @hybrid_property
     def is_zero_distance(self):
-        """是否零运行时长: 中文转数值, 与铁路 is_zero 语义一致"""
-        return {'是': 1, '否': 0}.get(self.is_zero)
+        """是否零运行时长: 见 cn_yes_no_to_int 语义说明"""
+        return cn_yes_no_to_int(self.is_zero)
 
     @is_zero_distance.inplace.expression
     @classmethod
@@ -163,8 +172,8 @@ class FailureJL(DataClassBase):
 
     @hybrid_property
     def is_company(self):
-        """是否本公司产品: 中文转数值, 与铁路 is_company 语义一致"""
-        return {'是': 1, '否': 0}.get(self.is_yj_product)
+        """是否本公司产品: 见 cn_yes_no_to_int 语义说明"""
+        return cn_yes_no_to_int(self.is_yj_product)
 
     @is_company.inplace.expression
     @classmethod

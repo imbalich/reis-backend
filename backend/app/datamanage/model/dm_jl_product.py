@@ -18,6 +18,17 @@ from sqlalchemy.orm import Mapped, mapped_column
 from backend.common.model import DataClassBase, id_key
 
 
+
+
+def calc_repair_times_days(prod_repair_years) -> int | None:
+    """删失阈值口径(评审PR#3意见#6, 业务确认后固化):
+    修级间隔天数 = 产品寿命(年) × 365 (风电无修级体系, 以设计寿命为界)
+    """
+    if prod_repair_years is None:
+        return None
+    return int(round(float(prod_repair_years) * 365))
+
+
 class ProductJL(DataClassBase):
     """产品信息-风电(来源: dm_jl_product, 风电专属表)"""
 
@@ -98,7 +109,5 @@ class ProductJL(DataClassBase):
 
     @property
     def repair_times(self) -> int | None:
-        """修级间隔天数(删失阈值): 风电无修级体系, 以产品寿命折算天数替代"""
-        if self.prod_repair is None:
-            return None
-        return int(round(float(self.prod_repair) * 365))
+        """修级间隔天数(删失阈值): 见 calc_repair_times_days 口径说明"""
+        return calc_repair_times_days(self.prod_repair)
