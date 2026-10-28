@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 @Project : fastapi-base-backend
@@ -8,7 +8,8 @@
 from datetime import date, timedelta
 from typing import Any
 
-from backend.app.datamanage.model import Despatch, Ebom, FailureModel, Product
+from backend.app.datamanage.model import Despatch, Ebom
+from backend.common.industry import FailureLike, ProductLike
 from backend.app.fit.schema.base_param import (
     DespatchParam,
     EbomParam,
@@ -23,8 +24,8 @@ class PartTagProcessService(TagProcessService):
     async def process_data(
         self,
         despatch_data: list[Despatch],
-        failure_data: list[FailureModel],
-        product_data: Product,
+        failure_data: list[FailureLike],
+        product_data: ProductLike,
         bom_data: Ebom,
         input_date: str | date = None,
         **kwargs: Any,
@@ -52,8 +53,8 @@ class PartTagProcessService(TagProcessService):
     async def _process_non_essential(
         self,
         despatch_data: list[Despatch],
-        failure_data: list[FailureModel],
-        product_data: Product,
+        failure_data: list[FailureLike],
+        product_data: ProductLike,
         bom_data: Ebom,
         input_date: str | date = None,
     ) -> list[list]:
@@ -79,8 +80,8 @@ class PartTagProcessService(TagProcessService):
     async def _process_essential(
         self,
         despatch_data: list[Despatch],
-        failure_data: list[FailureModel],
-        product_data: Product,
+        failure_data: list[FailureLike],
+        product_data: ProductLike,
         bom_data: Ebom,
         repair_data: list[RepairParam],
         repair_despatch_data: list[Despatch],
@@ -124,7 +125,7 @@ class PartTagProcessService(TagProcessService):
 
     async def process_failure_data(
         self,
-        failure_data: list[FailureModel],
+        failure_data: list[FailureLike],
         input_date: date,
     ):
         return await super().process_failure_data(failure_data, input_date)
@@ -251,7 +252,7 @@ class PartTagProcessService(TagProcessService):
     @staticmethod
     async def tag_create_non_essential(
         container: dict[str, Any],
-        product_data: Product,
+        product_data: ProductLike,
         input_date: date,
     ) -> list[list[Any]]:
         result = []
@@ -308,7 +309,7 @@ class PartTagProcessService(TagProcessService):
     @staticmethod
     async def tag_create_essential(
         container: dict[str, Any],
-        product_data: Product,
+        product_data: ProductLike,
         input_date: date,
     ) -> list[list[Any]]:
         result = []

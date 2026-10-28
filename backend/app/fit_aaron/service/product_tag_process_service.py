@@ -11,7 +11,8 @@
 from datetime import date
 from typing import Any
 
-from backend.app.datamanage.model import Despatch, Failure, Product
+from backend.app.datamanage.model import Despatch
+from backend.common.industry import FailureLike, ProductLike
 from backend.app.fit.schema.base_param import DespatchParam, FailureParam
 from backend.app.fit_aaron.service.tag_process_service import TagProcessService
 from backend.app.fit.utils.time_utils import dateutils
@@ -21,8 +22,8 @@ class ProductTagProcessService(TagProcessService):
     async def process_data(
         self,
         despatch_data: list[Despatch],
-        failure_data: list[Failure],
-        product_data: Product,
+        failure_data: list[FailureLike],
+        product_data: ProductLike,
         input_date: str | date = None,
         **kwargs: Any,
     ) -> list[list]:
@@ -54,7 +55,7 @@ class ProductTagProcessService(TagProcessService):
         """
         return await super().process_despatch_data(despatch_data, input_date)
 
-    async def process_failure_data(self, failure_data: list[Failure], input_date: date):
+    async def process_failure_data(self, failure_data: list[FailureLike], input_date: date):
         """
         处理故障数据，按时间顺序排序，降序。
         :param failure_data: 故障数据列表
@@ -135,7 +136,7 @@ class ProductTagProcessService(TagProcessService):
 
     @staticmethod
     async def tag_create(
-        container: dict[str, dict[str, Any]], product_data: Product, input_date: date
+        container: dict[str, dict[str, Any]], product_data: ProductLike, input_date: date
     ) -> list[list[Any]]:
         """
         根据给定的容器（包含产品编号和故障日期列表）和产品数据，为每个故障日期对创建标签列表。
