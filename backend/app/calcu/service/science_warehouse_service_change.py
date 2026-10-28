@@ -165,21 +165,6 @@ class ScienceWarehouseServiceChange:
                 spare_part_code
             )
         )
-        # 产业标记(评审PR#3意见#4/第4阶段): 按备品支撑型号解析产业构成
-        from backend.common.industry import resolve_industry
-
-        async with async_db_session() as industry_db:
-            model_names = {
-                str(m.product_model).strip()
-                for m in (model_failure_spare_mappings or [])
-                if getattr(m, 'product_model', None)
-            }
-            industries = {
-                await resolve_industry(industry_db, mn) for mn in model_names
-            }
-        from backend.common.industry import aggregate_industry
-
-        spare_industry = aggregate_industry(industries)
         if model_failure_spare_mappings is None:
             return {
                 "success": False,
@@ -454,7 +439,6 @@ class ScienceWarehouseServiceChange:
 
         result = {
             "success": True,
-            "industry": spare_industry,
             "warehouse_code": warehouse_code,
             "warehouse_name": warehouse_spare.warehouse_name,
             "spare_part_code": spare_part_code,
@@ -1068,7 +1052,6 @@ class ScienceWarehouseServiceChange:
                     "created_time": date.today(),
                     "confidence": confidence,
                     "max_failure_count": int(max_failure_count),  # 确保是整数
-                    "industry": industry,
                 }
 
                 result_data.append(db_record)
