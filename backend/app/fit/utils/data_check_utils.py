@@ -83,7 +83,7 @@ class DataCheckUtils:
         product_config_code: str | None = None,
     ) -> bool:
         """
-        检查型号是否在 Despatch 表中，累计运行时间至少 10w 小时。
+        检查型号是否在 Despatch 表中，且累计运行时间大于 0。
         """
         async with async_db_session() as db:
             total_hours = await DataCheckUtils.total_run_time(
@@ -91,7 +91,7 @@ class DataCheckUtils:
                 model,
                 product_config_code=product_config_code,
             )
-            return total_hours >= 100000
+            return total_hours > 0
 
     @staticmethod
     async def total_run_time(

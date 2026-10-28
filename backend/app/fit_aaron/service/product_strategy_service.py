@@ -42,7 +42,7 @@ class ProductStrategyService:
         # 2.检查累计运行时间Despatch
         run_time_check = await datacheckutils.check_model_in_despatch(model)
         if not run_time_check:
-            raise errors.DataValidationError(msg=f'型号{model}的累计运行时间不足')
+            raise errors.DataValidationError(msg=f'型号{model}的发运信息不存在')
         # 3.检查故障信息Failure数量
         fault_check = await datacheckutils.check_model_in_failure(model)
         if not fault_check:

@@ -54,7 +54,7 @@ class PartStrategyService:
             product_config_code=product_config_code,
         )
         if not run_time_check:
-            raise errors.DataValidationError(msg=f"型号{model}的累计运行时间不足")
+            raise errors.DataValidationError(msg=f"型号{model}的发运信息不存在")
 
         fault_check = await datacheckutils.check_model_and_part_in_failure(
             model,
@@ -212,7 +212,7 @@ class PartStrategyService:
             product_config_code=product_config_code,
         )
         if not run_time_check:
-            raise errors.DataValidationError(msg=f"型号{model}的累计运行时间不足")
+            raise errors.DataValidationError(msg=f"型号{model}的发运信息不存在")
 
         if not filtered_failures:
             raise errors.FailureCheckError(
