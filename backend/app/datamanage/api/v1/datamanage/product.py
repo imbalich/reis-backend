@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 from typing import Annotated
@@ -55,6 +55,7 @@ async def get_pagination_product(
     product_config_code: Annotated[str | None, Query()] = None,
 ) -> ResponseSchemaModel[PageData[GetProductDetails]]:
     product_select = await product_service.get_select(
+        db=db,
         model=model,
         product_config_code=product_config_code,
     )

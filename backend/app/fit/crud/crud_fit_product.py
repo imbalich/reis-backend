@@ -85,6 +85,7 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
         product_config_code: str | None = None,
+        industry: str | None = None,
     ) -> Sequence[FitProduct]:
         """
         根据型号查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -110,6 +111,9 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         apply_product_config_code_filter(
             base_conditions, self.model.product_config_code, product_config_code
         )
+
+        if industry:
+            base_conditions.append(self.model.industry == industry)
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:
@@ -144,6 +148,7 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
         product_config_code: str | None = None,
+        industry: str | None = None,
     ) -> FitProduct:
         """
         根据型号和分布查询拟合信息:查询最新的拟合信息,只选取一个
@@ -175,6 +180,9 @@ class CRUDFitProduct(CRUDPlus[FitProduct]):
         apply_product_config_code_filter(
             base_conditions, self.model.product_config_code, product_config_code
         )
+
+        if industry:
+            base_conditions.append(self.model.industry == industry)
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:

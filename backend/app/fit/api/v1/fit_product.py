@@ -36,6 +36,7 @@ async def product_tag(
         model,
         input_date,
         product_config_code=product_config_code,
+        industry=industry,
     )
     return response_base.success(data=tags)
 
@@ -83,6 +84,7 @@ async def product_get_fits(
     input_date: Annotated[str | None, Query(description="计算截止日期")] = None,
     check: Annotated[FitCheckType | None, Query(description="拟合优度检验")] = FitCheckType.BIC,
     source: Annotated[bool, Query(description="数据来源，False 为系统默认，True 为用户自定义")] = False,
+    industry: Annotated[str | None, Query(description="数据产业(railway/wind)")] = None,
 ):
     results = await product_fit_service.get_by_model(
         model,
@@ -91,6 +93,7 @@ async def product_get_fits(
         check,
         source,
         product_config_code=product_config_code,
+        industry=industry,
     )
     return response_base.success(data=results)
 
@@ -103,6 +106,7 @@ async def product_get_best_fit(
     method: Annotated[FitMethodType | None, Query(description="拟合方法")] = FitMethodType.MLE,
     check: Annotated[FitCheckType | None, Query(description="拟合优度检验")] = FitCheckType.BIC,
     source: Annotated[bool, Query(description="数据来源，False 为系统默认，True 为用户自定义")] = False,
+    industry: Annotated[str | None, Query(description="数据产业(railway/wind)")] = None,
 ):
     results = await product_fit_service.get_best_by_model(
         model,
@@ -111,5 +115,6 @@ async def product_get_best_fit(
         check,
         source,
         product_config_code=product_config_code,
+        industry=industry,
     )
     return response_base.success(data=results)
