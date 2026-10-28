@@ -526,6 +526,8 @@ class ScienceWarehouseServiceChange:
             （根据product_model，规范化后的product_config_code，original_part_code，spare_part_code去重）
         """
         async with async_db_session() as db:
+            from backend.common.industry import Industry, resolve_industry
+
             spare_models = await part_spare_mapping_dao.get_by_spare_part_code(
                 db, spare_part_code
             )
@@ -543,6 +545,11 @@ class ScienceWarehouseServiceChange:
                 product_config_code = normalize_product_config_code(
                     model.product_config_code
                 )
+                # 科学库存只针对铁路(评审PR#3意见): 剔除风电型号
+                if await resolve_industry(
+                    db, str(model.product_model).strip()
+                ) != Industry.RAILWAY:
+                    continue
                 key = (
                     model.product_model,
                     product_config_code,
@@ -639,7 +646,9 @@ class ScienceWarehouseServiceChange:
                     check=FitCheckType.BIC,
                     source=source,
                     product_config_code=product_config_code,
+                industry='railway',
                 )
+                industry='railway',
             if not rows:
                 continue
             params = convert_to_pydantic_model(rows[0], DistributionParams)
@@ -724,13 +733,13 @@ class ScienceWarehouseServiceChange:
             despatch_rows = await despatch_dao.get_despatchs_by_model(
                 db, model, product_config_code=product_config_code
             )
-            failure_rows = await failure_dao.get_by_model_and_part(
+            failure_rows = await failure_dao.railway.get_by_model_and_part(
                 db, model, part, input_date, product_config_code=product_config_code
             )
             ebom_rows = await get_ebom_tree_with_parents(
                 db, model, product_config_code, part
             )
-            product_row = await product_dao.get_by_model(
+            product_row = await product_dao.railway.get_by_model(
                 db, model, product_config_code=product_config_code
             )
         context["failure_count"] = len(failure_rows)
@@ -824,7 +833,7 @@ class ScienceWarehouseServiceChange:
 
         async with async_db_session() as db:
             failure_count = (
-                await failure_dao.get_failure_count_by_model_and_part_in_products(
+                await failure_dao.railway.get_failure_count_by_model_and_part_in_products(
                     db, model, part, start_date_str, end_date_str, products
                 )
             )
