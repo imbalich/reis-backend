@@ -35,6 +35,7 @@ from backend.app.calcu.service.distribute_service import distribute_service
 from backend.app.fit.schema.fit_param import CreateFitPartInParam, FitCheckType, FitMethodType
 from backend.app.fit_aaron.service.part_fit_service import part_fit_service
 from backend.app.fit.utils.time_utils import dateutils
+from backend.common.industry import Industry, resolve_industry
 from backend.common.product_config import (
     normalize_product_config_code,
     product_config_codes_equal,
@@ -959,8 +960,6 @@ class ScienceWarehouseService:
                 db, spare_part_code
             )
             # 科学库存只针对铁路(评审PR#3意见): 剔除风电型号
-            from backend.common.industry import Industry, resolve_industry
-
             railway_models = [
                 mapping.product_model for mapping in mappings
                 if await resolve_industry(

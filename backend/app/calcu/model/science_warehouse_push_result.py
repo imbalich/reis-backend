@@ -45,10 +45,6 @@ class ScienceWarehousePushResult(Base):
     input_date: Mapped[date] = mapped_column(
         Date, nullable=False, comment="计算截止日期"
     )
-    industry: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="railway", index=True,
-        comment="数据产业(railway/wind/mixed), 评审PR#3意见#4"
-    )
     created_time: Mapped[date] = mapped_column(
         Date, nullable=False, comment="原结果创建时间"
     )

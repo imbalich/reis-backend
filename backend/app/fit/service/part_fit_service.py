@@ -28,6 +28,7 @@ from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
 from backend.common.exception import errors
 from backend.common.exception.errors import DataValidationError, FailureCheckError
+from backend.common.industry import resolve_industry
 from backend.database.db import async_db_session
 
 
@@ -164,8 +165,6 @@ class PartFitService:
         async with async_db_session() as db:
             async with db.begin():
                 try:
-                    from backend.common.industry import resolve_industry
-
                     industry = await resolve_industry(db, model)
                     tags = await part_strategy_service.part_tag_process(
                         model,
@@ -182,7 +181,7 @@ class PartFitService:
                         input_date,
                         method,
                         is_user_input,
-                        industry,
+                        industry=industry.value,
                     )
                     await fit_part_dao.creates(db, distribution_params)
                 except FailureCheckError:
@@ -201,7 +200,7 @@ class PartFitService:
                         method,
                         is_user_input,
                         lambda_,
-                        industry,
+                        industry=industry.value,
                     )
                     await fit_part_dao.create(db, distribution_param)
 

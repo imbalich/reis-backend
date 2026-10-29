@@ -9,8 +9,7 @@ from sqlalchemy import Row, Select, desc, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
-from backend.app.datamanage.model import Failure
-from backend.app.datamanage.model.failure_mro_correct import FailureMROCorrect
+from backend.app.datamanage.model import FailureModel
 from backend.app.datamanage.model.dm_jl_failure import FailureJL  # 故障信息-风电(jl)
 from backend.common.industry import FailureLike
 from backend.common.product_config import apply_product_config_code_filter
@@ -363,6 +362,16 @@ class FailureDaoProxy:
         self._railway = railway
         self._wind = wind
 
+    @property
+    def railway(self) -> CRUDFailure:
+        """铁路专用 DAO：只读铁路故障表，不做产业分流（科学库存等铁路专属业务使用）"""
+        return self._railway
+
+    @property
+    def wind(self) -> CRUDFailure:
+        """风电专用 DAO：只读 dm_jl_failure，不做产业分流"""
+        return self._wind
+
     def __getattr__(self, name: str):
         """未显式分流的方法/属性: 回退铁路实现"""
         return getattr(self._railway, name)
@@ -416,7 +425,7 @@ class FailureDaoProxy:
 
 
 failure_dao: FailureDaoProxy = FailureDaoProxy(
-    railway=CRUDFailure(Failure),      # 铁路: dm_failure
-    wind=CRUDFailure(FailureJL),       # 风电: dm_jl_failure
+    railway=CRUDFailure(FailureModel),  # 铁路: 跟随 FAILURE_DATA_SOURCE(dm_failure/mro_correct)
+    wind=CRUDFailure(FailureJL),        # 风电: dm_jl_failure
 )
 

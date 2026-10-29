@@ -16,7 +16,6 @@ from backend.app.calcu.service.science_warehouse_esb_client import (
     science_warehouse_esb_client,
 )
 from backend.common.exception import errors
-from loguru import logger
 from backend.core.conf import settings
 from backend.database.db import async_db_session
 
@@ -65,34 +64,6 @@ class ScienceWarehousePushService:
                 raise errors.NotFoundError(
                     msg=f"计算批次 {calculation_id} 没有待推送数据"
                 )
-
-            # ===== 兜底防线(评审PR#3意见#7/第4阶段): 批次混入非铁路行 → 整批拒绝 =====
-            # 业务规则(固定写在代码, 不做配置): 风电结果一律不推送 ESB
-            non_railway_rows = [
-                r for r in rows
-                if (getattr(r, 'industry', None) or 'railway') != 'railway'
-            ]
-            if non_railway_rows:
-                samples = [
-                    f'{r.spare_part_code}[{getattr(r, "industry", "?")}]'
-                    for r in non_railway_rows[:10]
-                ]
-                detail = '; '.join(samples)
-                logger.error(
-                    f'[科学库存推送兜底] 批次{calculation_id}混入'
-                    f'{len(non_railway_rows)}条非铁路行, 已拒绝推送: {detail}'
-                )
-                raise errors.ForbiddenError(
-                    msg=(f'计算批次 {calculation_id} 含 '
-                         f'{len(non_railway_rows)} 条非铁路数据, 已拒绝推送ESB; '
-                         f'样例: {detail}')
-                )
-
-            # ===== 推送过滤防线: 仅铁路行进入 ESB 报文 =====
-            rows = [
-                r for r in rows
-                if (getattr(r, 'industry', None) or 'railway') == 'railway'
-            ]
 
             full_payload = build_science_warehouse_push_payload(
                 calculation_id=calculation_id,

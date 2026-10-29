@@ -27,16 +27,12 @@ else:
     # print(f"使用字体文件: {font_path}")
     pass
 
-
 # 设置中文字体支持
 font_prop = fm.FontProperties(fname=font_path)
-# plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
-# plt.rcParams['font.family'] = ['sans-serif'] # 设置字体家族
-# plt.rcParams['font.sans-serif'] = [plt.FontProperties(fname=font_path).get_name()] # 指定中文字体
-# plt.rcParams['axes.unicode_minus'] = False
 
 class PlotLifetimeService:
-    def plot_optimize_result(model, pso_results, t, equal_points: dict, target_sf, code_to_name):
+    @staticmethod
+    async def plot_optimize_result(model, pso_results, t, equal_points: dict, target_sf, code_to_name):
         """
         绘制优化结果
         pso_results: dict keyed by part, 包含 optimized_distribution / optimized_pdf 等字段
@@ -44,16 +40,6 @@ class PlotLifetimeService:
         """
         fig, ax = plt.subplots(figsize=(12, 10))
         # 安全计算绘图 x 轴上限：优先使用 equal_points 中的时间点（取最大）
-        # if equal_points:
-        #     # 期望 equal_points.values() 中每项为 (t_point, sf_point)
-        #     t_candidates = [pair[0] for pair in equal_points.values() if pair and pair[0] is not None]
-        #     x_max = max(t_candidates) if t_candidates else 1
-        # else:
-        #     x_max = 1
-
-        # # 保证上限至少为 1，避免 np.linspace 参数异常
-        # x_max = max(1, int(x_max))
-        # x = np.linspace(0, x_max, 1000)
         x = np.linspace(0, t+10000, 1000)
         for part, pso_result in pso_results.items():
             # 只绘制优化后生成的分布
@@ -78,7 +64,7 @@ class PlotLifetimeService:
         img_base64 = PlotLifetimeService._fig_to_base64(fig)
         return [img_base64]
 
-    #     @staticmethod
+    @staticmethod
     async def plot_original_result(model, pso_results, t, target_sf, code_to_name, year_worktimes):
         """
         绘制优化结果
@@ -89,12 +75,6 @@ class PlotLifetimeService:
         # 安全计算绘图 x 轴上限：优先使用 equal_points 中的时间点（取最大）
         x = np.linspace(0, t+10000, 1000)
         for part, pso_result in pso_results.items():
-            # 只绘制优化后生成的分布
-            # if 'optimized_distribution' in pso_result:
-            #     distribution = pso_result['original_distribution']
-            #     y = distribution.SF(x)
-            #     label = code_to_name.get(part, part)
-            #     ax.plot(x, y, label=label)
             distribution = pso_result['original_distribution']
             y = distribution.SF(x)
             label = code_to_name.get(part, part)
@@ -109,6 +89,14 @@ class PlotLifetimeService:
         ax.legend(prop=font_prop)
         img_base64 = PlotLifetimeService._fig_to_base64(fig)
         return [img_base64]
-    
+
+    @staticmethod
+    def _fig_to_base64(fig):
+        '''将 matplotlib 图片转换为 base64'''
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+        img_base64 = base64.b64encode(buf.getvalue()).decode()
+        plt.close(fig)
+        return img_base64
 
 plot_lifetime_service: PlotLifetimeService = PlotLifetimeService()

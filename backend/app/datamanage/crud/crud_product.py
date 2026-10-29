@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
 @Project : fastapi-base-backend
@@ -107,6 +107,16 @@ class ProductDaoProxy:
         self._railway = railway
         self._wind = wind
         self._wind_model = wind_model
+
+    @property
+    def railway(self) -> CRUDProduct:
+        """铁路专用 DAO：只读 dm_product，不做产业分流（科学库存等铁路专属业务使用）"""
+        return self._railway
+
+    @property
+    def wind(self) -> CRUDProduct:
+        """风电专用 DAO：只读 dm_jl_product，不做产业分流"""
+        return self._wind
 
     async def _dao_for(self, db: AsyncSession, model: str | None) -> CRUDProduct:
         if not model:

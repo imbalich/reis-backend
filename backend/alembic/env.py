@@ -51,9 +51,12 @@ def include_object(obj, name, type_, reflected, compare_to):
 
 
 # other values from the config, defined by the needs of env.py,
-alembic_config.set_main_option(
-    'sqlalchemy.url', SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False).replace('%', '%%')
-)
+import os as _os
+
+_effective_url = _os.getenv('ALEMBIC_DB_URL') or SQLALCHEMY_DATABASE_URL.render_as_string(
+    hide_password=False
+).replace('%', '%%')
+alembic_config.set_main_option('sqlalchemy.url', _effective_url)
 
 
 def run_migrations_offline():

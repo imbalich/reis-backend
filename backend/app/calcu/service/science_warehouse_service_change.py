@@ -51,6 +51,7 @@ from backend.app.fit_aaron.service.part_strategy_service import (
     part_strategy_service as aaron_part_strategy_service,
 )
 from backend.common.exception.errors import DataValidationError, FailureCheckError
+from backend.common.industry import Industry, resolve_industry
 from backend.common.log import log
 from backend.common.product_config import normalize_product_config_code
 from backend.database.db import async_db_session
@@ -510,8 +511,6 @@ class ScienceWarehouseServiceChange:
             （根据product_model，规范化后的product_config_code，original_part_code，spare_part_code去重）
         """
         async with async_db_session() as db:
-            from backend.common.industry import Industry, resolve_industry
-
             spare_models = await part_spare_mapping_dao.get_by_spare_part_code(
                 db, spare_part_code
             )
@@ -630,15 +629,14 @@ class ScienceWarehouseServiceChange:
                     check=FitCheckType.BIC,
                     source=source,
                     product_config_code=product_config_code,
-                industry='railway',
+                    industry='railway',
                 )
-                industry='railway',
-            if not rows:
-                continue
-            params = convert_to_pydantic_model(rows[0], DistributionParams)
-            distribution = await distribute_service.get_distribution_by_params(params)
-            if distribution is not None:
-                return distribution
+                if not rows:
+                    continue
+                params = convert_to_pydantic_model(rows[0], DistributionParams)
+                distribution = await distribute_service.get_distribution_by_params(params)
+                if distribution is not None:
+                    return distribution
         return None
 
     @staticmethod

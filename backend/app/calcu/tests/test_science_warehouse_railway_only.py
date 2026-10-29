@@ -1,19 +1,23 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 @Project : reis-backend
 @File    : test_science_warehouse_railway_only.py
-@Desc    : 第4阶段测试(评审PR#3意见③的替代测试):
-           备品同时映射铁路与风电型号时, 科学库存只使用铁路型号:
-           - 返回的型号列表不含风电型号
-           - 风电DAO(dm_jl_failure/dm_jl_product)调用次数为0
-"""
+@Desc    : 评审B1验收测试:
+           1) 真实代理(不替换代理本身)暴露 railway/wind 属性, 指向对应底层DAO
+           2) 备品同时映射铁路与风电型号时, 科学库存只使用铁路型号
+    10|"""
 import asyncio
 from types import SimpleNamespace
 
 import pytest
 
 from backend.app.calcu.service import science_warehouse_service as svc_mod
+from backend.app.datamanage.crud.crud_failure import failure_dao
+from backend.app.datamanage.crud.crud_product import product_dao
+from backend.app.datamanage.model import FailureModel, Product
+from backend.app.datamanage.model.dm_jl_failure import FailureJL
+from backend.app.datamanage.model.dm_jl_product import ProductJL
 from backend.common.industry import Industry
 
 
@@ -34,6 +38,27 @@ class _FakeSession:
 
     async def __aexit__(self, *a):
         return False
+
+
+class TestDaoProxyRailwayAttribute:
+    """评审B1验收: 代理必须真实暴露 .railway/.wind, 不得经过 __getattr__ 兜底"""
+
+    def test_product_dao_railway_is_railway_crud(self):
+        assert product_dao.railway is product_dao._railway
+        assert product_dao.railway.model is Product
+
+    def test_product_dao_wind_is_wind_crud(self):
+        assert product_dao.wind is product_dao._wind
+        assert product_dao.wind.model is ProductJL
+
+    def test_failure_dao_railway_is_railway_crud(self):
+        assert failure_dao.railway is failure_dao._railway
+        # S1: 铁路侧跟随 FAILURE_DATA_SOURCE(dm_failure / mro_correct)
+        assert failure_dao.railway.model is FailureModel
+
+    def test_failure_dao_wind_is_wind_crud(self):
+        assert failure_dao.wind is failure_dao._wind
+        assert failure_dao.wind.model is FailureJL
 
 
 def _mapping(product_model: str):
@@ -71,13 +96,11 @@ def _patch(monkeypatch, mappings):
                 raise AssertionError('风电DAO不应被科学库存调用')
             return _method
 
-    # 产业判定: R1→铁路, W1→风电(打桩 resolve, 避免测试依赖库中数据)
-    import backend.common.industry as industry_mod
-
+    # 产业判定: R1→铁路, W1→风电(打桩服务模块内的绑定, 避免测试依赖库中数据)
     async def fake_resolve(db, model):
         return Industry.WIND if str(model).startswith('W') else Industry.RAILWAY
 
-    monkeypatch.setattr(industry_mod, 'resolve_industry', fake_resolve)
+    monkeypatch.setattr(svc_mod, 'resolve_industry', fake_resolve)
     return calls
 
 

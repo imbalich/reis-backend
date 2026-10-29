@@ -28,6 +28,7 @@ from backend.app.fit.utils.convert_model import (
 from backend.app.fit.utils.data_check_utils import datacheckutils
 from backend.app.fit.utils.time_utils import dateutils
 from backend.common.exception.errors import DataValidationError, FailureCheckError
+from backend.common.industry import resolve_industry
 from backend.database.db import async_db_session
 
 
@@ -157,8 +158,6 @@ class ProductFitService:
         async with async_db_session() as db:
             async with db.begin():
                 try:
-                    from backend.common.industry import resolve_industry
-
                     industry = await resolve_industry(db, model)
                     tags = await product_strategy_service.model_tag_process(
                         model,
@@ -173,7 +172,7 @@ class ProductFitService:
                         input_date,
                         method,
                         is_user_input,
-                        industry,
+                        industry=industry.value,
                     )
                     await fit_product_dao.creates(db, distribution_params)
                 except FailureCheckError:
@@ -189,7 +188,7 @@ class ProductFitService:
                         method,
                         is_user_input,
                         lambda_,
-                        industry,
+                        industry=industry.value,
                     )
                     await fit_product_dao.create_model(db, distribution_param)
 

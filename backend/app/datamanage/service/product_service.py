@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
 @Project 锛歠astapi-base-backend

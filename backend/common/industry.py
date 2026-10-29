@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 @Project : reis-backend
 @File    : industry.py
@@ -19,6 +19,7 @@ from sqlalchemy import String, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.datamanage.model.dm_jl_product import ProductJL
+from backend.common.log import log
 
 
 class Industry(str, Enum):
@@ -66,6 +67,9 @@ async def get_industry_model_sets(db: AsyncSession) -> tuple[frozenset[str], fro
     wind = await _load_wind_models(db)
     railway = await _load_railway_models(db)
     conflicts = frozenset(wind & railway)
+    # 重叠是常态(dm_product 为全公司统一主表): 只在缓存刷新时汇总告警一次, 避免刷屏
+    if conflicts:
+        log.warning('共 {} 个型号同时存在于铁路与风电产品表, 判定时按风电处理', len(conflicts))
     _cache['wind_models'] = wind
     _cache['railway_only_conflicts'] = conflicts
     _cache['ts'] = now
@@ -76,34 +80,13 @@ async def resolve_industry(db: AsyncSession, model: str) -> Industry:
     """按产品型号判定产业
 
     判定规则: 型号存在于 dm_jl_product(风电产品表) → WIND, 否则 → RAILWAY
-    同一型号同时存在于铁路与风电产品表 → 抛出异常(不允许静默选边, 评审PR#3意见#1)
+    同一型号同时存在于铁路与风电产品表 → 按风电处理并汇总告警
+    (评审PR#3意见#1原"重叠即报错"规则经数据核实不可行: dm_product 是全公司
+    统一产品主表, 风电型号(product_type='风力电机')灌入其中属常态)
     """
     normalized = str(model).strip() if model else ''
     wind_models, conflicts = await get_industry_model_sets(db)
-    # 评审PR#3意见#1原规则(重叠即报错)经数据核实不可行:
-    #   fba.dm_product 是全公司统一产品主表, 数据方已将全部风电产品
-    #   (product_type='风力电机')灌入其中, 风电型号与 dm_product 的重叠是常态。
-    #   故以 dm_jl_product 成员资格作为风电判定唯一依据, 重叠仅告警。
-    if normalized in conflicts:
-        import logging
-
-        logging.warning('型号 %s 同时存在于铁路与风电产品表, 已按风电处理', model)
     return Industry.WIND if normalized in wind_models else Industry.RAILWAY
-
-
-def aggregate_industry(industries: set[Industry]) -> str:
-    """聚合一组产业为单行标记: 全风电→wind / 全铁路→railway / 混合→mixed / 空→railway
-
-    用于科学库存等按(库房,备品)聚合的结果行: 行的产业取决于支撑该行的型号产业构成。
-    ESB 推送防线只放行 industry='railway' 的行(评审PR#3意见#7, 业务已确认风电不推ESB)。
-    """
-    if not industries:
-        return 'railway'
-    if industries == {Industry.WIND}:
-        return 'wind'
-    if industries == {Industry.RAILWAY}:
-        return 'railway'
-    return 'mixed'
 
 
 # ---------------------------------------------------------------------------
