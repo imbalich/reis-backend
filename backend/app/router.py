@@ -14,6 +14,7 @@ from backend.app.rcm.api.router import v1 as rcm_v1
 from backend.app.degrade.api.router import v1 as degrade_v1
 from backend.app.lcc.api.router import v1 as lcc_v1
 from backend.app.lifetime.api.router import v1 as lifetime_v1
+from backend.app.forecast.api.router import v1 as forecast_v1
 
 router = APIRouter()
 
@@ -29,3 +30,4 @@ router.include_router(rcm_v1)
 router.include_router(degrade_v1)
 router.include_router(lcc_v1)
 router.include_router(lifetime_v1)
+router.include_router(forecast_v1)

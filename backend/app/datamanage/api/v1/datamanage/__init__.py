@@ -30,6 +30,9 @@ from backend.app.datamanage.api.v1.datamanage.warehouse_inventory import (
 from backend.app.datamanage.api.v1.datamanage.part_spare_mapping import (
     router as part_spare_mapping_router,
 )
+from backend.app.datamanage.api.v1.datamanage.fit_roster import (
+    router as fit_roster_router,
+)
 from backend.app.datamanage.api.v1.datamanage.allotment import (
     router as allotment_router,
 )
@@ -53,6 +56,11 @@ router.include_router(
     part_spare_mapping_router,
     prefix="/part-spare-mapping",
     tags=["部件与备品对应关系数据"],
+)
+router.include_router(
+    fit_roster_router,
+    prefix="/fit-roster",
+    tags=["寿命拟合名单"],
 )
 router.include_router(
     allotment_router,
