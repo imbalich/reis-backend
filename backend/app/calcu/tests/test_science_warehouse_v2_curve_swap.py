@@ -27,6 +27,13 @@ def _exp_delta(lam: float, t0: float, t1: float) -> float:
 def _patch_context_sources(monkeypatch, failure_count: int, bl_quantity: int = 2):
     calls = {}
 
+    # 评审B4: 统一打桩产业判定(铁路测试一律返回 RAILWAY), 避免测试会话查库
+    # 服务为模块级导入(from ... import resolve_industry), 需打桩服务模块内的绑定
+    async def _fake_resolve(db, model):
+        return service_module.Industry.RAILWAY
+
+    monkeypatch.setattr(service_module, "resolve_industry", _fake_resolve)
+
     async def _fake_despatchs(db, model, product_config_code=None):
         calls["despatch_config"] = product_config_code
         return []
@@ -55,10 +62,11 @@ def _patch_context_sources(monkeypatch, failure_count: int, bl_quantity: int = 2
 
     monkeypatch.setattr(service_module, "async_db_session", lambda: _SessionContext())
     monkeypatch.setattr(service_module.despatch_dao, "get_despatchs_by_model", _fake_despatchs)
-    monkeypatch.setattr(service_module.failure_dao, "get_by_model_and_part", _fake_failures)
+    # 评审B1/B4: 业务代码走 failure_dao.railway / product_dao.railway, 打桩到真实目标
+    monkeypatch.setattr(service_module.failure_dao.railway, "get_by_model_and_part", _fake_failures)
     monkeypatch.setattr(service_module, "get_ebom_tree_with_parents", _fake_ebom)
     monkeypatch.setattr(service_module, "convert_to_total_quantity", lambda rows, part: bl_quantity)
-    monkeypatch.setattr(service_module.product_dao, "get_by_model", _fake_product)
+    monkeypatch.setattr(service_module.product_dao.railway, "get_by_model", _fake_product)
     return calls
 
 
@@ -76,6 +84,12 @@ def test_mapping_dedupe_keeps_each_product_config_code(monkeypatch) -> None:
 
     monkeypatch.setattr(service_module, "async_db_session", lambda: _SessionContext())
     monkeypatch.setattr(service_module.part_spare_mapping_dao, "get_by_spare_part_code", _fake_get)
+
+    # 评审B4: 打桩产业判定(全部按铁路处理), 避免测试会话查库
+    async def _fake_resolve(db, model):
+        return service_module.Industry.RAILWAY
+
+    monkeypatch.setattr(service_module, "resolve_industry", _fake_resolve)
 
     mappings = asyncio.run(Service.get_spare_models_by_spare_part_code("S"))
 

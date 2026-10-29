@@ -38,6 +38,18 @@ if alembic_config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = MappedBase.metadata
 
+
+# 外部同步表(风电 dm_jl_*)不由 Alembic 管理结构:
+# 这些表由数据同步方维护, 自动生成会误判增删列(评审PR#3意见#5)
+EXTERNAL_SYNC_TABLE_PREFIXES = ('dm_jl_',)
+
+
+def include_object(obj, name, type_, reflected, compare_to):
+    if type_ == 'table' and name and name.startswith(EXTERNAL_SYNC_TABLE_PREFIXES):
+        return False
+    return True
+
+
 # other values from the config, defined by the needs of env.py,
 alembic_config.set_main_option(
     'sqlalchemy.url', SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False).replace('%', '%%')
@@ -65,6 +77,7 @@ def run_migrations_offline():
         compare_type=True,
         compare_server_default=True,
         transaction_per_migration=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -87,6 +100,7 @@ def do_run_migrations(connection: Connection) -> None:
         compare_server_default=True,
         transaction_per_migration=True,
         process_revision_directives=process_revision_directives,
+        include_object=include_object,
     )
 
     with context.begin_transaction():

@@ -35,6 +35,7 @@ from backend.app.calcu.service.distribute_service import distribute_service
 from backend.app.fit.schema.fit_param import CreateFitPartInParam, FitCheckType, FitMethodType
 from backend.app.fit_aaron.service.part_fit_service import part_fit_service
 from backend.app.fit.utils.time_utils import dateutils
+from backend.common.industry import Industry, resolve_industry
 from backend.common.product_config import (
     normalize_product_config_code,
     product_config_codes_equal,
@@ -786,7 +787,7 @@ class ScienceWarehouseService:
                 from backend.app.datamanage.crud.crud_product import product_dao
 
                 product_data = convert_to_pydantic_model(
-                    await product_dao.get_by_model(
+                    await product_dao.railway.get_by_model(
                         db, product_model, product_config_code=product_config_code
                     ),
                     ProductParam,
@@ -958,7 +959,14 @@ class ScienceWarehouseService:
             mappings = await part_spare_mapping_dao.get_by_spare_part_code(
                 db, spare_part_code
             )
-            return list(set([mapping.product_model for mapping in mappings]))
+            # 科学库存只针对铁路(评审PR#3意见): 剔除风电型号
+            railway_models = [
+                mapping.product_model for mapping in mappings
+                if await resolve_industry(
+                    db, str(mapping.product_model).strip()
+                ) == Industry.RAILWAY
+            ]
+            return list(set(railway_models))
 
     @staticmethod
     async def get_products_by_allotment_two(allotment_two: str) -> List[str]:
@@ -992,7 +1000,7 @@ class ScienceWarehouseService:
         """计算特定产品编号列表的总运行时间"""
         async with async_db_session() as db:
             # 获取产品运行参数
-            product = await product_dao.get_by_model(
+            product = await product_dao.railway.get_by_model(
                 db, product_model, product_config_code=product_config_code
             )
             if not product:
@@ -1063,7 +1071,7 @@ class ScienceWarehouseService:
             # 计算备件量（使用指数分布的CDF）
             # 获取产品运行参数用于时间转换
             async with async_db_session() as db:
-                product = await product_dao.get_by_model(
+                product = await product_dao.railway.get_by_model(
                     db, product_model, product_config_code=product_config_code
                 )
                 if not product:
@@ -1094,7 +1102,7 @@ class ScienceWarehouseService:
     async def get_failures_by_product_number(product_number: str) -> List:
         """根据产品编号获取故障数据"""
         async with async_db_session() as db:
-            return await failure_dao.get_by_product_number(db, product_number)
+            return await failure_dao.railway.get_by_product_number(db, product_number)
 
     @staticmethod
     async def get_part_spare_mapping(

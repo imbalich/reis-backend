@@ -24,6 +24,7 @@ from backend.app.fit.utils.time_utils import dateutils
 from backend.app.fit_aaron.service.part_strategy_service import part_strategy_service
 from backend.common.exception import errors
 from backend.common.exception.errors import DataValidationError, FailureCheckError
+from backend.common.industry import resolve_industry
 from backend.common.product_config import normalize_product_config_code
 from backend.database.db import async_db_session
 
@@ -161,6 +162,7 @@ class PartFitService:
     ) -> None:
         async with async_db_session() as db:
             async with db.begin():
+                industry = await resolve_industry(db, model)
                 try:
                     # Aaron?2026-07-31???????Aaron??????tags
                     # ?????Aaron?????main_new.py????data_result1/data_result_replace???????
@@ -180,6 +182,7 @@ class PartFitService:
                         input_date,
                         method,
                         is_user_input,
+                        industry=industry.value,
                     )
                     await fit_part_dao.creates(db, distribution_params)
                 except FailureCheckError:
@@ -198,6 +201,7 @@ class PartFitService:
                         method,
                         is_user_input,
                         lambda_,
+                        industry=industry.value,
                     )
                     await fit_part_dao.create(db, distribution_param)
 

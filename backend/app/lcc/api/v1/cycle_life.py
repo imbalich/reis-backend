@@ -12,7 +12,6 @@ from typing import Annotated
 import json
 from fastapi import APIRouter, Query
 
-from backend.common.response.response_schema import response_base
 from backend.common.response.response_schema import ResponseSchemaModel, response_base
 from backend.app.lcc.schema.cycle_life_service import CycleLifeTotalSchemaBase
 from backend.app.lcc.service.cycle_life_service import cycle_life_service

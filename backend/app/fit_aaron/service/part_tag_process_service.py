@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 @Project : fastapi-base-backend
@@ -11,7 +11,8 @@
 from datetime import date
 from typing import Any
 
-from backend.app.datamanage.model import Despatch, Ebom, Failure, Product
+from backend.app.datamanage.model import Despatch, Ebom
+from backend.common.industry import FailureLike, ProductLike
 from backend.app.fit.schema.base_param import DespatchParam, EbomParam, FailureParam, RepairParam, ReplaceParam
 from backend.app.fit_aaron.service.tag_process_service import TagProcessService
 from backend.app.fit.utils.time_utils import dateutils
@@ -21,8 +22,8 @@ class PartTagProcessService(TagProcessService):
     async def process_data(
         self,
         despatch_data: list[Despatch],
-        failure_data: list[Failure],
-        product_data: Product,
+        failure_data: list[FailureLike],
+        product_data: ProductLike,
         bom_data: Ebom,
         input_date: str | date = None,
         **kwargs: Any,
@@ -46,8 +47,8 @@ class PartTagProcessService(TagProcessService):
     async def _process_non_essential(
         self,
         despatch_data: list[Despatch],
-        failure_data: list[Failure],
-        product_data: Product,
+        failure_data: list[FailureLike],
+        product_data: ProductLike,
         bom_data: Ebom,
         input_date: str | date = None,
     ) -> list[list]:
@@ -70,8 +71,8 @@ class PartTagProcessService(TagProcessService):
     async def _process_essential(
         self,
         despatch_data: list[Despatch],
-        failure_data: list[Failure],
-        product_data: Product,
+        failure_data: list[FailureLike],
+        product_data: ProductLike,
         bom_data: Ebom,
         replace_data: list[ReplaceParam],
         repair_data: list[RepairParam],
@@ -110,7 +111,7 @@ class PartTagProcessService(TagProcessService):
         """
         return await super().process_despatch_data(despatch_data, input_date)
 
-    async def process_failure_data(self, failure_data: list[Failure], input_date: date):
+    async def process_failure_data(self, failure_data: list[FailureLike], input_date: date):
         """
         处理故障数据，按时间顺序排序，降序。
         :param failure_data: 故障数据列表
@@ -226,7 +227,7 @@ class PartTagProcessService(TagProcessService):
 
     @staticmethod
     async def tag_create_non_essential(
-        container: dict[str, Any], product_data: Product, input_date: date
+        container: dict[str, Any], product_data: ProductLike, input_date: date
     ) -> list[list[Any]]:
         result = []
         # 循环遍历 container 容器中的每个键和值
@@ -272,7 +273,7 @@ class PartTagProcessService(TagProcessService):
 
     @staticmethod
     async def tag_create_essential(
-        container: dict[str, Any], product_data: Product, input_date: date
+        container: dict[str, Any], product_data: ProductLike, input_date: date
     ) -> list[list[Any]]:
         # TODO:故障数据插入时需要考虑必换件和必换周期，隔周期打断
         result = []

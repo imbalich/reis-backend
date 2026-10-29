@@ -53,6 +53,10 @@ class FitPart(DataClassBase):
     )
 
     source: Mapped[bool] = mapped_column(Integer, default=False, comment='数据来源,0为系统生成,1为用户输入')
+    industry: Mapped[str] = mapped_column(
+        String(20), default='railway', index=True,
+        comment='数据产业(railway/wind), 评审PR#3意见#4'
+    )
     created_time: Mapped[date] = mapped_column(
         Date, init=False, default_factory=timezone.now_date, sort_order=999, comment='创建时间'
     )

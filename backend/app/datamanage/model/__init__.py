@@ -28,6 +28,8 @@ from backend.app.datamanage.model.unqualify import Unqualify
 from backend.app.datamanage.model.repair_interval import RepairInterval
 from backend.app.datamanage.model.reliability_index import ReliabilityIndex
 from backend.app.datamanage.model.failure_mro_correct import FailureMROCorrect  # 故障信息-来源MRO-修正数据
+from backend.app.datamanage.model.dm_jl_failure import FailureJL  # 故障信息-风电(jl)
+from backend.app.datamanage.model.dm_jl_product import ProductJL  # 产品信息-风电(jl)
 
 def get_failure_model():
     if settings.FAILURE_DATA_SOURCE == "mro_correct":
@@ -35,3 +37,5 @@ def get_failure_model():
     return Failure
 
 FailureModel = get_failure_model()
+# 风电模型(FailureJL/ProductJL)由 common/industry.py 的分流代理按型号动态路由,
+# 不再提供模块级 ProductModel/FailureModel 全局切换(评审PR#3意见#1)

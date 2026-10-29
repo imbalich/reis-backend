@@ -464,7 +464,6 @@ class EqualLifetimeService:
             failure_parts = await failure_dao.get_parts_with_names_only_by_model(db, model)
             code_to_name = {code: name for name, code in failure_parts}
 
-            pso_results: dict[str, dict] = {}
 
             section_start = time.time()
 

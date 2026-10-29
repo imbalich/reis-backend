@@ -19,7 +19,6 @@ from backend.app.calcu.service.reliability_index_service import reliability_inde
 from backend.app.lcc.schema.cycle_life_service import CycleLifeSchemaBase, CycleLifeTotalSchemaBase
 from backend.app.fit.crud.crud_fit_part import fit_part_dao
 from backend.app.datamanage.crud.crud_failure import failure_dao
-from backend.common.exception.errors import DataValidationError
 logger = logging.getLogger(__name__)
 
 class CycleLifeService:
@@ -41,7 +40,7 @@ class CycleLifeService:
                     result['part'] = part
                     ebom_data = await ebom_dao.get_by_model_and_part(db, result['model'], result['part'])
                     if ebom_data is None:
-                        raise errors.DataValidationError(msg=f'型号{item['model']}+部件{item['part']}的没有Ebom数据')
+                        raise errors.DataValidationError(msg=f"型号{item['model']}+部件{item['part']}的没有Ebom数据")
                     result['part_number'] = len(ebom_data)
                     year_worktimes = await CycleLifeService.year_worktimes(result['model'])
                     time = year_worktimes*life

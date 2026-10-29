@@ -11,6 +11,7 @@
 from typing import Any, List, Sequence
 
 from sqlalchemy import Select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.datamanage.crud.crud_product import product_dao
 from backend.common.exception import errors
@@ -72,9 +73,9 @@ class ProductService:
 
     @staticmethod
     async def get_select(
-        *, model: str = None, product_config_code: str | None = None
+        db: AsyncSession, *, model: str = None, product_config_code: str | None = None
     ) -> Select:
-        return await product_dao.get_list(model=model, product_config_code=product_config_code)
+        return await product_dao.get_list(db=db, model=model, product_config_code=product_config_code)
 
 
 product_service: ProductService = ProductService()

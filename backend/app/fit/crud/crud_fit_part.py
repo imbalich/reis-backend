@@ -110,6 +110,7 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         check: FitCheckType = FitCheckType.BIC,
         source: bool = False,
         product_config_code: str | None = None,
+        industry: str | None = None,
     ) -> Sequence[FitPart]:
         """
         根据型号和零部件查询拟合信息:查询最新的拟合信息,以一组的形式出现
@@ -144,6 +145,9 @@ class CRUDFitPart(CRUDPlus[FitPart]):
         apply_product_config_code_filter(
             base_conditions, self.model.product_config_code, product_config_code
         )
+        if industry:
+            base_conditions.append(self.model.industry == industry)
+
 
         # 如果提供了 input_date，添加到查询条件中
         if input_date:

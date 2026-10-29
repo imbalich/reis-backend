@@ -9,7 +9,7 @@ from backend.app.calcu.schema.distribute_param import DistributionParams
 from backend.app.calcu.service.distribute_service import DistributeService
 from backend.app.datamanage.crud.crud_despatch import despatch_dao
 from backend.app.datamanage.crud.crud_product import product_dao
-from backend.app.datamanage.model.failure import Failure
+from backend.app.datamanage.model.failure import Failure  # 预测模块仅面向铁路(评审S7)
 from backend.app.fit.schema.fit_param import CreateFitPartInParam, FitCheckType, FitMethodType
 from backend.app.fit.utils.convert_model import convert_to_total_quantity, get_ebom_tree_with_parents
 from backend.app.fit.utils.time_utils import dateutils
@@ -203,7 +203,7 @@ class PartForecastService:
         """每天平均运行小时 = 年运行天数 × 日均工作时间 / 365。"""
         async with async_db_session() as db:
             # 同一型号加派生码只取一条产品参数，用来折算运行小时。
-            product = await product_dao.get_by_model(db, model, product_config_code)
+            product = await product_dao.railway.get_by_model(db, model, product_config_code)
         if product is None or not product.year_days or not product.avg_worktime:
             raise errors.DataValidationError(msg=f"型号 {model} 缺少年运行天数或日均工作时间")
         return product.year_days * product.avg_worktime / 365

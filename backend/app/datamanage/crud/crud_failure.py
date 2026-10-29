@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_crud_plus import CRUDPlus
 
 from backend.app.datamanage.model import FailureModel
+from backend.app.datamanage.model.dm_jl_failure import FailureJL  # 故障信息-风电(jl)
+from backend.common.industry import FailureLike
 from backend.common.product_config import apply_product_config_code_filter
 
 T = TypeVar("T")
@@ -142,7 +144,7 @@ class CRUDFailure(CRUDPlus[T]):
         db: AsyncSession,
         model: str,
         product_config_code: str | None = None,
-    ) -> Sequence[FailureModel]:
+    ) -> Sequence[FailureLike]:
         stmt = select(self.model).order_by(self.model.discovery_date)
         where_list = [self.model.product_model == model]
         apply_product_config_code_filter(
@@ -178,7 +180,7 @@ class CRUDFailure(CRUDPlus[T]):
         part: str,
         input_date: date = None,
         product_config_code: str | None = None,
-    ) -> Sequence[FailureModel]:
+    ) -> Sequence[FailureLike]:
         stmt = select(self.model).order_by(self.model.discovery_date)
         where_list = []
         if input_date:
@@ -202,7 +204,7 @@ class CRUDFailure(CRUDPlus[T]):
 
     async def get_by_model_and_part_usesense(
         self, db: AsyncSession, model: str, part: str
-    ) -> Sequence[FailureModel]:
+    ) -> Sequence[FailureLike]:
         stmt = select(self.model).order_by(self.model.discovery_date)
         where_list = [
             self.model.product_model == model,
@@ -279,7 +281,7 @@ class CRUDFailure(CRUDPlus[T]):
 
     async def get_by_product_number(
         self, db: AsyncSession, product_number: str
-    ) -> Sequence[FailureModel]:
+    ) -> Sequence[FailureLike]:
         stmt = (
             select(self.model)
             .where(
@@ -295,7 +297,7 @@ class CRUDFailure(CRUDPlus[T]):
 
     async def get_job_loss_by_model_and_part(
         self, db: AsyncSession, model: str, part: str
-    ) -> Sequence[FailureModel]:
+    ) -> Sequence[FailureLike]:
         stmt = (
             select(self.model)
             .where(
@@ -335,4 +337,95 @@ class CRUDFailure(CRUDPlus[T]):
         return count if count is not None else 0
 
 
-failure_dao: CRUDFailure = CRUDFailure(FailureModel)
+class FailureDaoProxy:
+    """故障数据访问分流代理(评审PR#3意见#2)
+
+    - 型号作用方法(get_by_model/get_by_model_and_part/get_number_by_model等):
+      按型号判定产业后转发到对应DAO
+    - 其余方法(无型号参数): 回退铁路实现(风电阶段未使用的功能)
+    """
+
+    _MODEL_KEY = {
+        'get_by_model': 'model',
+        'get_by_model_and_part': 'model',
+        'get_by_model_and_part_usesense': 'model',
+        'get_number_by_model': 'model',
+        'get_parts_with_names_by_model': 'model',
+        'get_parts_with_names_only_by_model': 'model',
+        'get_job_loss_by_model_and_part': 'model',
+        'get_failure_count_by_model_and_part_in_products': 'model',
+        'get_distinct_column_values_by_product_model': 'product_model',
+        'get_distinct_columns_values_by_product_model': 'product_model',
+    }
+
+    def __init__(self, railway: CRUDFailure, wind: CRUDFailure):
+        self._railway = railway
+        self._wind = wind
+
+    @property
+    def railway(self) -> CRUDFailure:
+        """铁路专用 DAO：只读铁路故障表，不做产业分流（科学库存等铁路专属业务使用）"""
+        return self._railway
+
+    @property
+    def wind(self) -> CRUDFailure:
+        """风电专用 DAO：只读 dm_jl_failure，不做产业分流"""
+        return self._wind
+
+    def __getattr__(self, name: str):
+        """未显式分流的方法/属性: 回退铁路实现"""
+        return getattr(self._railway, name)
+
+    async def _forward(self, name: str, db, args, kwargs):
+        model_key = self._MODEL_KEY.get(name)
+        model = kwargs.get(model_key) if model_key else None
+        if model is None and args:
+            model = args[0]
+        from backend.common.industry import Industry, resolve_industry
+
+        industry = await resolve_industry(db, model)
+        dao = self._wind if industry == Industry.WIND else self._railway
+        return await getattr(dao, name)(db, *args, **kwargs)
+
+    async def get_by_model(self, db, *args, **kwargs):
+        return await self._forward('get_by_model', db, args, kwargs)
+
+    async def get_by_model_and_part(self, db, *args, **kwargs):
+        return await self._forward('get_by_model_and_part', db, args, kwargs)
+
+    async def get_by_model_and_part_usesense(self, db, *args, **kwargs):
+        return await self._forward('get_by_model_and_part_usesense', db, args, kwargs)
+
+    async def get_number_by_model(self, db, *args, **kwargs):
+        return await self._forward('get_number_by_model', db, args, kwargs)
+
+    async def get_parts_with_names_by_model(self, db, *args, **kwargs):
+        return await self._forward('get_parts_with_names_by_model', db, args, kwargs)
+
+    async def get_parts_with_names_only_by_model(self, db, *args, **kwargs):
+        return await self._forward('get_parts_with_names_only_by_model', db, args, kwargs)
+
+    async def get_job_loss_by_model_and_part(self, db, *args, **kwargs):
+        return await self._forward('get_job_loss_by_model_and_part', db, args, kwargs)
+
+    async def get_failure_count_by_model_and_part_in_products(self, db, *args, **kwargs):
+        return await self._forward(
+            'get_failure_count_by_model_and_part_in_products', db, args, kwargs
+        )
+
+    async def get_distinct_column_values_by_product_model(self, db, *args, **kwargs):
+        return await self._forward(
+            'get_distinct_column_values_by_product_model', db, args, kwargs
+        )
+
+    async def get_distinct_columns_values_by_product_model(self, db, *args, **kwargs):
+        return await self._forward(
+            'get_distinct_columns_values_by_product_model', db, args, kwargs
+        )
+
+
+failure_dao: FailureDaoProxy = FailureDaoProxy(
+    railway=CRUDFailure(FailureModel),  # 铁路: 跟随 FAILURE_DATA_SOURCE(dm_failure/mro_correct)
+    wind=CRUDFailure(FailureJL),        # 风电: dm_jl_failure
+)
+

@@ -93,6 +93,7 @@ class CreateProductDistributionParam(SchemaBase):
     optimizer: str | None = None
 
     source: bool
+    industry: str = 'railway'
 
 
 class CreatePartDistributionParam(SchemaBase):
@@ -125,3 +126,4 @@ class CreatePartDistributionParam(SchemaBase):
     optimizer: str | None = None
 
     source: bool
+    industry: str = 'railway'

@@ -370,8 +370,9 @@ def test_calculate_spare_quantity_by_interval_queries_product_with_product_confi
         "async_db_session",
         lambda: _SessionContext(),
     )
+    # 评审B1/B4: 业务代码走 product_dao.railway, 打桩到真实目标
     monkeypatch.setattr(
-        science_warehouse_service_module.product_dao,
+        science_warehouse_service_module.product_dao.railway,
         "get_by_model",
         _fake_get_by_model,
     )
