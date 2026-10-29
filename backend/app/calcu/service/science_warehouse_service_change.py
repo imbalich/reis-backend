@@ -631,12 +631,12 @@ class ScienceWarehouseServiceChange:
                     product_config_code=product_config_code,
                     industry='railway',
                 )
-                if not rows:
-                    continue
-                params = convert_to_pydantic_model(rows[0], DistributionParams)
-                distribution = await distribute_service.get_distribution_by_params(params)
-                if distribution is not None:
-                    return distribution
+            if not rows:
+                continue
+            params = convert_to_pydantic_model(rows[0], DistributionParams)
+            distribution = await distribute_service.get_distribution_by_params(params)
+            if distribution is not None:
+                return distribution
         return None
 
     @staticmethod

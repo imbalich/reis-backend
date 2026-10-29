@@ -69,7 +69,11 @@ async def get_industry_model_sets(db: AsyncSession) -> tuple[frozenset[str], fro
     conflicts = frozenset(wind & railway)
     # 重叠是常态(dm_product 为全公司统一主表): 只在缓存刷新时汇总告警一次, 避免刷屏
     if conflicts:
-        log.warning('共 {} 个型号同时存在于铁路与风电产品表, 判定时按风电处理', len(conflicts))
+        log.warning(
+            '共 {} 个型号同时存在于铁路与风电产品表, 判定时按风电处理, 示例: {}',
+            len(conflicts),
+            sorted(conflicts)[:10],
+        )
     _cache['wind_models'] = wind
     _cache['railway_only_conflicts'] = conflicts
     _cache['ts'] = now
