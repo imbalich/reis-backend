@@ -13,7 +13,7 @@ sys.path.insert(0, str(project_root))
 
 from backend.database.db import async_db_session
 from backend.app.calcu.model.science_warehouse_result import ScienceWarehouseResult
-from backend.app.datamanage.crud.crud_failure import failure_dao, CRUDFailure
+from backend.app.datamanage.crud.crud_failure import failure_dao
 from backend.app.datamanage.crud.crud_warehouse import warehouse_dao
 from backend.app.datamanage.crud.crud_allotment import allotment_dao
 from backend.app.datamanage.crud.crud_part_spare_mapping import part_spare_mapping_dao
@@ -81,7 +81,8 @@ async def query_failures(model: str, part: str, products: List[str], start_date:
             failure_dao.model.discovery_date >= start_str,
             failure_dao.model.discovery_date <= end_str,
             failure_dao.model.is_zero_distance == 0,
-            CRUDFailure._non_user_responsibility_condition(failure_dao.model),
+            # 暂时关闭：责任含「用户」的记录也进入拟合。
+            # CRUDFailure._non_user_responsibility_condition(failure_dao.model),
         )
         stmt = select(failure_dao.model.report_id).where(cond)
         res = await db.execute(stmt)

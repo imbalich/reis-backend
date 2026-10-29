@@ -151,7 +151,8 @@ class CRUDFailure(CRUDPlus[T]):
         where_list.extend(
             [
                 self.model.is_zero_distance == 0,
-                CRUDFailure._non_user_responsibility_condition(self.model),
+                # 暂时关闭：责任含「用户」的记录也进入拟合。
+                # CRUDFailure._non_user_responsibility_condition(self.model),
                 self.model.manufacturing_date.isnot(None),
             ]
         )
@@ -164,7 +165,8 @@ class CRUDFailure(CRUDPlus[T]):
         where_list = [
             self.model.fault_material_code == part,
             self.model.is_zero_distance == 0,
-            CRUDFailure._non_user_responsibility_condition(self.model),
+            # 暂时关闭：责任含「用户」的记录也进入拟合。
+            # CRUDFailure._non_user_responsibility_condition(self.model),
         ]
         stmt = stmt.where(*where_list)
         return stmt
@@ -189,7 +191,8 @@ class CRUDFailure(CRUDPlus[T]):
                 self.model.product_model == model,
                 self.model.fault_material_code == part,
                 self.model.is_zero_distance == 0,
-                CRUDFailure._non_user_responsibility_condition(self.model),
+                # 暂时关闭：责任含「用户」的记录也进入拟合。
+                # CRUDFailure._non_user_responsibility_condition(self.model),
                 self.model.manufacturing_date.isnot(None),
             ]
         )
@@ -204,7 +207,8 @@ class CRUDFailure(CRUDPlus[T]):
         where_list = [
             self.model.product_model == model,
             self.model.fault_material_code == part,
-            CRUDFailure._non_user_responsibility_condition(self.model),
+            # 暂时关闭：责任含「用户」的记录也进入拟合。
+            # CRUDFailure._non_user_responsibility_condition(self.model),
         ]
         stmt = stmt.where(*where_list)
         result = await db.execute(stmt)
@@ -243,7 +247,8 @@ class CRUDFailure(CRUDPlus[T]):
                 self.model.fault_material_code.isnot(None),
                 self.model.fault_location.isnot(None),
                 self.model.is_zero_distance == 0,
-                CRUDFailure._non_user_responsibility_condition(self.model),
+                # 暂时关闭：责任含「用户」的记录也进入拟合。
+                # CRUDFailure._non_user_responsibility_condition(self.model),
             )
             .order_by(self.model.fault_location, self.model.fault_material_code)
         )
@@ -280,7 +285,8 @@ class CRUDFailure(CRUDPlus[T]):
             .where(
                 self.model.product_number == product_number,
                 self.model.is_zero_distance == 0,
-                CRUDFailure._non_user_responsibility_condition(self.model),
+                # 暂时关闭：责任含「用户」的记录也进入拟合。
+                # CRUDFailure._non_user_responsibility_condition(self.model),
             )
             .order_by(self.model.discovery_date)
         )
@@ -321,7 +327,8 @@ class CRUDFailure(CRUDPlus[T]):
             self.model.discovery_date >= start_date,
             self.model.discovery_date <= end_date,
             self.model.is_zero_distance == 0,
-            CRUDFailure._non_user_responsibility_condition(self.model),
+            # 暂时关闭：责任含「用户」的记录也进入拟合。
+            # CRUDFailure._non_user_responsibility_condition(self.model),
         )
         result = await db.execute(stmt)
         count = result.scalar()

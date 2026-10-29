@@ -14,7 +14,6 @@ from typing import List, Tuple
 
 from sqlalchemy import and_, func, select
 
-from backend.app.datamanage.crud.crud_failure import CRUDFailure
 from backend.app.datamanage.model import FailureModel
 from backend.common.log import log
 from backend.common.product_config import apply_product_config_code_filter
@@ -43,7 +42,8 @@ class SpareStatisticsService:
                         FailureModel.is_zero_distance == 0,
                         FailureModel.fault_material_code.isnot(None),
                         FailureModel.manufacturing_date.isnot(None),
-                        CRUDFailure._non_user_responsibility_condition(FailureModel),
+                        # 暂时关闭：责任含「用户」的记录也进入拟合。
+                        # CRUDFailure._non_user_responsibility_condition(FailureModel),
                     )
                 )
                 .group_by(
@@ -94,7 +94,8 @@ class SpareStatisticsService:
                 FailureModel.discovery_date >= start_date.strftime("%Y-%m-%d"),
                 FailureModel.discovery_date <= end_date.strftime("%Y-%m-%d"),
                 FailureModel.is_zero_distance == 0,
-                CRUDFailure._non_user_responsibility_condition(FailureModel),
+                # 暂时关闭：责任含「用户」的记录也进入拟合。
+                # CRUDFailure._non_user_responsibility_condition(FailureModel),
             ]
             apply_product_config_code_filter(
                 conditions, FailureModel.product_config_code, product_config_code
@@ -121,7 +122,8 @@ class SpareStatisticsService:
                 FailureModel.discovery_date <= end_date.strftime("%Y-%m-%d"),
                 FailureModel.is_zero_distance == 0,
                 FailureModel.fault_location.isnot(None),
-                CRUDFailure._non_user_responsibility_condition(FailureModel),
+                # 暂时关闭：责任含「用户」的记录也进入拟合。
+                # CRUDFailure._non_user_responsibility_condition(FailureModel),
             ]
             apply_product_config_code_filter(
                 conditions, FailureModel.product_config_code, product_config_code

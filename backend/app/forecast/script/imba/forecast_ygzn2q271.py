@@ -13,7 +13,6 @@ from sqlalchemy import func, select
 project_root = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(project_root))
 
-from backend.app.datamanage.crud.crud_failure import CRUDFailure
 from backend.app.datamanage.model import FailureModel
 from backend.app.forecast.schema.forecast_param import PartForecastParam
 from backend.app.forecast.service.part_forecast_service import part_forecast_service
@@ -49,7 +48,8 @@ OUTPUT = Path(__file__).resolve().parent / "YGZN2Q271_PS00_两个年度窗口预
 async def count_window_failures(part: str, start: str, end: str) -> int:
     """窗口内实际故障条数，过滤条件与打标拟合的 get_by_model_and_part 相同。
 
-    终判物料编码、型号、派生码（PS00 含空值）、非零公里、责任不含「用户」、生产日期非空。
+    终判物料编码、型号、派生码（PS00 含空值）、非零公里、生产日期非空。
+    责任含「用户」的排除已暂时关闭，与拟合取数一致。
     日期由拟合用的「不晚于截止日」改为窗口闭区间，含开始日和结束日。
     每条故障记录计一次，不把同一产品同一天合并。
     """
@@ -58,7 +58,8 @@ async def count_window_failures(part: str, start: str, end: str) -> int:
             FailureModel.product_model == MODEL,
             FailureModel.fault_material_code == part,
             FailureModel.is_zero_distance == 0,
-            CRUDFailure._non_user_responsibility_condition(FailureModel),
+            # 暂时关闭：责任含「用户」的记录也计入，与拟合取数一致。
+            # CRUDFailure._non_user_responsibility_condition(FailureModel),
             FailureModel.manufacturing_date.isnot(None),
             FailureModel.discovery_date >= start,
             FailureModel.discovery_date <= end,
